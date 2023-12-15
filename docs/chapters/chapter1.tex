@@ -1,0 +1,63 @@
+\chapter{Block Cipher AES}
+
+\section{Overview of Advanced Encryption Standard}
+
+\begin{itemize}
+	\item $\text{AddRoundKey}:\set{0,1}^{128}\times\set{0,1}^{128}\to\set{0,1}^{128}$
+	\item $\text{SubBytes}:\set{0,1}^{128}\to\set{0,1}^{128}$
+	\item $\text{ShiftRows}:\set{0,1}^{128}\to\set{0,1}^{128}$
+	\item $\text{MixColumns}:\set{0,1}^{128}\to\set{0,1}^{128}$
+\end{itemize}
+
+\begin{algorithm}[H]
+	\caption{Encryption of AES-128}
+	
+	\KwIn{block $\mathsf{src} \in \set{0,1}^{128}$, round-keys $\{rk_i\}_{i=0}^{11}$ ($rk_i \in \set{0,1}^{128}$)}
+	\KwOut{block $\mathsf{dst} \in \set{0,1}^{128}$}
+	\BlankLine
+	$t \leftarrow \mathsf{src}$\;
+	$t \leftarrow \text{AddRoundKey}(t, rk_0)$\;
+	\For{$i \leftarrow 1$ \KwTo $9$}{
+		$t \leftarrow \text{SubBytes}(t)$\;
+		$t \leftarrow \text{ShiftRows}(t)$\;
+		$t \leftarrow \text{MixColumns}(t)$\;
+		$t \leftarrow \text{AddRoundKey}(t, rk_i)$\;
+	}
+	$t \leftarrow \text{SubBytes}(t)$\;
+	$t \leftarrow \text{ShiftRows}(t)$\;
+	$t \leftarrow \text{AddRoundKey}(t, rk_{10})$\;
+	$\mathsf{dst} \leftarrow t$\;
+	\Return{$\mathsf{dst}$}\;
+\end{algorithm}
+
+\newpage
+\section{Functions and Constants used in AES}
+\subsection{Key Expansion}
+
+\begin{algorithm}[H]
+	\caption{Key Schedule (AES-128)}
+	
+	\KwIn{key \( k = (k_0, \dots, k_{15}) \) \( (k_i \in \set{0,1}^8) \)}
+	\KwOut{round-keys \( \{rk_i\}_{i=0}^{43} \) \( (rk_i \in \set{0,1}^{32}) \)}
+	\BlankLine
+	\( rk_0 \leftarrow k_0\parallel k_1\parallel k_2 \parallel k_3 \)\;
+	\( rk_1 \leftarrow k_4\parallel k_5\parallel k_6 \parallel k_7 \)\;
+	\( rk_2 \leftarrow k_8\parallel k_9\parallel k_{10} \parallel k_{11} \)\;
+	\( rk_3 \leftarrow k_{12}\parallel k_{13}\parallel k_{14} \parallel k_{15} \)\;
+	\For{\( i = 4 \) \KwTo \( 43 \)}{
+		\( t \leftarrow rk_{i-1} \)\;
+		\If{\( i \bmod 4 = 0 \)}{
+			\( t \leftarrow \text{RotWord}(t) \)\;
+			\( t \leftarrow \text{SubWord}(t) \)\;
+			\( t \leftarrow t \oplus \text{word}(\text{Rcon}[i/4], 0x00, 0x00, 0x00) \)\;
+		}
+		\( rk_i \leftarrow rk_{i-4} \oplus t \)\;
+	}
+\end{algorithm}
+
+\subsection{AddRoundKey}
+
+
+\subsection{SubBytes}
+\subsection{ShiftRows}
+\subsection{MiColums}

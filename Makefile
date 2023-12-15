@@ -1,0 +1,45 @@
+# Makefile for AES Cryptographic Library
+
+CC = gcc
+CFLAGS = -Wall -Wextra -O2
+INCLUDES = -Iinclude
+SRC_DIR = src
+OBJ_DIR = obj
+BIN_DIR = bin
+
+# Define the source and object files
+SRCS = $(SRC_DIR)/aes.c $(SRC_DIR)/aes_key_expansion.c $(SRC_DIR)/aes_modes.c $(SRC_DIR)/utils.c
+OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+DEPS = $(OBJS:.o=.d)
+
+# Target binary
+TARGET = $(BIN_DIR)/aes_library
+
+# Default target
+all: $(TARGET)
+
+# Include dependencies
+-include $(DEPS)
+
+# Rule to create the target directory
+$(BIN_DIR):
+	mkdir -p $(BIN_DIR)
+
+# Rule to create the object directory
+$(OBJ_DIR):
+	mkdir -p $(OBJ_DIR)
+
+# Rule to create the binary
+$(TARGET): $(OBJS) | $(BIN_DIR)
+	$(CC) $(CFLAGS) -o $@ $^
+
+# Rule to create object files
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
+
+# Clean target
+clean:
+	rm -rf $(OBJ_DIR) $(BIN_DIR)
+
+# Phony targets
+.PHONY: all clean
