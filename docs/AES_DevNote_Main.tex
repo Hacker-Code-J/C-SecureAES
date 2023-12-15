@@ -13,6 +13,14 @@
 \definecolor{procolor}{RGB}{241, 196, 15}
 \definecolor{execolor}{RGB}{90, 128, 127}
 
+\definecolor{comments}{HTML}{6A9955} % A kind of forest green.
+\definecolor{keyword}{HTML}{569CD6} % A medium blue..
+\definecolor{string}{HTML}{CE9178} % A reddish-brown or terra cotta.
+\definecolor{function}{HTML}{DCDCAA} % A beige or light khaki.
+\definecolor{number}{HTML}{B5CEA8} % A muted green.
+\definecolor{type}{HTML}{4EC9B0} %  A turquoise or teal.
+\definecolor{class}{HTML}{4EC9B0} % Similar to types, a turquoise or teal.
+
 % Fonts
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
@@ -49,19 +57,95 @@
 
 % TikZ
 \usepackage{tikz}
-\usetikzlibrary{shapes.geometric, arrows.meta, positioning, shadows}
+\usetikzlibrary{matrix, positioning, arrows.meta, calc, shapes.multipart, chains, decorations.pathreplacing}
 
 % Pseudo-code
 \usepackage[linesnumbered,ruled]{algorithm2e}
 \usepackage{algpseudocode}
 \SetKwComment{Comment}{/* }{ */}
 
+% Listings
+\usepackage{listings}
+\renewcommand{\lstlistingname}{Code}%
+\lstdefinestyle{C}{
+	language=C,
+	backgroundcolor=\color{white},
+	basicstyle=\ttfamily\color{black},
+	commentstyle=\color{green!70!black},
+	keywordstyle={\bfseries\color{purple}},
+	keywordstyle=[2]{\bfseries\color{red}},
+	keywordstyle=[3]{\bfseries\color{type}},
+	keywordstyle=[4]{\bfseries\color{Magenta}},
+	keywordstyle=[5]{\bfseries\color{JungleGreen}},
+	keywordstyle=[6]{\bfseries\color{RoyalBlue}},
+	keywordstyle=[7]{\bfseries\color{Turquoise}},
+	otherkeywords={bool},
+	morekeywords=[2]{;},
+	morekeywords=[3]{u8,u32,u64, BINT},
+	morekeywords=[4]{
+		Rcon, SubWord
+	},
+	morekeywords=[5]{
+		KeyExpansion
+	},
+	morekeywords=[6]{false, true, MAX, MIN},
+	morekeywords=[7]{WORD},
+	numberstyle=\tiny\color{gray},
+	stringstyle=\color{purple},
+	showstringspaces=false,
+	breaklines=true,
+	frame=single,
+	framesep=3pt,
+	%frameround=tttt,
+	framexleftmargin=3pt,
+	numbers=left,
+	numberstyle=\small\color{gray},
+	xleftmargin=15pt, % Increase the left margin
+	xrightmargin=5pt,
+	tabsize=4,
+	belowskip=0pt,
+	aboveskip=4pt
+}
+
+% Table
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{longtable}
+
+% Hyperlinks
+\usepackage{hyperref}
+\hypersetup{
+	colorlinks=true,
+	linkcolor=titleblue,
+	filecolor=black,      
+	urlcolor=titleblue,
+}
+
 % Preamble with packages, custom commands, etc.
 \usepackage{commath}
+\usepackage{soul} % highlight
 \usepackage{lipsum}  % Just for generating text
 
-\begin{document}
-	
+%% Theorem
+%\newtheorem{axiom}{Axiom}[chapter]
+%\newtheorem{theorem}{Theorem}[chapter]
+%\newtheorem{proposition}[theorem]{Proposition}
+%\newtheorem{corollary}{Corollary}[theorem]
+%\newtheorem{lemma}[theorem]{Lemma}
+%
+%\theoremstyle{definition}
+%\newtheorem{definition}{Definition}[chapter]
+%\newtheorem{remark}{Remark}[chapter]
+%\newtheorem{exercise}{Exercise}[chapter]
+%\newtheorem{example}{Example}[chapter]
+%\newtheorem*{note}{Note}
+
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\zero}{\textcolor{red}{\texttt{0}}}
+\newcommand{\one}{\textcolor{red}{\texttt{1}}}
+\newcommand{\binaryfield}{\set{\zero,\one}}
+
+\begin{document}	
 	% Title page
 	\begin{titlepage}
 		\begin{center}
@@ -94,7 +178,7 @@
 	% Include more chapters as needed
 	
 	\appendix
-%	\input{appendices/appendixA.tex}
+	\input{appendices/appendixA.tex}
 %	\input{appendices/appendixB.tex}
 	
 	\backmatter

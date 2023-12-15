@@ -1,4 +1,4 @@
-\chapter{Block Cipher AES}
+\chapter{Block Cipher AES-128}
 
 \section{Overview of Advanced Encryption Standard}
 
@@ -33,12 +33,49 @@
 \newpage
 \section{Functions and Constants used in AES}
 \subsection{Key Expansion}
-
+\begin{itemize}
+	\item \hl{$\text{RotWord}:\binaryfield^{32}\to\binaryfield^{32}$} is defined by \[
+	\text{RotWord}\left(X_0\parallel X_1\parallel X_2\parallel X_3\right):=X_1\parallel X_2\parallel X_3\parallel X_0\quad\text{for}\quad X_i\in\binaryfield^8.
+	\]
+	\begin{lstlisting}[style=C, caption={RotWord rotates the input word left by one byte},captionpos=t]
+u32 RotWord(u32 word) {
+	return (word << 0x08) | (word >> 0x18);
+}
+	\end{lstlisting}
+	\item \hl{$\text{SubWord}:\binaryfield^{32}\to\binaryfield^{32}$} is defined by \[
+	\text{SubWord}(X_0\parallel X_1\parallel X_2\parallel X_3):=s(X_0)\parallel s(X_1)\parallel s(X_2)\parallel s(X_3)\quad\text{for}\quad X_i\in\binaryfield^8.
+	\] Here, $s:{\binaryfield^8}\to{\binaryfield^8}$ is the \hyperlink{s-box}{S-box}.
+	\begin{lstlisting}[style=C, caption={SubWord applies the S-box to each byte of the input word},captionpos=t]
+u32 SubWord(u32 word) {
+	return (u32)s_box[word >> 0x18] << 0x18 | 
+		(u32)s_box[(word >> 0x10) & 0xFF] << 0x10 | 
+		(u32)s_box[(word >> 0x08) & 0xFF] << 0x08 | 
+		(u32)s_box[word & 0xFF];
+}
+	\end{lstlisting}
+	\item \hl{Round Constant $\texttt{Rcon}$}:
+	
+	The constant $\texttt{Rcon}_i\in\F_{2^8}$ used in generating the $i$-th round key corresponds to the value of $x^{i-1}$ in the binary finite field $\F_{2^8}$ and is as follows:
+	\begin{table}[h!]\centering\renewcommand{\arraystretch}{1.5} % Increase row height by 1.5 times
+		\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}c||cccccccccc}
+			$i$ & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10\\
+			\hline
+			$\texttt{Rcon}_i$ & $\texttt{0x01}$ & $\texttt{0x02}$ & $\texttt{0x04}$ & $\texttt{0x08}$ & $\texttt{0x10}$ & $\texttt{0x20}$ & $\texttt{0x40}$ & $\texttt{0x80}$ & $\texttt{0x1b}$ & $\texttt{0x36}$\\
+		\end{tabular*}
+	\end{table}
+	\begin{lstlisting}[style=C, caption={Rcon Array Declaration},captionpos=t]
+static const u32 Rcon[10] = {
+	0x01000000, 0x02000000, 0x04000000, 0x08000000,
+	0x10000000, 0x20000000, 0x40000000, 0x80000000,
+	0x1b000000, 0x36000000
+};
+	\end{lstlisting}
+\end{itemize}
 \begin{algorithm}[H]
 	\caption{Key Schedule (AES-128)}
 	
-	\KwIn{key \( k = (k_0, \dots, k_{15}) \) \( (k_i \in \set{0,1}^8) \)}
-	\KwOut{round-keys \( \{rk_i\}_{i=0}^{43} \) \( (rk_i \in \set{0,1}^{32}) \)}
+	\KwIn{key \( k = (k_0, \dots, k_{15}) \) \( (k_i \in \binaryfield^8) \)\tcp*{$k\in\binaryfield^{128}$ is 16-byte}}
+	\KwOut{round-keys \( \{rk_i\}_{i=0}^{43} \) \( (rk_i \in \binaryfield^{32}) \)\tcp*{$\set{rk_i}_{i=0}^{43}\in\binaryfield^{1408}$ is 176-byte}}
 	\BlankLine
 	\( rk_0 \leftarrow k_0\parallel k_1\parallel k_2 \parallel k_3 \)\;
 	\( rk_1 \leftarrow k_4\parallel k_5\parallel k_6 \parallel k_7 \)\;
@@ -47,13 +84,76 @@
 	\For{\( i = 4 \) \KwTo \( 43 \)}{
 		\( t \leftarrow rk_{i-1} \)\;
 		\If{\( i \bmod 4 = 0 \)}{
+			\Comment{$\text{SubWord}\circ\text{RotWord}:\binaryfield^{32}\to\binaryfield^{32}$}
 			\( t \leftarrow \text{RotWord}(t) \)\;
 			\( t \leftarrow \text{SubWord}(t) \)\;
-			\( t \leftarrow t \oplus \text{word}(\text{Rcon}[i/4], 0x00, 0x00, 0x00) \)\;
+			\( t \leftarrow t \oplus (\texttt{Rcon}_{i/4}\parallel\texttt{0x00}\parallel\texttt{0x00}\parallel\texttt{0x00}) \)\;
 		}
 		\( rk_i \leftarrow rk_{i-4} \oplus t \)\;
 	}
 \end{algorithm}
+\begin{lstlisting}[style=C, caption={AES Key Expansion},captionpos=t]
+void KeyExpansion(const u8* key, u32* rKey) {
+	u32 temp;
+	int i = 0;
+	
+	// Copy the input key to the first round key
+	while (i < 4) {
+		rKey[i] = (u32)key[4*i] << 0x18 | 
+		(u32)key[4*i+1] << 0x10 | 
+		(u32)key[4*i+2] << 0x08 | 
+		(u32)key[4*i+3];
+		i++;
+	}
+	
+	i = 4;
+	
+	// Generate the remaining round keys
+	while (i < 44) {
+		temp = rKey[i-1];
+		if (i % 4 == 0) {
+			temp = SubWord(RotWord(temp)) ^ Rcon[i/4-1];
+		}
+		rKey[i] = rKey[i-4] ^ temp;
+		i++;
+	}
+}
+\end{lstlisting}
+
+\section{Code Structure}
+\begin{enumerate}
+	\item Rcon Array Declaration
+	\item Function Definition
+	\item Variable Declarations and Initial Checks
+	\item Key Expansion Logic
+\end{enumerate}
+
+\section{Detailed Analysis}
+\subsection{Rcon Array Declaration}
+
+
+\subsection{Function Definition}
+\begin{lstlisting}[language=C]
+	int AES_set_encrypt_key(const unsigned char *userKey, const int bits, AES_KEY *key);
+\end{lstlisting}
+
+\subsection{Variable Declarations and Initial Checks}
+\begin{lstlisting}[language=C]
+	u32 *rk;
+	int i = 0;
+	u32 temp;
+	if (!userKey || !key)
+	return -1;
+	if (bits != 128 && bits != 192 && bits != 256)
+	return -2;
+\end{lstlisting}
+
+\subsection{Key Expansion Logic}
+\begin{enumerate}
+	\item Initial Key Setup
+	\item Key Expansion based on key size
+\end{enumerate}
+
 
 \subsection{AddRoundKey}
 

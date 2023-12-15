@@ -1,0 +1,33 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    padding: 20px;
+    margin: 0;
+  }
+  .table-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  table {
+    border-collapse: collapse;
+    width: 60%;
+    background-color: #fff;
+  }
+  th, td {
+    border: 1px solid #999;
+    padding: 8px;
+    text-align: center;
+  }
+  th {
+    background-color: #333;
+    color: #fff;
+  }
+  tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+  .key-header {
+    margin-bottom: 10px;
+    text-align: center;
+  }  
