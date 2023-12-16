@@ -49,9 +49,9 @@ u32 SubWord(u32 word);
  * several round keys as required by the AES algorithm. It uses the
  * helper functions RotWord and SubWord in the process.
  *
- * @param key The initial key for AES.
+ * @param ukey The initial key for AES.
  * @param rKey The expanded round keys.
  */
-void KeyExpansion(const u8* key, u32* rKey);
+void KeyExpansion(const u8* ukey, u32* rKey);
 
 #endif // _AES_KEY_EXPANSION_H

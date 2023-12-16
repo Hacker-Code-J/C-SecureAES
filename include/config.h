@@ -36,6 +36,15 @@ typedef unsigned long long u64;
  */
 #define true  1
 
+// #define AES_BLOCK_SIZE 16 // AES-128 block size is 16 bytes
+// // #define AES_BLOCK_SIZE 24 // AES-192 block size is 24 bytes
+// // #define AES_BLOCK_SIZE 32 // AES-256 block size is 32 bytes
+
+/* Key lengths */
+#define AES_KEY_SIZE (128 / 8) // 16
+// #define AES_KEY_SIZE (192 / 8) // 24
+// #define AES_KEY_SIZE (256 / 8) // 32
+
 static const u8 s_box[256] = {
     0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
     0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,

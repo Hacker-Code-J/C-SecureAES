@@ -1,10 +1,61 @@
 #include "aes.h"
 
-void AddRoundKey(u8* block, const u8* roundKey) {
-    for (int i = 0; i < 16; i++) {
-        block[i] ^= roundKey[i];
+/* Original Ver. */
+// void AddRoundKey(u8* state, const u32* rKey) {
+//     // Iterate over each byte of the AES block.
+//     for (int i = 0; i < AES_KEY_SIZE; i++) {
+//         // Calculate the index of the word in rKey array. Since each word of rKey is 4 bytes (32 bits),
+//         // and we are processing 1 byte at a time, we divide i by 4 to get the correct word index.
+//         int wordIndex = i / 4;
+
+//         // Calculate the byte position within the 32-bit word. We use modulo 4 operation on i
+//         // to get the position of the byte within the word (0, 1, 2, or 3).
+//         int bytePosition = i % 4;
+
+//         // Shift the 32-bit word to align the target byte with the least significant byte (LSB) position.
+//         // The shift amount depends on the byte position (0 to 3) and is calculated as 8 times (3 - position),
+//         // effectively getting the byte in reverse order (as AES uses little-endian byte order).
+//         u32 shiftedWord = rKey[wordIndex] >> (8 * (3 - bytePosition));
+
+//         // Apply a bitmask to extract only the least significant byte from the shifted word.
+//         // The bitmask 0xFF (255 in decimal) ensures that only the last 8 bits (1 byte) are retained.
+//         u8 keyByte = shiftedWord & 0xFF;
+
+//         // XOR the current byte of the state with the corresponding byte of the round key.
+//         // This operation combines the state with the round key to add cryptographic diffusion.
+//         state[i] ^= keyByte;
+//     }
+// }
+
+/* Optimized Ver.*/
+
+void AddRoundKey(u8* state, const u32* rKey) {
+    for (int i = 0; i < AES_KEY_SIZE; i++) {
+        // Extract the corresponding byte from the round key word
+        state[i] ^= (rKey[i / 4] >> (8 * (3 - (i % 4)))) & 0xFF;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // aes_error_t aes_init(aes_ctx_t *ctx, const uint8_t *key, size_t key_length) {
 //     // Check for null pointers to prevent undefined behavior

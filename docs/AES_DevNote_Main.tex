@@ -21,6 +21,11 @@
 \definecolor{type}{HTML}{4EC9B0} %  A turquoise or teal.
 \definecolor{class}{HTML}{4EC9B0} % Similar to types, a turquoise or teal.
 
+\definecolor{aesblue}{RGB}{30,144,255}
+\definecolor{aesgreen}{RGB}{0,128,0}
+\definecolor{aesred}{RGB}{255,69,0}
+\definecolor{aesgray}{RGB}{112,128,144}
+
 % Fonts
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
@@ -57,8 +62,8 @@
 
 % TikZ
 \usepackage{tikz}
-\usetikzlibrary{matrix, positioning, arrows.meta, calc, shapes.multipart, chains, decorations.pathreplacing}
-
+\usetikzlibrary{matrix, positioning, arrows.meta, calc, shapes.geometric, shapes.multipart, chains}
+\usetikzlibrary{decorations.pathreplacing,calligraphy}
 % Pseudo-code
 \usepackage[linesnumbered,ruled]{algorithm2e}
 \usepackage{algpseudocode}
@@ -75,21 +80,21 @@
 	keywordstyle={\bfseries\color{purple}},
 	keywordstyle=[2]{\bfseries\color{red}},
 	keywordstyle=[3]{\bfseries\color{type}},
-	keywordstyle=[4]{\bfseries\color{Magenta}},
-	keywordstyle=[5]{\bfseries\color{JungleGreen}},
+	keywordstyle=[4]{\bfseries\color{JungleGreen}},
+	keywordstyle=[5]{\bfseries\color{Magenta}},
 	keywordstyle=[6]{\bfseries\color{RoyalBlue}},
 	keywordstyle=[7]{\bfseries\color{Turquoise}},
 	otherkeywords={bool},
 	morekeywords=[2]{;},
-	morekeywords=[3]{u8,u32,u64, BINT},
+	morekeywords=[3]{u8,u32,u64},
 	morekeywords=[4]{
 		rCon, SubWord, RotWord
 	},
 	morekeywords=[5]{
-		KeyExpansion
+		KeyExpansion, AddRoundKey, SubBytes, ShiftRows, MixColums
 	},
 	morekeywords=[6]{false, true, MAX, MIN},
-	morekeywords=[7]{WORD},
+	morekeywords=[7]{AES\_KEY\_SIZE},
 	numberstyle=\tiny\color{gray},
 	stringstyle=\color{purple},
 	showstringspaces=false,
@@ -154,7 +159,52 @@
 			\vspace{0.5in}
 			{\Large {Ji Yong-Hyeon}\par}
 			\vspace{1in}
-%			\includegraphics[scale=.35]{haskell_logo.png}\par
+%			\begin{center}
+%			\begin{tikzpicture}[
+%				node distance=1.5cm,
+%				auto,
+%				block/.style={
+%					rectangle, 
+%					rounded corners, 
+%					draw, 
+%					fill=aesblue!30,
+%					text width=5em, 
+%					text centered, 
+%					minimum height=3em
+%				},
+%				line/.style={
+%					draw, 
+%					-Latex, 
+%					thick
+%				},
+%				decoration={brace,amplitude=5pt}
+%				]
+%				
+%				% Blocks
+%				\node [block] (plaintext) {Plaintext};
+%				\node [block, below of=plaintext, fill=aesgreen!30] (key) {Key Expansion};
+%				\node [block, below of=key, fill=aesred!30] (subbytes) {SubBytes};
+%				\node [block, below of=subbytes, fill=aesgray!30] (shiftrows) {ShiftRows};
+%				\node [block, below of=shiftrows, fill=aesblue!30] (mixcolumns) {MixColumns};
+%				\node [block, below of=mixcolumns, fill=aesgreen!30] (addroundkey) {AddRoundKey};
+%				\node [block, below of=addroundkey] (ciphertext) {Ciphertext};
+%				
+%				% Arrows
+%				\draw [line] (plaintext) -- (key);
+%				\draw [line] (key) -- (subbytes);
+%				\draw [line] (subbytes) -- (shiftrows);
+%				\draw [line] (shiftrows) -- (mixcolumns);
+%				\draw [line] (mixcolumns) -- (addroundkey);
+%				\draw [line] (addroundkey) -- (ciphertext);
+%				
+%				% Brace and annotation
+%				\draw [decorate, decoration={calligraphic brace, mirror, amplitude=10pt}, thick, aesred] 
+%				(subbytes.south west) -- (addroundkey.north west)
+%				node[midway, left=10pt, align=left] {Rounds\\Repeated};
+%				
+%			\end{tikzpicture}
+%			\end{center}
+			\includegraphics[scale=2]{images/title.jpg}\par
 			\vspace{1in}
 			{\large\bf \textsf{Department of Information Security, Cryptology, and Mathematics}\par}
 			{\textsf{College of Science and Technology}\par}

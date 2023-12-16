@@ -1,20 +1,17 @@
 #ifndef _AES_H
 #define _AES_H
 
-#include "config.h"
+#include "utils.h"
 
-#include <stdint.h>
-#include <stddef.h>
-
-/* AES block size in bytes */
-#define AES_BLOCK_SIZE 16
-
-/* Key lengths */
-#define AES_KEY_SIZE_128 (128 / 8)
-#define AES_KEY_SIZE_192 (192 / 8)
-#define AES_KEY_SIZE_256 (256 / 8)
-
-void AddRoundKey(u8* block, const u8* roundKey);
+/**
+ * AddRoundKey - XORs the state with a round key.
+ * 
+ * In this step, each byte of the state is XORed with the corresponding byte of the round key.
+ * 
+ * @param state A pointer to the state, an array of bytes representing the current state of the AES encryption.
+ * @param rKey A pointer to the round keys, an array of 32-bit unsigned integers (u32) containing the expanded keys.
+ */
+void AddRoundKey(u8* state, const u32* rKey);
 
 // /* Error codes */
 // typedef enum {
