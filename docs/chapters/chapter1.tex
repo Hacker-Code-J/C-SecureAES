@@ -3,17 +3,18 @@
 \section{Overview of Advanced Encryption Standard}
 
 \begin{itemize}
-	\item $\text{AddRoundKey}:\set{0,1}^{128}\times\set{0,1}^{128}\to\set{0,1}^{128}$
-	\item $\text{SubBytes}:\set{0,1}^{128}\to\set{0,1}^{128}$
-	\item $\text{ShiftRows}:\set{0,1}^{128}\to\set{0,1}^{128}$
-	\item $\text{MixColumns}:\set{0,1}^{128}\to\set{0,1}^{128}$
+	\item $\text{KeyExpansion}:\binaryfield^{128}\to\binaryfield^{1408}$.
+	\item $\text{AddRoundKey}:\binaryfield^{128}\times\binaryfield^{128}\to\binaryfield^{128}$.
+	\item $\text{SubBytes}:\binaryfield^{128}\to\binaryfield^{128}$.
+	\item $\text{ShiftRows}:\binaryfield^{128}\to\binaryfield^{128}$.
+	\item $\text{MixColumns}:\binaryfield^{128}\to\binaryfield^{128}$.
 \end{itemize}
 
 \begin{algorithm}[H]
 	\caption{Encryption of AES-128}
 	
-	\KwIn{block $\mathsf{src} \in \set{0,1}^{128}$, round-keys $\{rk_i\}_{i=0}^{11}$ ($rk_i \in \set{0,1}^{128}$)}
-	\KwOut{block $\mathsf{dst} \in \set{0,1}^{128}$}
+	\KwIn{block $\mathsf{src} \in \binaryfield^{128}$, round-keys $\{rk_i\}_{i=0}^{11}$ ($rk_i \in \binaryfield^{128}$)}
+	\KwOut{block $\mathsf{dst} \in \binaryfield^{128}$}
 	\BlankLine
 	$t \leftarrow \mathsf{src}$\;
 	$t \leftarrow \text{AddRoundKey}(t, rk_0)$\;
@@ -53,9 +54,9 @@ u32 SubWord(u32 word) {
 		(u32)s_box[word & 0xFF];
 }
 	\end{lstlisting}
-	\item \hl{Round Constant $\texttt{Rcon}$}:
+	\item \hl{Round Constant $\texttt{rCon}$}:
 	
-	The constant $\texttt{Rcon}_i\in\F_{2^8}$ used in generating the $i$-th round key corresponds to the value of $x^{i-1}$ in the binary finite field $\F_{2^8}$ and is as follows:
+	The constant $\texttt{rCon}_i\in\F_{2^8}$ used in generating the $i$-th round key corresponds to the value of $x^{i-1}$ in the binary finite field $\F_{2^8}$ and is as follows:
 	\begin{table}[h!]\centering\renewcommand{\arraystretch}{1.5} % Increase row height by 1.5 times
 		\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}c||cccccccccc}
 			$i$ & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10\\
@@ -63,8 +64,8 @@ u32 SubWord(u32 word) {
 			$\texttt{Rcon}_i$ & $\texttt{0x01}$ & $\texttt{0x02}$ & $\texttt{0x04}$ & $\texttt{0x08}$ & $\texttt{0x10}$ & $\texttt{0x20}$ & $\texttt{0x40}$ & $\texttt{0x80}$ & $\texttt{0x1b}$ & $\texttt{0x36}$\\
 		\end{tabular*}
 	\end{table}
-	\begin{lstlisting}[style=C, caption={Rcon Array Declaration},captionpos=t]
-static const u32 Rcon[10] = {
+	\begin{lstlisting}[style=C, caption={rCon Array Declaration},captionpos=t]
+static const u32 rCon[10] = {
 	0x01000000, 0x02000000, 0x04000000, 0x08000000,
 	0x10000000, 0x20000000, 0x40000000, 0x80000000,
 	0x1b000000, 0x36000000
@@ -87,11 +88,12 @@ static const u32 Rcon[10] = {
 			\Comment{$\text{SubWord}\circ\text{RotWord}:\binaryfield^{32}\to\binaryfield^{32}$}
 			\( t \leftarrow \text{RotWord}(t) \)\;
 			\( t \leftarrow \text{SubWord}(t) \)\;
-			\( t \leftarrow t \oplus (\texttt{Rcon}_{i/4}\parallel\texttt{0x00}\parallel\texttt{0x00}\parallel\texttt{0x00}) \)\;
+			\( t \leftarrow t \oplus (\texttt{rCon}_{i/4}\parallel\texttt{0x00}\parallel\texttt{0x00}\parallel\texttt{0x00}) \)\;
 		}
 		\( rk_i \leftarrow rk_{i-4} \oplus t \)\;
 	}
 \end{algorithm}
+\vspace{24pt}
 \begin{lstlisting}[style=C, caption={AES Key Expansion},captionpos=t]
 void KeyExpansion(const u8* key, u32* rKey) {
 	u32 temp;
@@ -112,7 +114,7 @@ void KeyExpansion(const u8* key, u32* rKey) {
 	while (i < 44) {
 		temp = rKey[i-1];
 		if (i % 4 == 0) {
-			temp = SubWord(RotWord(temp)) ^ Rcon[i/4-1];
+			temp = SubWord(RotWord(temp)) ^ rCon[i/4-1];
 		}
 		rKey[i] = rKey[i-4] ^ temp;
 		i++;
@@ -120,6 +122,18 @@ void KeyExpansion(const u8* key, u32* rKey) {
 }
 \end{lstlisting}
 
+\newpage
+\subsection{AddRoundKey}
+\begin{itemize}
+	\item $\text{AddRoundKey}:\binaryfield^{128}\times\binaryfield^{128}\to\binaryfield^{128}$ is defined by \[
+	\text{AddRoundKey}\left(\set{X_i}_{i=0}^{15},\set{rk_i}_{i=0}^{15}\right)
+	\] 
+\end{itemize}
+\subsection{SubBytes}
+\subsection{ShiftRows}
+\subsection{MiColums}
+
+\newpage
 \section{Code Structure}
 \begin{enumerate}
 	\item Rcon Array Declaration
@@ -154,10 +168,3 @@ void KeyExpansion(const u8* key, u32* rKey) {
 	\item Key Expansion based on key size
 \end{enumerate}
 
-
-\subsection{AddRoundKey}
-
-
-\subsection{SubBytes}
-\subsection{ShiftRows}
-\subsection{MiColums}

@@ -1,10 +1,10 @@
 # Compiler settings - Can be customized.
 CC = gcc
-CFLAGS = -I./include
+CFLAGS = -I./include -O2 -Wall -Wextra -pedantic
 
 # Source files
-SRC = ./src/aes_key_expansion.c
-OBJ = $(SRC:.c=.o)
+SRC = ./src/aes_key_expansion.c ./src/utils.c
+OBJ = $(SRC:./src/%.c=./obj/%.o)
 
 # Test program
 TEST_SRC = ./examples/key_expansion_test.c
@@ -17,36 +17,13 @@ $(TEST_OUT): $(OBJ)
 	$(CC) $(CFLAGS) -o $(TEST_OUT) $(TEST_SRC) $(OBJ)
 
 # Compile source files into object files
-%.o: %.c
+./obj/%.o: ./src/%.c
+	mkdir -p ./obj
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Clean the build
 clean:
-	rm -f $(OBJ) $(TEST_OUT)# Compiler settings - Can be customized.
-CC = gcc
-CFLAGS = -I./include
-
-# Source files
-SRC = ./src/aes_key_expansion.c
-OBJ = $(SRC:.c=.o)
-
-# Test program
-TEST_SRC = ./examples/key_expansion_test.c
-TEST_OUT = a.out
-
-# Compile and build
-all: $(TEST_OUT)
-
-$(TEST_OUT): $(OBJ)
-	$(CC) $(CFLAGS) -o $(TEST_OUT) $(TEST_SRC) $(OBJ)
-
-# Compile source files into object files
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-# Clean the build
-clean:
-	rm -f $(OBJ) $(TEST_OUT)
+	rm -rf ./obj $(TEST_OUT)
 
 rebuild: clean all
 

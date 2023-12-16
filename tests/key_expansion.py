@@ -32,17 +32,6 @@ def key_expansion(key, s_box):
 
     return w
 
-def read_round_keys(file_path):
-    """ Read round keys from a file. Each line contains one round key in hex format. """
-    with open(file_path, 'r') as file:
-        return [line.strip() for line in file]
-
-# Define the key and S-box
-key = [
-    0xf7, 0xe7, 0x8d, 0x3d, 0x3d, 0xee, 0x64, 0xba,
-    0xc7, 0x88, 0xd0, 0xcb, 0x89, 0xc8, 0x82, 0x72
-]
-
 s_box = [
     0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
     0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
@@ -62,24 +51,76 @@ s_box = [
     0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
 ]
 
+# def read_round_keys(file_path):
+#     """ Read round keys from a file. Each line contains one round key in hex format. """
+#     with open(file_path, 'r') as file:
+#         return [line.strip() for line in file]
+
+# # Define the key and S-box
+# key = [
+#     0xf7, 0xe7, 0x8d, 0x3d, 0x3d, 0xee, 0x64, 0xba,
+#     0xc7, 0x88, 0xd0, 0xcb, 0x89, 0xc8, 0x82, 0x72
+# ]
+
+def read_key_and_round_keys(file_path):
+    """ Read the initial key and round keys from a file. The first line contains the key, subsequent lines contain round keys. """
+    with open(file_path, 'r') as file:
+        # Read the first line and convert it to a list of integers
+        key_hex = file.readline().strip()
+        key = [int(key_hex[i:i+2], 16) for i in range(0, len(key_hex), 2)]
+
+        # Read the remaining lines as round keys
+        round_keys = [line.strip() for line in file]
+
+    return key, round_keys
+
+# Read key and round keys from a file
+file_path = 'round_keys.txt'  # Replace with your file path
+key, expected_keys = read_key_and_round_keys(file_path)
+
+# Convert the key array to a hexadecimal string
+key_hex = ''.join([f"{byte:02x}:" for byte in key])
+
+# Print the key in hexadecimal format
+print();
+print("------------------------------------------------------------")
+print(f"Random Key: {key_hex}")
+print("------------------------------------------------------------")
+print();
+
 # Convert key to bytes
 key_bytes = bytes(key)
 
 # Perform key expansion
 expanded_keys = key_expansion(key_bytes, s_box)
 
-# # Print expanded keys
-# for i, key in enumerate(expanded_keys):
-#     print(f"Round {i}: {key:08x}")
+# Print expanded keys
+for i, key in enumerate(expanded_keys):
+    print(f"rKey[{i:2d}]: {key:08x}")
 
-# Read expected round keys from a file
-file_path = 'round_keys.txt'  # Replace with your file path
-expected_keys = read_round_keys(file_path)
+# Initialize counters for total rounds and matches
+total_rounds = len(expanded_keys)
+matches = 0
 
-# Compare and check keys
+# Iterate through each round and compare keys
 for i, (generated_key, expected_key) in enumerate(zip(expanded_keys, expected_keys)):
     generated_key_hex = f"{generated_key:08x}"
     if generated_key_hex == expected_key:
-        print(f"Round {i}: Match")
+        # print(f"Round {i}: Match")
+        matches += 1  # Increment the match counter
     else:
         print(f"Round {i}: Mismatch (Generated: {generated_key_hex}, Expected: {expected_key})")
+
+# Calculate match percentage
+match_percentage = (matches / total_rounds) * 100
+
+# Print match percentage
+print(f"Match Percentage: {match_percentage:.2f}% ({matches}/{total_rounds})")
+
+# # Compare and check keys
+# for i, (generated_key, expected_key) in enumerate(zip(expanded_keys, expected_keys)):
+#     generated_key_hex = f"{generated_key:08x}"
+#     if generated_key_hex == expected_key:
+#         print(f"Round {i}: Match")
+#     else:
+#         print(f"Round {i}: Mismatch (Generated: {generated_key_hex}, Expected: {expected_key})")

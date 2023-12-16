@@ -36,7 +36,7 @@
 // 	while (i < 44) {
 // 		temp = rKey[i-1];
 // 		if (i % 4 == 0) {
-// 			temp = SubWord(RotWord(temp)) ^ Rcon[i / 4 - 1];
+// 			temp = SubWord(RotWord(temp)) ^ rCon[i / 4 - 1];
 // 		}
 // 		rKey[i] = rKey[i-4] ^ temp;
 // 		i++;
@@ -68,8 +68,8 @@ void KeyExpansion(const u8* key, u32* rKey) {
     // Optimize the round key generation loop
     for (int i = 4; i < 44; ++i) {
         temp = rKey[i - 1];
-        if ((i & 0b11) == 0) { // Equivalent to i % 4 == 0 but faster
-            temp = SubWord(RotWord(temp)) ^ Rcon[i / 4 - 1];
+        if ((i & 3) == 0) { // Equivalent to i % 4 == 0 but faster
+            temp = SubWord(RotWord(temp)) ^ rCon[i / 4 - 1];
         }
         rKey[i] = rKey[i - 4] ^ temp;
     }

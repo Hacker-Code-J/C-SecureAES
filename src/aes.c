@@ -1,5 +1,11 @@
 #include "aes.h"
 
+void AddRoundKey(u8* block, const u8* roundKey) {
+    for (int i = 0; i < 16; i++) {
+        block[i] ^= roundKey[i];
+    }
+}
+
 // aes_error_t aes_init(aes_ctx_t *ctx, const uint8_t *key, size_t key_length) {
 //     // Check for null pointers to prevent undefined behavior
 //     if (ctx == NULL || key == NULL) {

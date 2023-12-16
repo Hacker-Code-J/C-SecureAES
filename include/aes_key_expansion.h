@@ -6,7 +6,7 @@
 #ifndef _AES_KEY_EXPANSION_H
 #define _AES_KEY_EXPANSION_H
 
-#include "config.h"
+#include "utils.h"
 
 /**
  * @brief Round constants used in the AES key expansion algorithm.
@@ -14,7 +14,7 @@
  * These constants are used in the key expansion process of the AES algorithm. 
  * They are derived from the powers of x (x is 0x02) in the field GF(2^8).
  */
-static const u32 Rcon[10] = {
+static const u32 rCon[10] = {
     0x01000000, 0x02000000, 0x04000000, 0x08000000,
     0x10000000, 0x20000000, 0x40000000, 0x80000000,
     0x1b000000, 0x36000000
