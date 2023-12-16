@@ -13,6 +13,19 @@
  */
 void AddRoundKey(u8* state, const u32* rKey);
 
+void SubBytes(u8* state);
+
+void ShiftRows(u8* state);
+
+/**
+ * Performs the MixColumns step in AES.
+ * This operation treats each column of the state as a polynomial over GF(2^8) and multiplies it
+ * with a fixed polynomial c(x) = 03.x^3 + 01.x^2 + 01.x + 02, modulo x^4 + 1.
+ * 
+ * @param state The current state (128 bits) of the AES algorithm, represented as a 16-byte array.
+ */
+void MixColumns(u8 *state);
+
 // /* Error codes */
 // typedef enum {
 //     AES_SUCCESS = 0,

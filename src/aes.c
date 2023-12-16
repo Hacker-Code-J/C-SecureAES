@@ -1,3 +1,5 @@
+#include <emmintrin.h> // For SSE2 intrinsics
+
 #include "aes.h"
 
 /* Original Ver. */
@@ -27,6 +29,57 @@
 //     }
 // }
 
+void SubBytes(u8* state) {
+    for (int i = 0; i < AES_KEY_SIZE; i++) {
+        state[i] = s_box[state[i]];
+    }
+}
+
+void ShiftRows(u8* state) {
+	u8 temp;
+	
+	// Row 1: shift left by 1
+	temp = state[1];
+	state[1] = state[5];
+	state[5] = state[9];
+	state[9] = state[13];
+	state[13] = temp;
+	
+	// Row 2: shift left by 2
+	temp = state[2];
+	state[2] = state[10];
+	state[10] = temp;
+	temp = state[6];
+	state[6] = state[14];
+	state[14] = temp;
+	
+	// Row 3: shift left by 3 (or right by 1)
+	temp = state[15];
+	state[15] = state[11];
+	state[11] = state[7];
+	state[7] = state[3];
+	state[3] = temp;
+}
+
+void MixColumns(u8* state) {
+    u8 temp[4];  // Temporary array to hold the mixed column
+
+    // Process each column
+    for (int i = 0; i < 4; i++) {
+        // Multiply and add the elements in the column by the fixed polynomial
+        // The coefficients are 02, 03, 01, 01 for the first element, and so on, in a cyclic manner
+        temp[0] = gmul(0x02, state[i * 4]) ^ gmul(0x03, state[i * 4 + 1]) ^ state[i * 4 + 2] ^ state[i * 4 + 3];
+        temp[1] = state[i * 4] ^ gmul(0x02, state[i * 4 + 1]) ^ gmul(0x03, state[i * 4 + 2]) ^ state[i * 4 + 3];
+        temp[2] = state[i * 4] ^ state[i * 4 + 1] ^ gmul(0x02, state[i * 4 + 2]) ^ gmul(0x03, state[i * 4 + 3]);
+        temp[3] = gmul(0x03, state[i * 4]) ^ state[i * 4 + 1] ^ state[i * 4 + 2] ^ gmul(0x02, state[i * 4 + 3]);
+
+        // Copy the mixed column back to the state
+        for (int j = 0; j < 4; j++) {
+            state[i * 4 + j] = temp[j];
+        }
+    }
+}
+
 /* Optimized Ver.*/
 
 void AddRoundKey(u8* state, const u32* rKey) {
@@ -35,8 +88,6 @@ void AddRoundKey(u8* state, const u32* rKey) {
         state[i] ^= (rKey[i / 4] >> (8 * (3 - (i % 4)))) & 0xFF;
     }
 }
-
-
 
 
 
