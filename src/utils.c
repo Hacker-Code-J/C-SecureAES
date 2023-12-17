@@ -1,7 +1,16 @@
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #include "utils.h"
+
+void stringToByteArray(const char* hexString, u8* byteArray) {
+    size_t length = strlen(hexString);
+    for (size_t i = 0; i < length; i += 2) {
+        sscanf(&hexString[i], "%2hhx", &byteArray[i / 2]);
+    }
+}
 
 void RANDOM_KEY_GENERATION(u8* key) {
     srand((u32)time(NULL));
@@ -20,33 +29,39 @@ void RANDOM_KEY_GENERATION(u8* key) {
     }
 }
 
-u8 gmul(u8 a, u8 b) {
-    u8 p = 0;  // Accumulator for the product
-    u8 high_bit_mask = 0x80;  // Mask for detecting the high bit (0x80 in hexadecimal is 10000000 in binary)
-    u8 high_bit;  // Variable to store the high bit
-    u8 modulo = 0x1B;  // The reduction polynomial (x^8 + x^4 + x^3 + x + 1) for AES, represented in hexadecimal
-
-    // Iterate over all bits of b
-    for (int i = 0; i < 8; i++) {
-        // If the least significant bit of b is 1, add a to the product
-        if (b & 1) {
-            p ^= a;
-        }
-
-        // Store the high bit of a
-        high_bit = a & high_bit_mask;
-
-        // Shift a to the left, effectively multiplying it by x
-        a <<= 1;
-
-        // If the high bit was 1, reduce the result modulo the reduction polynomial
-        if (high_bit) {
-            a ^= modulo;
-        }
-
-        // Shift b to the right, moving to the next bit
-        b >>= 1;
-    }
-
-    return p;
+u8 MUL_GF256(u8 a, u8 b) {
+	u8 res = 0;
+	// Mask for detecting the MSB (0x80 = 0b10000000)
+	u8 MSB_mask = 0x80;
+	u8 MSB;
+	
+	/*
+	 * The reduction polynomial
+	 * (x^8 + x^4 + x^3 + x + 1) = 0b00011011
+	 * for AES, represented in hexadecimal
+	*/
+	u8 modulo = 0x1B;
+	
+	for (int i = 0; i < 8; i++) {
+		// LSB(b)=1
+		if (b & 1) { // Addition in Binary Field
+			res ^= a;
+		}
+		
+		// Store the MSB of a
+		MSB = a & MSB_mask;
+		
+		// Multiplying it by x effectively
+		a <<= 1;
+		
+		// Reduce the result modulo the reduction polynomial
+		if (MSB) {
+			a ^= modulo;
+		}
+		
+		// Moving to the next bit
+		b >>= 1;
+	}
+	
+	return res;
 }

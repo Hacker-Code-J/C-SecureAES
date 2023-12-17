@@ -1,4 +1,43 @@
-%\section*{Acknowledgements}
+\section*{Acknowledgements}
+
+\begin{note}[\textbf{XOR Operation and Modular Reduction in \( GF(2^n) \)}]
+	In the context of Galois Field \( GF(2^n) \), particularly in binary polynomial arithmetic, the XOR operation is equivalent to addition and also plays a crucial role in modular reduction. We explore this equivalence through the principles of field theory and polynomial arithmetic.
+	\begin{itemize}
+		\item \textbf{Field Properties:}
+		
+		A Galois Field, \( GF(p^n) \), is a finite field that contains a finite number of elements, where
+		\begin{itemize}
+			\item \( p \) is a prime number (base of the field) and
+			\item \( n \) is a positive integer (degree of the field).
+		\end{itemize}
+		For the binary field \( GF(2^n) \), \( p = 2 \), which implies that every element in this field is either 0 or 1.
+		\vspace{8pt}
+		\item \textbf{Addition in \( GF(2^n) \):}
+		
+		In \( GF(2^n) \), the addition of two elements is performed modulo 2. For any two elements \( a, b \in GF(2^n) \), the addition is defined as:
+		\[ a + b = a \oplus b\]
+		Since \( 2 \) is the base of the field, the addition wraps around upon reaching 2, which is effectively what the XOR operation does.
+		\vspace{8pt}
+		\item \textbf{Polynomial Representation:}
+		
+		Elements in \( GF(2^n) \) can be represented as polynomials where each coefficient is in \( GF(2)=\set{0,1} \). A general element can be written as:
+		\[ a(x) = a_{n-1}x^{n-1} + a_{n-2}x^{n-2} + \cdots + a_1x + a_0 \]
+		where \( a_i \in \{0, 1\} \) for all \( i \).
+		\vspace{8pt}
+		\item \textbf{Modular Reduction:}
+		
+		Modular reduction in \( GF(2^n) \) involves reducing a polynomial by a fixed irreducible polynomial of degree \( n \), ensuring that the result remains within the field. Let \( m(x) \) be the irreducible polynomial. The reduction of a polynomial \( f(x) \) is given by:
+		$ f(x) \mod m(x)$
+		\vspace{8pt}
+		\item \textbf{XOR as Modular Reduction:}
+		
+		During modular reduction, the subtraction used in polynomial division becomes XOR, because subtraction and addition are the same in \( GF(2) \). Therefore, reducing a polynomial \( f(x) \) by \( m(x) \) is effectively performed using XOR on the coefficients of corresponding terms.
+		
+		For example, if \( f(x) \) has a term \( x^k \) where \( k \geq n \), and \( m(x) \) has a term \( x^k \), then reducing \( f(x) \) by \( m(x) \) involves XORing the coefficients of \( x^k \) in \( f(x) \) and \( m(x) \), effectively eliminating the \( x^k \) term in \( f(x) \).
+	\end{itemize}
+	
+	In summary, the XOR operation becomes equivalent to both addition and modular reduction in \( GF(2^n) \) due to the binary nature of the field. This equivalence simplifies polynomial arithmetic in binary fields, making it a cornerstone of operations in cryptographic algorithms.
+\end{note}
 
 %\section*{Functional Programming}
 %

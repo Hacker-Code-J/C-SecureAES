@@ -3,6 +3,9 @@
 
 #include "config.h"
 
+
+void stringToByteArray(const char* hexString, u8* byteArray);
+
 void RANDOM_KEY_GENERATION(u8 *key);
 
 /**
@@ -17,6 +20,6 @@ void RANDOM_KEY_GENERATION(u8 *key);
  * @param b The second byte to multiply.
  * @return The result of the multiplication in GF(2^8).
  */
-u8 gmul(u8 a, u8 b);
+u8 MUL_GF256(u8 a, u8 b);
 
 #endif // _UTILS_H

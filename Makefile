@@ -3,11 +3,11 @@ CC = gcc
 CFLAGS = -I./include -O2 -Wall -Wextra -pedantic
 
 # Source files
-SRC = ./src/aes_key_expansion.c ./src/utils.c
+SRC = ./src/utils.c ./src/aes_key_expansion.c ./src/aes.c
 OBJ = $(SRC:./src/%.c=./obj/%.o)
 
 # Test program
-TEST_SRC = ./examples/key_expansion_test.c
+TEST_SRC = ./examples/aes_encryption_test.c
 TEST_OUT = a.out
 
 # Compile and build

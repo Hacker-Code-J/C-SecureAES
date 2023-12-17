@@ -26,6 +26,9 @@ void ShiftRows(u8* state);
  */
 void MixColumns(u8 *state);
 
+void AES128_Encrypt(const u8* plaintext, const u8* key, u8* ciphertext);
+void AES128_Encrypt_Opt(const u8* plaintext, const u8* key, u8* ciphertext);
+
 // /* Error codes */
 // typedef enum {
 //     AES_SUCCESS = 0,

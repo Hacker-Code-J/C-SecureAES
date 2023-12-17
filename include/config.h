@@ -42,8 +42,15 @@ typedef unsigned long long u64;
 
 /* Key lengths */
 #define AES_KEY_SIZE (128 / 8) // 16
+// AES constants
+#define AES_BLOCK_SIZE 16
+#define AES_KEY_EXP_SIZE 176
 // #define AES_KEY_SIZE (192 / 8) // 24
 // #define AES_KEY_SIZE (256 / 8) // 32
+
+#define Nk 16 // Number of 32-bit words in the key.
+#define Nb 16 // Number of blocks.
+#define Nr 10 // Number of rounds.
 
 static const u8 s_box[256] = {
     0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,

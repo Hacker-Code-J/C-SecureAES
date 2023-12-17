@@ -1,5 +1,26 @@
 \documentclass[12pt,openany]{book}
 
+% Preamble with packages, custom commands, etc.
+\usepackage{commath, amsmath, amsthm}
+\usepackage{polynomial}
+\usepackage{enumerate}
+\usepackage{soul} % highlight
+\usepackage{lipsum}  % Just for generating text
+
+% Theorem
+\newtheorem{axiom}{Axiom}[chapter]
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}[theorem]{Lemma}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[chapter]
+\newtheorem{remark}{Remark}[chapter]
+\newtheorem{exercise}{Exercise}[chapter]
+\newtheorem{example}{Example}[chapter]
+\newtheorem*{note}{Note}
+
 % Colors
 \usepackage[dvipsnames,table]{xcolor}
 \definecolor{titleblue}{RGB}{0,53,128}
@@ -88,7 +109,7 @@
 	morekeywords=[2]{;},
 	morekeywords=[3]{u8,u32,u64},
 	morekeywords=[4]{
-		rCon, SubWord, RotWord
+		rCon, SubWord, RotWord, MUL\_GF256
 	},
 	morekeywords=[5]{
 		KeyExpansion, AddRoundKey, SubBytes, ShiftRows, MixColums
@@ -126,29 +147,12 @@
 	urlcolor=titleblue,
 }
 
-% Preamble with packages, custom commands, etc.
-\usepackage{commath}
-\usepackage{soul} % highlight
-\usepackage{lipsum}  % Just for generating text
-
-%% Theorem
-%\newtheorem{axiom}{Axiom}[chapter]
-%\newtheorem{theorem}{Theorem}[chapter]
-%\newtheorem{proposition}[theorem]{Proposition}
-%\newtheorem{corollary}{Corollary}[theorem]
-%\newtheorem{lemma}[theorem]{Lemma}
-%
-%\theoremstyle{definition}
-%\newtheorem{definition}{Definition}[chapter]
-%\newtheorem{remark}{Remark}[chapter]
-%\newtheorem{exercise}{Exercise}[chapter]
-%\newtheorem{example}{Example}[chapter]
-%\newtheorem*{note}{Note}
-
 \newcommand{\F}{\mathbb{F}}
 \newcommand{\zero}{\textcolor{red}{\texttt{0}}}
 \newcommand{\one}{\textcolor{red}{\texttt{1}}}
 \newcommand{\binaryfield}{\set{\zero,\one}}
+
+\newcommand{\ie}{\textnormal{i.e.}}
 
 \begin{document}	
 	% Title page
@@ -215,7 +219,7 @@
 	\end{titlepage}
 	
 	\frontmatter
-%	\input{front/acknowledgements.tex}
+	\input{front/acknowledgements.tex}
 %	\input{front/abstract.tex}
 	
 	\newpage

@@ -1,5 +1,6 @@
-#include <emmintrin.h> // For SSE2 intrinsics
+#include <string.h> // For memcpy
 
+#include "aes_key_expansion.h"
 #include "aes.h"
 
 /* Original Ver. */
@@ -62,22 +63,37 @@ void ShiftRows(u8* state) {
 }
 
 void MixColumns(u8* state) {
-    u8 temp[4];  // Temporary array to hold the mixed column
-
-    // Process each column
-    for (int i = 0; i < 4; i++) {
-        // Multiply and add the elements in the column by the fixed polynomial
-        // The coefficients are 02, 03, 01, 01 for the first element, and so on, in a cyclic manner
-        temp[0] = gmul(0x02, state[i * 4]) ^ gmul(0x03, state[i * 4 + 1]) ^ state[i * 4 + 2] ^ state[i * 4 + 3];
-        temp[1] = state[i * 4] ^ gmul(0x02, state[i * 4 + 1]) ^ gmul(0x03, state[i * 4 + 2]) ^ state[i * 4 + 3];
-        temp[2] = state[i * 4] ^ state[i * 4 + 1] ^ gmul(0x02, state[i * 4 + 2]) ^ gmul(0x03, state[i * 4 + 3]);
-        temp[3] = gmul(0x03, state[i * 4]) ^ state[i * 4 + 1] ^ state[i * 4 + 2] ^ gmul(0x02, state[i * 4 + 3]);
-
-        // Copy the mixed column back to the state
-        for (int j = 0; j < 4; j++) {
-            state[i * 4 + j] = temp[j];
-        }
-    }
+	u8 temp[4];
+	
+	// Multiply and add the elements in the column
+	// by the fixed polynomial
+	for (int i = 0; i < 4; i++) { 
+		temp[0] =
+			MUL_GF256(0x02, state[i * 4]) ^
+			MUL_GF256(0x03, state[i * 4 + 1]) ^
+			state[i * 4 + 2] ^
+			state[i * 4 + 3]; 
+		temp[1] =
+			state[i * 4] ^
+			MUL_GF256(0x02, state[i * 4 + 1]) ^
+			MUL_GF256(0x03, state[i * 4 + 2]) ^
+			state[i * 4 + 3];
+		temp[2] =
+			state[i * 4] ^
+			state[i * 4 + 1] ^
+			MUL_GF256(0x02, state[i * 4 + 2]) ^
+			MUL_GF256(0x03, state[i * 4 + 3]);
+		temp[3] =
+			MUL_GF256(0x03, state[i * 4]) ^
+			state[i * 4 + 1] ^
+			state[i * 4 + 2] ^
+			MUL_GF256(0x02, state[i * 4 + 3]);
+		
+		// Copy the mixed column back to the state
+		for (int j = 0; j < 4; j++) {
+			state[i * 4 + j] = temp[j];
+		}
+	}
 }
 
 /* Optimized Ver.*/
@@ -90,8 +106,73 @@ void AddRoundKey(u8* state, const u32* rKey) {
 }
 
 
+// AES128 Encrypt function
+void AES128_Encrypt(const u8* plaintext, const u8* key, u8* ciphertext) {
+    u32 roundKey[AES_KEY_EXP_SIZE / sizeof(u32)];
+    u8 state[AES_BLOCK_SIZE];
 
+    // Copy plaintext to state
+    for (int i = 0; i < AES_BLOCK_SIZE; ++i) {
+        state[i] = plaintext[i];
+    }
 
+    // Key expansion
+    KeyExpansion(key, roundKey);
+
+    // Initial round
+    AddRoundKey(state, roundKey);
+
+    // Main rounds
+    for (int round = 1; round <= 10; round++) {
+        SubBytes(state);
+        ShiftRows(state);
+        if (round != 10) {
+            MixColumns(state);
+        }
+        AddRoundKey(state, roundKey + round * AES_BLOCK_SIZE / sizeof(u32));
+    }
+
+    // Copy state to ciphertext
+    for (int i = 0; i < AES_BLOCK_SIZE; ++i) {
+        ciphertext[i] = state[i];
+    }
+
+}
+
+/*
+Optimization Notes:
+
+- The `state` array is removed, and the `plaintext` array is used directly. This is assuming `plaintext` is not a `const` in the calling code, otherwise, you'd need a temporary buffer.
+- The `plaintext` buffer is cast to `(u8*)` to allow writing. If `plaintext` is `const` in the calling code, this would be invalid.
+- Inline and SIMD optimizations are not explicitly shown but should be applied in the implementations of `SubBytes`, `ShiftRows`, `MixColumns`, and `AddRoundKey`.
+- The loop and memory access optimizations are applied within the limits of maintaining the algorithm's correctness and structure.
+
+Remember, optimizing cryptographic code also needs to consider security implications, like side-channel attacks. Ensure that any optimization does not inadvertently introduce vulnerabilities.
+*/
+void AES128_Encrypt_Opt(const u8* plaintext, const u8* key, u8* ciphertext) {
+    u32 roundKey[AES_KEY_EXP_SIZE / sizeof(u32)];
+
+    // Key expansion
+    KeyExpansion(key, roundKey);
+
+    // Initial round
+    AddRoundKey((u8*)plaintext, roundKey);
+
+    // Main rounds
+    for (int round = 1; round <= 10; round++) {
+        SubBytes((u8*)plaintext);
+        ShiftRows((u8*)plaintext);
+        if (round != 10) {
+            MixColumns((u8*)plaintext);
+        }
+        AddRoundKey((u8*)plaintext, roundKey + round * AES_BLOCK_SIZE / sizeof(u32));
+    }
+
+    // Copy state to ciphertext
+    for (int i = 0; i < AES_BLOCK_SIZE; ++i) {
+        ciphertext[i] = plaintext[i];
+    }
+}
 
 
 
