@@ -89,8 +89,24 @@
 % Pseudo-code
 \usepackage[linesnumbered,ruled]{algorithm2e}
 \usepackage{algpseudocode}
+\usepackage{setspace}
 \SetKwComment{Comment}{/* }{ */}
 \SetKw{End}{end}
+
+% Define a new environment for algorithms without line numbers
+\newenvironment{algorithm2}[1][]{
+	% Save the current state of the algorithm counter
+	\newcounter{tempCounter}
+	\setcounter{tempCounter}{\value{algocf}}
+	% Redefine the algorithm numbering (remove prefix)
+	\renewcommand{\thealgocf}{}
+	\begin{algorithm}
+	}{
+	\end{algorithm}
+	% Restore the algorithm counter state
+	\setcounter{algocf}{\value{tempCounter}}
+}
+
 
 % Listings
 \usepackage{listings}
@@ -141,6 +157,7 @@
 % Table
 \usepackage{booktabs}
 \usepackage{tabularx}
+\usepackage{multicol}
 \usepackage{multirow}
 \usepackage{array}
 \usepackage{longtable}
@@ -236,6 +253,7 @@
 	\mainmatter
 	\input{chapters/chapter1.tex}
 	\input{chapters/chapter2.tex}
+	\input{chapters/chapter3.tex}
 	% Include more chapters as needed
 	
 	\appendix

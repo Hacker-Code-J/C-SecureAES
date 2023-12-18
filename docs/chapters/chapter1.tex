@@ -1,13 +1,11 @@
 \chapter{Block Cipher AES-128}
 
-\section{Overview of Advanced Encryption Standard}
+\section{Overview of AES-128}
 
 \begin{itemize}
-	\item $\text{KeyExpansion}:\binaryfield^{128}\to\binaryfield^{1408}$.
+	\item $\text{KeyExpansion}:\binaryfield^{128}\to\binaryfield^{1408=4\cdot(10+1)\cdot32}$.
 	\item $\text{AddRoundKey}:\binaryfield^{128}\times\binaryfield^{128}\to\binaryfield^{128}$.
-	\item $\text{SubBytes}:\binaryfield^{128}\to\binaryfield^{128}$.
-	\item $\text{ShiftRows}:\binaryfield^{128}\to\binaryfield^{128}$.
-	\item $\text{MixColumns}:\binaryfield^{128}\to\binaryfield^{128}$.
+	\item $\text{SubBytes/ShiftRows/MixColumns}:\binaryfield^{128}\to\binaryfield^{128}$.
 \end{itemize}
 
 \begin{algorithm}[H]
@@ -16,16 +14,12 @@
 	\KwIn{block $\mathsf{src} \in \binaryfield^{128}$, round-keys $\{rk_i\}_{i=0}^{11}$ ($rk_i \in \binaryfield^{128}$)}
 	\KwOut{block $\mathsf{dst} \in \binaryfield^{128}$}
 	\BlankLine
-	$t \leftarrow \mathsf{src}$\;
-	$t \leftarrow \text{AddRoundKey}(t, rk_0)$\;
+	$t \leftarrow \text{AddRoundKey}(\mathsf{src}, rk_0)$\;
 	\For{$i \leftarrow 1$ \KwTo $9$}{
-		$t \leftarrow \text{SubBytes}(t)$\;
-		$t \leftarrow \text{ShiftRows}(t)$\;
-		$t \leftarrow \text{MixColumns}(t)$\;
+		$t \leftarrow (\text{MixColumns}\circ\text{ShiftRows}\circ\text{SubBytes})(t)$\;
 		$t \leftarrow \text{AddRoundKey}(t, rk_i)$\;
 	}
-	$t \leftarrow \text{SubBytes}(t)$\;
-	$t \leftarrow \text{ShiftRows}(t)$\;
+	$t \leftarrow (\text{ShiftRows}\circ\text{SubBytes})(t)$\;
 	$t \leftarrow \text{AddRoundKey}(t, rk_{10})$\;
 	$\mathsf{dst} \leftarrow t$\;
 	\Return{$\mathsf{dst}$}\;
@@ -37,16 +31,13 @@
 	\KwIn{block $\mathsf{src} \in \binaryfield^{128}$, round-keys $\{rk_i\}_{i=0}^{11}$ ($rk_i \in \binaryfield^{128}$)}
 	\KwOut{block $\mathsf{dst} \in \binaryfield^{128}$}
 	\BlankLine
-	$t \leftarrow \mathsf{src}$\;
-	$t \leftarrow \text{AddRoundKey}(t, rk_{10})$\;
+	$t \leftarrow \text{AddRoundKey}(\mathsf{src}, rk_{10})$\;
 	\For{$i \leftarrow 9$ \KwTo $1$}{
-		$t \leftarrow \text{InvShiftRows}(t)$\;
-		$t \leftarrow \text{InvSubBytes}(t)$\;
+		$t \leftarrow (\text{InvSubBytes}\circ\text{InvShiftRows})(t)$\;
 		$t \leftarrow \text{AddRoundKey}(t, rk_i)$\;
 		$t \leftarrow \text{InvMixColumns}(t)$\;
 	}
-	$t \leftarrow \text{SubBytes}(t)$\;
-	$t \leftarrow \text{ShiftRows}(t)$\;
+	$t \leftarrow (\text{InvShiftRows}\circ\text{InvSubBytes})(t)$\;
 	$t \leftarrow \text{AddRoundKey}(t, rk_{0})$\;
 	$\mathsf{dst} \leftarrow t$\;
 	\Return{$\mathsf{dst}$}\;
@@ -345,7 +336,7 @@ void ShiftRows(u8* state) {
 }
 \end{lstlisting}
 \newpage
-\begin{lstlisting}[style=C, caption={ShiftRows},captionpos=t]
+\begin{lstlisting}[style=C, caption={Inverse ShiftRows},captionpos=t]
 void InvShiftRows(u8* state) {
 	u8 temp;
 	

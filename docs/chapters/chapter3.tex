@@ -1,0 +1,257 @@
+\chapter{AES - 128 / 192 / 256 (32-bit Version)}
+
+\section{$8\times 32$ Table Look Up}
+
+Convert the 8-bit string $\set{X_i}_{i=0}^{15} (X_i\in\binaryfield^8)$ into a 32-bit string $\set{Y_i}_{i=0}^3 (Y_i\in\binaryfield^{32})$ as follows: \[
+Y_i:=(X_{4i}\ll 24)\parallel(X_{4i+1}\ll 16)\parallel(X_{4i+2}\ll 8)\parallel(X_{4i+3})\in\binaryfield^{32}
+\] for $i=0,1,2,3$. In other words, \begin{table}[h!]
+	\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}|c|r|c|r|}
+		\hline
+		$X_0$ & \texttt{($Y_0\gg$ 0x18) \& 0xff} & $X_4$ & \texttt{($Y_1\gg$ 0x18) \& 0xff} \\
+		$X_1$ & \texttt{($Y_0\gg$ 0x10) \& 0xff} & $X_5$ & \texttt{($Y_1\gg$ 0x10) \& 0xff} \\
+		$X_2$ & \texttt{($Y_0\gg$ 0x08) \& 0xff} & $X_6$ & \texttt{($Y_1\gg$ 0x08) \& 0xff} \\
+		$X_3$ & \texttt{($Y_0$) \& 0xff} & $X_7$ & \texttt{($Y_1$) \& 0xff} \\
+		\hline
+		$X_8$ & \texttt{($Y_2\gg$ 0x18) \& 0xff} & $X_{12}$ & \texttt{($Y_3\gg$ 0x18) \& 0xff} \\
+		$X_9$ & \texttt{($Y_2\gg$ 0x10) \& 0xff} & $X_{13}$ & \texttt{($Y_3\gg$ 0x10) \& 0xff} \\
+		$X_{10}$ & \texttt{($Y_2\gg$ 0x08) \& 0xff} & $X_{14}$ & \texttt{($Y_3\gg$ 0x08) \& 0xff} \\
+		$X_{11}$ & \texttt{($Y_2$) \& 0xff} & $X_{15}$ & \texttt{($Y_3$) \& 0xff} \\
+		\hline
+	\end{tabular*}
+\end{table}\\
+Note that \begin{table}[h!]
+	\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+		\hline
+		$X_0$ & $X_1$ & $X_2$ & $X_3$ & $X_4$ & $X_5$ & $X_6$ & $X_7$ &
+		$X_8$ & $X_9$ & $X_{10}$ & $X_{11}$ & $X_{12}$ & $X_{13}$ & $X_{14}$ & $X_{15}$\\
+		\hline
+		\multicolumn{4}{|c|}{$Y_0$} & \multicolumn{4}{c|}{$Y_1$} & \multicolumn{4}{c|}{$Y_2$} & \multicolumn{4}{c|}{$Y_3$}\\
+		\hline
+	\end{tabular*}
+\end{table}
+
+\section{SubMix and InvSubInvMix}
+
+\begin{itemize}
+	\item $\text{SubMix}:\binaryfield^{128}\to\binaryfield^{128}$ and $\text{InvSubInvMix}:\binaryfield^{128}\to\binaryfield^{128}$ are defined by \begin{align*}
+		\text{SubMix} &:= \text{MixColumns}\circ\text{SubBytes}\\
+		\text{InvSubInvMix} &:= \text{InvMixColumns}\circ\text{InvSubBytes}.
+	\end{align*}
+\end{itemize}
+
+\begin{algorithm}[H]
+	\caption{Encryption of AES}
+	
+	\KwIn{block $\mathsf{src} \in \binaryfield^{128}$, round-keys $\{rk_i\}_{i=0}^{N_r+1}$ ($rk_i \in \binaryfield^{128}$)}
+	\KwOut{block $\mathsf{dst} \in \binaryfield^{128}$}
+	\BlankLine
+	$t \leftarrow \mathsf{src}$\;
+	$t \leftarrow \text{AddRoundKey}(t, rk_0)$\;
+	\For{$i \leftarrow 1$ \KwTo $N_r - 1$}{
+		$t \leftarrow \text{SubBytes}(t)$\;
+		$t \leftarrow \text{ShiftRows}(t)$\;
+		$t \leftarrow \text{MixColumns}(t)$\;
+		$t \leftarrow \text{AddRoundKey}(t, rk_i)$\;
+	}
+	$t \leftarrow \text{SubBytes}(t)$\;
+	$t \leftarrow \text{ShiftRows}(t)$\;
+	$t \leftarrow \text{AddRoundKey}(t, rk_{N_r})$\;
+	$\mathsf{dst} \leftarrow t$\;
+	\Return{$\mathsf{dst}$}\;
+\end{algorithm}
+\vspace{24pt}
+\begin{algorithm}[H]
+	\caption{Decryption of AES}
+	
+	\KwIn{block $\mathsf{src} \in \binaryfield^{128}$, round-keys $\{rk_i\}_{i=0}^{N_r+1}$ ($rk_i \in \binaryfield^{128}$)}
+	\KwOut{block $\mathsf{dst} \in \binaryfield^{128}$}
+	\BlankLine
+	$t \leftarrow \mathsf{src}$\;
+	$t \leftarrow \text{AddRoundKey}(t, rk_{N_r})$\;
+	\For{$i \leftarrow N_r-1$ \KwTo $1$}{
+		$t \leftarrow \text{InvShiftRows}(t)$\;
+		$t \leftarrow \text{InvSubBytes}(t)$\;
+		$t \leftarrow \text{AddRoundKey}(t, rk_i)$\;
+		$t \leftarrow \text{InvMixColumns}(t)$\;
+	}
+	$t \leftarrow \text{InvSubBytes}(t)$\;
+	$t \leftarrow \text{InvShiftRows}(t)$\;
+	$t \leftarrow \text{AddRoundKey}(t, rk_{0})$\;
+	$\mathsf{dst} \leftarrow t$\;
+	\Return{$\mathsf{dst}$}\;
+\end{algorithm}
+
+\newpage
+\section{Generation of $8\times 32$ Tables}
+Note that \begin{align*}
+	\begin{pmatrix}
+		X_0' & X_4' & X_8' & X_{12}' \\
+		X_1' & X_5' & X_9' & X_{13}' \\
+		X_2' & X_6' & X_{10}' & X_{14}' \\
+		X_3' & X_7' & X_{11}' & X_{15}'
+	\end{pmatrix}&=\text{SubMix}\left(\begin{pmatrix}
+		X_0 & X_4 & X_8 & X_{12} \\
+		X_1 & X_5 & X_9 & X_{13} \\
+		X_2 & X_6 & X_{10} & X_{14} \\
+		X_3 & X_7 & X_{11} & X_{15}
+	\end{pmatrix}\right):=\\
+&\begin{pmatrix}
+		\texttt{0x02} & \texttt{0x03} & \texttt{0x01} & \texttt{0x01}\\
+		\texttt{0x01} & \texttt{0x02} & \texttt{0x03} & \texttt{0x01}\\
+		\texttt{0x01} & \texttt{0x01} & \texttt{0x02} & \texttt{0x03}\\
+		\texttt{0x03} & \texttt{0x01} & \texttt{0x01} & \texttt{0x02}
+	\end{pmatrix}\begin{pmatrix}
+		s(X_0) & s(X_4) & s(X_8) & s(X_{12}) \\
+		s(X_1) & s(X_5) & s(X_9) & s(X_{13}) \\
+		s(X_2) & s(X_6) & s(X_{10}) & s(X_{14}) \\
+		s(X_3) & s(X_7) & s(X_{11}) & s(X_{15})
+	\end{pmatrix},\\
+\begin{pmatrix}
+	X_0' & X_4' & X_8' & X_{12}' \\
+	X_1' & X_5' & X_9' & X_{13}' \\
+	X_2' & X_6' & X_{10}' & X_{14}' \\
+	X_3' & X_7' & X_{11}' & X_{15}'
+\end{pmatrix}&=\text{InvSubInvMix}\left(\begin{pmatrix}
+	X_0 & X_4 & X_8 & X_{12} \\
+	X_1 & X_5 & X_9 & X_{13} \\
+	X_2 & X_6 & X_{10} & X_{14} \\
+	X_3 & X_7 & X_{11} & X_{15}
+\end{pmatrix}\right):=\\
+&\begin{pmatrix}
+	\texttt{0x0e} & \texttt{0x0b} & \texttt{0x0d} & \texttt{0x09}\\
+	\texttt{0x09} & \texttt{0x0e} & \texttt{0x0b} & \texttt{0x0d}\\
+	\texttt{0x0d} & \texttt{0x09} & \texttt{0x0e} & \texttt{0x0b}\\
+	\texttt{0x0b} & \texttt{0x0d} & \texttt{0x09} & \texttt{0x0e}
+\end{pmatrix}\begin{pmatrix}
+	s^{-1}(X_0) & s^{-1}(X_4) & s^{-1}(X_8) & s^{-1}(X_{12}) \\
+	s^{-1}(X_1) & s^{-1}(X_5) & s^{-1}(X_9) & s^{-1}(X_{13}) \\
+	s^{-1}(X_2) & s^{-1}(X_6) & s^{-1}(X_{10}) & s^{-1}(X_{14}) \\
+	s^{-1}(X_3) & s^{-1}(X_7) & s^{-1}(X_{11}) & s^{-1}(X_{15})
+\end{pmatrix}.
+\end{align*}
+Then \begin{align*}
+\left(\begin{array}{l}
+	X_{4i}' \\
+	X_{4i+1}' \\
+	X_{4i+2}' \\
+	X_{4i+3}'
+\end{array}\right)&=\begin{pmatrix}
+	\texttt{0x02} & \texttt{0x03} & \texttt{0x01} & \texttt{0x01}\\
+	\texttt{0x01} & \texttt{0x02} & \texttt{0x03} & \texttt{0x01}\\
+	\texttt{0x01} & \texttt{0x01} & \texttt{0x02} & \texttt{0x03}\\
+	\texttt{0x03} & \texttt{0x01} & \texttt{0x01} & \texttt{0x02}
+\end{pmatrix}\left(\begin{array}{l}
+s(X_{4i})\\
+s(X_{4i+1})\\
+s(X_{4i+2})\\
+s(X_{4i+3})
+\end{array}\right)\\
+&=s(X_{4i})\begin{pmatrix}
+	\texttt{0x02}\\
+	\texttt{0x01}\\
+	\texttt{0x01}\\
+	\texttt{0x03}
+\end{pmatrix}\oplus s(X_{4i+1})\begin{pmatrix}
+\texttt{0x03}\\
+\texttt{0x02}\\
+\texttt{0x01}\\
+\texttt{0x01}
+\end{pmatrix}\oplus s(X_{4i+2})\begin{pmatrix}
+\texttt{0x01}\\
+\texttt{0x03}\\
+\texttt{0x02}\\
+\texttt{0x01}
+\end{pmatrix}\oplus s(X_{4i+3})\begin{pmatrix}
+\texttt{0x01}\\
+\texttt{0x01}\\
+\texttt{0x03}\\
+\texttt{0x02}
+\end{pmatrix},\\
+\left(\begin{array}{l}
+	X_{4i}' \\
+	X_{4i+1}' \\
+	X_{4i+2}' \\
+	X_{4i+3}'
+\end{array}\right)&=\begin{pmatrix}
+	\texttt{0x0e} & \texttt{0x0b} & \texttt{0x0d} & \texttt{0x09}\\
+	\texttt{0x09} & \texttt{0x0e} & \texttt{0x0b} & \texttt{0x0d}\\
+	\texttt{0x0d} & \texttt{0x09} & \texttt{0x0e} & \texttt{0x0b}\\
+	\texttt{0x0b} & \texttt{0x0d} & \texttt{0x09} & \texttt{0x0e}
+\end{pmatrix}\left(\begin{array}{l}
+	s^{-1}(X_{4i})\\
+	s^{-1}(X_{4i+1})\\
+	s^{-1}(X_{4i+2})\\
+	s^{-1}(X_{4i+3})
+\end{array}\right)\\
+&=s^{-1}(X_{4i})\begin{pmatrix}
+	\texttt{0x0e}\\
+	\texttt{0x09}\\
+	\texttt{0x0d}\\
+	\texttt{0x0b}
+\end{pmatrix}\oplus s^{-1}(X_{4i+1})\begin{pmatrix}
+	\texttt{0x0b}\\
+	\texttt{0x0e}\\
+	\texttt{0x09}\\
+	\texttt{0x0d}
+\end{pmatrix}\oplus s^{-1}(X_{4i+2})\begin{pmatrix}
+	\texttt{0x0d}\\
+	\texttt{0x0b}\\
+	\texttt{0x0e}\\
+	\texttt{0x09}
+\end{pmatrix}\oplus s^{-1}(X_{4i+3})\begin{pmatrix}
+	\texttt{0x09}\\
+	\texttt{0x0d}\\
+	\texttt{0x0b}\\
+	\texttt{0x0e}
+\end{pmatrix}.
+\end{align*}
+
+\newpage
+
+We define $Te_i/Td_i:\binaryfield^{8}\to\binaryfield^{32} (i\in\set{0,1,2,3})$ as follows:
+\begin{align*}
+Te_0(X)&:=\left(\texttt{0x02}\otimes s(X),s(X),s(X),\texttt{0x03}\otimes s(X)\right),\\
+Te_1(X)&:=\left(\texttt{0x03}\otimes s(X),\texttt{0x02}\otimes s(X),s(X),\texttt{0x03}\otimes s(X)\right),\\
+Te_2(X)&:=\left(s(X),\texttt{0x03}\otimes s(X),s(X),\texttt{0x03}\otimes s(X)\right),\\
+Te_3(X)&:=\left(s(X),s(X),s(X),\texttt{0x03}\otimes s(X)\right),\\
+\end{align*}
+
+$\text{SubMix}$ and $\text{InvSubInvMix}$ are computed as follows: \begin{align*}
+	\text{SubMix}:
+\end{align*}
+where $\begin{cases}
+	Y_0:=X_0\parallel X_1\parallel X_2\parallel X_3\\
+	Y_1:=X_4\parallel X_5\parallel X_6\parallel X_7\\
+	Y_2:=X_8\parallel X_9\parallel X_{10}\parallel X_{11}\\
+	Y_3:=X_{12}\parallel X_{13}\parallel X_{14}\parallel X_{15}
+\end{cases}$ and
+
+\begin{algorithm}[H]
+	\caption{SubMix and InvSubInvMix}
+	\BlankLine
+	\begin{multicols}{2}
+		\KwIn{$X_0\parallel X_1\parallel X_2\parallel X_3$}
+		\KwOut{$Y_0\parallel Y_1\parallel Y_2\parallel Y_3$}
+		\BlankLine
+		\For{$k\gets 0$ \KwTo $3$}{
+		
+		}
+		\If{$n=2$}{
+			\Return Prime\;
+		}
+		\If{$2\mid n$}{
+			\Return Compostie\;
+		}
+		\columnbreak % Move to the next column
+		\setcounter{AlgoLine}{0}  % Reset line numbering
+		\KwData{Odd $n\in Z_{>1}$}
+		\KwResult{Composite or Prime}
+		\BlankLine
+		a
+	\end{multicols}
+	\BlankLine
+\end{algorithm}
+
+
+
+

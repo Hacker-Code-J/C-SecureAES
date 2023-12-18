@@ -13,8 +13,7 @@
 #include "aes.h"
 
 // void AddRoundKey(u8* state, const u32* rKey) {
-//     // Iterate over each byte of the AES block.
-//     for (int i = 0; i < AES_KEY_SIZE; i++) {
+//     for (int i = 0; i < AES_BLOCK_SIZE; i++) {
 //         // Calculate the index of the word in rKey array. Since each word of rKey is 4 bytes (32 bits),
 //         // and we are processing 1 byte at a time, we divide i by 4 to get the correct word index.
 //         int wordIndex = i / 4;
@@ -37,6 +36,7 @@
 //         state[i] ^= keyByte;
 //     }
 // }
+
 void AddRoundKey(u8* state, const u32* rKey) {
     for (int i = 0; i < AES_BLOCK_SIZE; i++) {
         // Extract the corresponding byte from the round key word
