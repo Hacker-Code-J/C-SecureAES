@@ -1,3 +1,12 @@
+/**
+ * @file utils.c
+ * @brief Implementation of utility functions.
+ *
+ * This source file contains the implementation of utility functions declared
+ * in utils.h. It provides the functionality necessary for the various operations
+ * needed in the AES encryption program, such as data conversion and formatting.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,39 +38,39 @@ void RANDOM_KEY_GENERATION(u8* key) {
     }
 }
 
-u8 MUL_GF256(u8 a, u8 b) {
-	u8 res = 0;
-	// Mask for detecting the MSB (0x80 = 0b10000000)
-	u8 MSB_mask = 0x80;
-	u8 MSB;
+// u8 MUL_GF256(u8 a, u8 b) {
+// 	u8 res = 0;
+// 	// Mask for detecting the MSB (0x80 = 0b10000000)
+// 	u8 MSB_mask = 0x80;
+// 	u8 MSB;
 	
-	/*
-	 * The reduction polynomial
-	 * (x^8 + x^4 + x^3 + x + 1) = 0b00011011
-	 * for AES, represented in hexadecimal
-	*/
-	u8 modulo = 0x1B;
+// 	/*
+// 	 * The reduction polynomial
+// 	 * (x^8 + x^4 + x^3 + x + 1) = 0b100011011
+// 	 * for AES, represented in hexadecimal
+// 	*/
+// 	u8 modulo = 0x1B;
 	
-	for (int i = 0; i < 8; i++) {
-		// LSB(b)=1
-		if (b & 1) { // Addition in Binary Field
-			res ^= a;
-		}
+// 	for (int i = 0; i < 8; i++) {
+// 		// LSB(b)=1
+// 		if (b & 1) { // Addition in Binary Field
+// 			res ^= a;
+// 		}
 		
-		// Store the MSB of a
-		MSB = a & MSB_mask;
+// 		// Store the MSB of a
+// 		MSB = a & MSB_mask;
 		
-		// Multiplying it by x effectively
-		a <<= 1;
+// 		// Multiplying it by x effectively
+// 		a <<= 1;
 		
-		// Reduce the result modulo the reduction polynomial
-		if (MSB) {
-			a ^= modulo;
-		}
+// 		// Reduce the result modulo the reduction polynomial
+// 		if (MSB) {
+// 			a ^= modulo;
+// 		}
 		
-		// Moving to the next bit
-		b >>= 1;
-	}
+// 		// Moving to the next bit
+// 		b >>= 1;
+// 	}
 	
-	return res;
-}
+// 	return res;
+// }

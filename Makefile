@@ -1,13 +1,13 @@
 # Compiler settings - Can be customized.
 CC = gcc
-CFLAGS = -I./include -O2 -Wall -Wextra -pedantic
+CFLAGS = -I./include -O2 -Wall -Wextra
 
 # Source files
 SRC = ./src/utils.c ./src/aes_key_expansion.c ./src/aes.c
 OBJ = $(SRC:./src/%.c=./obj/%.o)
 
 # Test program
-TEST_SRC = ./examples/aes_encryption_test.c
+TEST_SRC = ./examples/aes_test.c
 TEST_OUT = a.out
 
 # Compile and build

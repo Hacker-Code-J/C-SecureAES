@@ -1,6 +1,10 @@
 /**
  * @file aes_key_expansion.h
- * @brief This file contains the declarations for AES key expansion functions.
+ * @brief Key expansion functions for AES.
+ *
+ * This header file defines the functions used for the AES key expansion
+ * process. It includes the necessary prototypes for expanding the encryption
+ * key as per AES requirements.
  */
 
 #ifndef _AES_KEY_EXPANSION_H

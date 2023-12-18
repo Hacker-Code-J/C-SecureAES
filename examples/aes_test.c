@@ -58,13 +58,21 @@ int main() {
     for (int i = 0; i < 16; i++) {
         printf("%02x ", output[i]);
     }
-    printf("\n");
+    printf("\n\n");
 
-    double time_normal = measure_time(AES128_Encrypt, input, key, output);
-    double time_optimized = measure_time(AES128_Encrypt_Opt, input, key, output);
+    u8 decrypted[16] = { 0x00, };
+    AES128_Decrypt(output, key, decrypted);
+    printf("Decrypted-text: ");
+    for (int i = 0; i < 16; i++) {
+        printf("%02x ", decrypted[i]);
+    }
+    printf("\n\n");
 
-    printf("Time for AES128_Encrypt: %.3f s\n", time_normal);
-    printf("Time for AES128_Encrypt_Opt: %.3f s\n", time_optimized);
+    double time_enc = measure_time(AES128_Encrypt, input, key, output);
+    double time_dec = measure_time(AES128_Decrypt, input, key, output);
+
+    printf("Time for AES128_Encrypt: %.3f s\n", time_enc);
+    printf("Time for AES128_Decrypt: %.3f s\n", time_dec);
 
 
     return 0;

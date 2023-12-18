@@ -1,9 +1,17 @@
+/**
+ * @file aes.c
+ * @brief Implementation of AES encryption and decryption.
+ *
+ * This source file contains the implementation of the AES algorithm for both
+ * encryption and decryption processes. It uses the key expansion, utility functions,
+ * and performs the core AES algorithm operations.
+ */
+
 #include <string.h> // For memcpy
 
 #include "aes_key_expansion.h"
 #include "aes.h"
 
-/* Original Ver. */
 // void AddRoundKey(u8* state, const u32* rKey) {
 //     // Iterate over each byte of the AES block.
 //     for (int i = 0; i < AES_KEY_SIZE; i++) {
@@ -29,10 +37,22 @@
 //         state[i] ^= keyByte;
 //     }
 // }
+void AddRoundKey(u8* state, const u32* rKey) {
+    for (int i = 0; i < AES_KEY_SIZE; i++) {
+        // Extract the corresponding byte from the round key word
+        state[i] ^= (rKey[i / 4] >> (8 * (3 - (i % 4)))) & 0xFF;
+    }
+}
 
 void SubBytes(u8* state) {
     for (int i = 0; i < AES_KEY_SIZE; i++) {
         state[i] = s_box[state[i]];
+    }
+}
+
+void InvSubBytes(u8* state) {
+    for (int i = 0; i < AES_KEY_SIZE; i++) {
+        state[i] = inv_s_box[state[i]];
     }
 }
 
@@ -62,27 +82,54 @@ void ShiftRows(u8* state) {
 	state[3] = temp;
 }
 
+void InvShiftRows(u8* state) {
+	u8 temp;
+	
+	// Row 1: shift left by 3 (or right by 1)
+	temp = state[13];
+	state[13] = state[9];
+	state[9] = state[5];
+	state[5] = state[1];
+	state[1] = temp;
+	
+	// Row 2: shift left by 2
+	temp = state[2];
+	state[2] = state[10];
+	state[10] = temp;
+	temp = state[6];
+	state[6] = state[14];
+	state[14] = temp;
+	
+	// Row 3: shift left by 1
+	temp = state[3];
+	state[3] = state[7];
+	state[7] = state[11];
+	state[11] = state[15];
+	state[15] = temp;
+}
+
 void MixColumns(u8* state) {
 	u8 temp[4];
-	
-	// Multiply and add the elements in the column
-	// by the fixed polynomial
+	// Multiply and add the elements in the column by the fixed polynomial
 	for (int i = 0; i < 4; i++) { 
 		temp[0] =
 			MUL_GF256(0x02, state[i * 4]) ^
 			MUL_GF256(0x03, state[i * 4 + 1]) ^
 			state[i * 4 + 2] ^
 			state[i * 4 + 3]; 
+		
 		temp[1] =
 			state[i * 4] ^
 			MUL_GF256(0x02, state[i * 4 + 1]) ^
 			MUL_GF256(0x03, state[i * 4 + 2]) ^
 			state[i * 4 + 3];
+		
 		temp[2] =
 			state[i * 4] ^
 			state[i * 4 + 1] ^
 			MUL_GF256(0x02, state[i * 4 + 2]) ^
 			MUL_GF256(0x03, state[i * 4 + 3]);
+		
 		temp[3] =
 			MUL_GF256(0x03, state[i * 4]) ^
 			state[i * 4 + 1] ^
@@ -90,21 +137,43 @@ void MixColumns(u8* state) {
 			MUL_GF256(0x02, state[i * 4 + 3]);
 		
 		// Copy the mixed column back to the state
-		for (int j = 0; j < 4; j++) {
+		for (int j = 0; j < 4; j++)
 			state[i * 4 + j] = temp[j];
-		}
 	}
 }
 
-/* Optimized Ver.*/
-
-void AddRoundKey(u8* state, const u32* rKey) {
-    for (int i = 0; i < AES_KEY_SIZE; i++) {
-        // Extract the corresponding byte from the round key word
-        state[i] ^= (rKey[i / 4] >> (8 * (3 - (i % 4)))) & 0xFF;
-    }
+void InvMixColumns(u8* state) {
+	u8 temp[4];
+	
+	for (int i = 0; i < 4; i++) { 
+		temp[0] =
+			MUL_GF256(0x0e, state[i * 4]) ^
+			MUL_GF256(0x0b, state[i * 4 + 1]) ^
+			MUL_GF256(0x0d, state[i * 4 + 2]) ^
+			MUL_GF256(0x09, state[i * 4 + 3]); 
+		
+		temp[1] =
+			MUL_GF256(0x09, state[i * 4]) ^
+			MUL_GF256(0x0e, state[i * 4 + 1]) ^
+			MUL_GF256(0x0b, state[i * 4 + 2]) ^
+			MUL_GF256(0x0d, state[i * 4 + 3]);
+		
+		temp[2] =
+			MUL_GF256(0x0d, state[i * 4]) ^
+			MUL_GF256(0x09, state[i * 4 + 1]) ^
+			MUL_GF256(0x0e, state[i * 4 + 2]) ^
+			MUL_GF256(0x0b, state[i * 4 + 3]);
+		
+		temp[3] =
+			MUL_GF256(0x0b, state[i * 4]) ^
+			MUL_GF256(0x0d, state[i * 4 + 1]) ^
+			MUL_GF256(0x09, state[i * 4 + 2]) ^
+			MUL_GF256(0x0e, state[i * 4 + 3]);
+		
+		for (int j = 0; j < 4; j++)
+			state[i * 4 + j] = temp[j];
+	}
 }
-
 
 // AES128 Encrypt function
 void AES128_Encrypt(const u8* plaintext, const u8* key, u8* ciphertext) {
@@ -137,6 +206,37 @@ void AES128_Encrypt(const u8* plaintext, const u8* key, u8* ciphertext) {
         ciphertext[i] = state[i];
     }
 
+}
+
+void AES128_Decrypt(const u8* ciphertext, const u8* key, u8* plaintext) {
+    u32 roundKey[AES_KEY_EXP_SIZE / sizeof(u32)];
+    u8 state[AES_BLOCK_SIZE];
+
+    // Key expansion
+    KeyExpansion(key, roundKey);
+
+    // Copy ciphertext to state
+    for (int i = 0; i < AES_BLOCK_SIZE; ++i) {
+        state[i] = ciphertext[i];
+    }
+
+    // Initial round with the last round key
+    AddRoundKey(state, roundKey + 10 * AES_BLOCK_SIZE / sizeof(u32));
+
+    // Main rounds in reverse order
+    for (int round = 9; round >= 0; round--) {
+        InvShiftRows(state);
+        InvSubBytes(state);
+        AddRoundKey(state, roundKey + round * AES_BLOCK_SIZE / sizeof(u32));
+        if (round != 0) {
+            InvMixColumns(state);
+        }
+    }
+
+    // Copy state to plaintext
+    for (int i = 0; i < AES_BLOCK_SIZE; ++i) {
+        plaintext[i] = state[i];
+    }
 }
 
 /*

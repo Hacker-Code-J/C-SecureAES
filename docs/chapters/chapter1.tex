@@ -31,6 +31,27 @@
 	\Return{$\mathsf{dst}$}\;
 \end{algorithm}
 
+\begin{algorithm}[H]
+	\caption{Decryption of AES-128}
+	
+	\KwIn{block $\mathsf{src} \in \binaryfield^{128}$, round-keys $\{rk_i\}_{i=0}^{11}$ ($rk_i \in \binaryfield^{128}$)}
+	\KwOut{block $\mathsf{dst} \in \binaryfield^{128}$}
+	\BlankLine
+	$t \leftarrow \mathsf{src}$\;
+	$t \leftarrow \text{AddRoundKey}(t, rk_{10})$\;
+	\For{$i \leftarrow 9$ \KwTo $1$}{
+		$t \leftarrow \text{InvShiftRows}(t)$\;
+		$t \leftarrow \text{InvSubBytes}(t)$\;
+		$t \leftarrow \text{AddRoundKey}(t, rk_i)$\;
+		$t \leftarrow \text{InvMixColumns}(t)$\;
+	}
+	$t \leftarrow \text{SubBytes}(t)$\;
+	$t \leftarrow \text{ShiftRows}(t)$\;
+	$t \leftarrow \text{AddRoundKey}(t, rk_{0})$\;
+	$\mathsf{dst} \leftarrow t$\;
+	\Return{$\mathsf{dst}$}\;
+\end{algorithm}
+
 \newpage
 \section{Functions and Constants used in AES}
 \subsection{Key Expansion}
@@ -183,10 +204,13 @@ void AddRoundKey(u8* state, const u32* rKey) {
 }
 \end{lstlisting}
 
-\subsection{SubBytes}
+\subsection{SubBytes / InvSubBytes}
 \begin{itemize}
 	\item $\text{SubBytes}:\binaryfield^{128}\to\binaryfield^{128}$ is defined by \[
 	\text{SubBytes}(\set{X_i}_{i=0}^{15})=\set{s(X_i)}_{i=0}^{15}.
+	\]
+	\item $\text{InvSubBytes}:\binaryfield^{128}\to\binaryfield^{128}$ is defined by \[
+	\text{SubBytes}(\set{X_i}_{i=0}^{15})=\set{s^{-1}(X_i)}_{i=0}^{15}.
 	\]
 \end{itemize}
 
@@ -240,8 +264,16 @@ void SubBytes(u8* state) {
 }
 \end{lstlisting}
 
+\begin{lstlisting}[style=C, caption={Inverse Byte Substitution},captionpos=t]
+void SubBytes(u8* state) {
+	for (int i = 0; i < AES_KEY_SIZE; i++) {
+		state[i] = inv_s_box[state[i]];
+	}
+}
+\end{lstlisting}
+
 \newpage
-\subsection{ShiftRows}
+\subsection{ShiftRows / InvShiftRows}
 \begin{itemize}
 	\item $\text{ShiftRows}:\binaryfield^{128}\to\binaryfield^{128}$ is defined by
 	\begin{center}
@@ -263,8 +295,28 @@ void SubBytes(u8* state) {
 	\end{tabular}
 \end{minipage}
 	\end{center}
+	\item $\text{InvShiftRows}:\binaryfield^{128}\to\binaryfield^{128}$ is defined by
+	\begin{center}
+	\begin{minipage}{.4\textwidth}\centering
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		\cellcolor{red!20}$X_0$ & \cellcolor{red!20}$X_4$ & \cellcolor{red!20}$X_8$ & \cellcolor{red!20}$X_{12}$ \\ \hline
+		\cellcolor{green!20}$X_1$ & \cellcolor{green!20}$X_5$ & \cellcolor{green!20}$X_9$ & \cellcolor{blue!20}$X_{13}$ \\ \hline
+		\cellcolor{green!20}$X_2$ & \cellcolor{green!20}$X_6$ & \cellcolor{blue!20}$X_{10}$ & \cellcolor{blue!20}$X_{14}$ \\ \hline
+		\cellcolor{green!20}$X_3$ & \cellcolor{blue!20}$X_7$ & \cellcolor{blue!20}$X_{11}$ & \cellcolor{blue!20}$X_{15}$ \\ \hline
+	\end{tabular}
+\end{minipage}$\implies$\begin{minipage}{.4\textwidth}\centering
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		\cellcolor{red!20}$X_0$ & \cellcolor{red!20}$X_4$ & \cellcolor{red!20}$X_8$ & \cellcolor{red!20}$X_{12}$ \\ \hline
+		\cellcolor{blue!20}$X_{13}$ & \cellcolor{green!20}$X_1$ & \cellcolor{green!20}$X_{5}$ & \cellcolor{green!20}$X_9$ \\ \hline
+		\cellcolor{blue!20}$X_{10}$ & \cellcolor{blue!20}$X_{14}$ & \cellcolor{green!20}$X_2$ & \cellcolor{green!20}$X_6$ \\ \hline
+		\cellcolor{blue!20}$X_{7}$ & \cellcolor{blue!20}$X_{11}$ & \cellcolor{blue!20}$X_{15}$ & \cellcolor{green!20}$X_{3}$ \\ \hline
+	\end{tabular}
+\end{minipage}
+	\end{center}
 \end{itemize}
-
+\vspace{24pt}
 \begin{lstlisting}[style=C, caption={ShiftRows},captionpos=t]
 void ShiftRows(u8* state) {
 	u8 temp;
@@ -292,9 +344,37 @@ void ShiftRows(u8* state) {
 	state[3] = temp;
 }
 \end{lstlisting}
+\newpage
+\begin{lstlisting}[style=C, caption={ShiftRows},captionpos=t]
+void InvShiftRows(u8* state) {
+	u8 temp;
+	
+	// Row 1: shift left by 3 (or right by 1)
+	temp = state[13];
+	state[13] = state[9];
+	state[9] = state[5];
+	state[5] = state[1];
+	state[1] = temp;
+	
+	// Row 2: shift left by 2
+	temp = state[2];
+	state[2] = state[10];
+	state[10] = temp;
+	temp = state[6];
+	state[6] = state[14];
+	state[14] = temp;
+	
+	// Row 3: shift left by 1
+	temp = state[3];
+	state[3] = state[7];
+	state[7] = state[11];
+	state[11] = state[15];
+	state[15] = temp;
+}
+\end{lstlisting}
 
 \newpage
-\subsection{MixColums}
+\subsection{MixColums / InvMixColmums}
 \begin{itemize}
 	\item Multiplication in the finite filed $\text{GF}(2^8)$. \[
 	\text{MUL}_{GF256}:\binaryfield^{8}\times\binaryfield^8\to\binaryfield^8.
@@ -403,7 +483,6 @@ u8 MUL_GF256(u8 a, u8 b) {
 	// Mask for detecting the MSB (0x80 = 0b10000000)
 	u8 MSB_mask = 0x80;
 	u8 MSB;
-	
 	/*
 	 * The reduction polynomial
 	 * (x^8 + x^4 + x^3 + x + 1) = 0b100011011
@@ -413,27 +492,40 @@ u8 MUL_GF256(u8 a, u8 b) {
 	
 	for (int i = 0; i < 8; i++) {
 		// Add a to result if LSB(b)=1
-		if (b & 1) {
+		if (b & 1)
 			res ^= a;
-		}
 		
-		// Store the MSB of a
-		MSB = a & MSB_mask;
-		
-		// Multiplying it by x effectively
-		a <<= 1;
+		MSB = a & MSB_mask; // Store the MSB of a
+		a <<= 1; // Multiplying it by x effectively
 		
 		// Reduce the result modulo the reduction polynomial
-		if (MSB) {
+		if (MSB)
 			a ^= modulo;
-		}
 		
-		// Moving to the next bit
-		b >>= 1;
+		b >>= 1; // Moving to the next bit
 	}
 	
 	return res;
 }
+
+#define MUL_GF256(a, b) ({ \
+	u8 res = 0; \
+	u8 MSB_mask = 0x80; \
+	u8 MSB; \
+	u8 modulo = 0x1B; \
+	u8 temp_a = (a); \
+	u8 temp_b = (b); \
+	for (int i = 0; i < 8; i++) { \
+		if (temp_b & 1) \
+		res ^= temp_a; \
+		MSB = temp_a & MSB_mask; \
+		temp_a <<= 1; \
+		if (MSB) \
+		temp_a ^= modulo; \
+		temp_b >>= 1; \
+	} \
+	res; \
+})
 	\end{lstlisting}
 	\newpage
 	\item $\text{MixColums}:\binaryfield^{128}\to\binaryfield^{128}$ is defined by \[
@@ -454,10 +546,28 @@ u8 MUL_GF256(u8 a, u8 b) {
 		X_3 & X_7 & X_{11} & X_{15}
 		\end{pmatrix}.
 	\]
-	\begin{lstlisting}[style=C, caption={MixColums},captionpos=t]
+	\item $\text{InvMixColums}:\binaryfield^{128}\to\binaryfield^{128}$ is defined by \[
+	\text{MixColums}\left(\begin{pmatrix}
+		X_0 & X_4 & X_8 & X_{12} \\
+		X_1 & X_5 & X_9 & X_{13} \\
+		X_2 & X_6 & X_{10} & X_{14} \\
+		X_3 & X_7 & X_{11} & X_{15}
+	\end{pmatrix}\right):=\begin{pmatrix}
+		\texttt{0x0e} & \texttt{0x0b} & \texttt{0x0d} & \texttt{0x09}\\
+		\texttt{0x09} & \texttt{0x0e} & \texttt{0x0b} & \texttt{0x0d}\\
+		\texttt{0x0d} & \texttt{0x09} & \texttt{0x0e} & \texttt{0x0b}\\
+		\texttt{0x0b} & \texttt{0x0d} & \texttt{0x09} & \texttt{0x0e}
+	\end{pmatrix}\begin{pmatrix}
+		X_0 & X_4 & X_8 & X_{12} \\
+		X_1 & X_5 & X_9 & X_{13} \\
+		X_2 & X_6 & X_{10} & X_{14} \\
+		X_3 & X_7 & X_{11} & X_{15}
+	\end{pmatrix}.
+	\]
+\end{itemize}
+\begin{lstlisting}[style=C, caption={MixColumns},captionpos=t]
 void MixColumns(u8* state) {
 	u8 temp[4];
-	
 	// Multiply and add the elements in the column
 	// by the fixed polynomial
 	for (int i = 0; i < 4; i++) { 
@@ -466,16 +576,19 @@ void MixColumns(u8* state) {
 			MUL_GF256(0x03, state[i * 4 + 1]) ^
 			state[i * 4 + 2] ^
 			state[i * 4 + 3]; 
+		
 		temp[1] =
 			state[i * 4] ^
 			MUL_GF256(0x02, state[i * 4 + 1]) ^
 			MUL_GF256(0x03, state[i * 4 + 2]) ^
 			state[i * 4 + 3];
+		
 		temp[2] =
 			state[i * 4] ^
 			state[i * 4 + 1] ^
 			MUL_GF256(0x02, state[i * 4 + 2]) ^
 			MUL_GF256(0x03, state[i * 4 + 3]);
+		
 		temp[3] =
 			MUL_GF256(0x03, state[i * 4]) ^
 			state[i * 4 + 1] ^
@@ -483,13 +596,46 @@ void MixColumns(u8* state) {
 			MUL_GF256(0x02, state[i * 4 + 3]);
 		
 		// Copy the mixed column back to the state
-		for (int j = 0; j < 4; j++) {
+		for (int j = 0; j < 4; j++)
 			state[i * 4 + j] = temp[j];
-		}
 	}
 }
-	\end{lstlisting}
-\end{itemize}
+\end{lstlisting}
+\newpage
+\begin{lstlisting}[style=C, caption={Inverse MixColumns},captionpos=t]
+void InvMixColumns(u8* state) {
+	u8 temp[4];
+	
+	for (int i = 0; i < 4; i++) { 
+		temp[0] =
+			MUL_GF256(0x0e, state[i * 4]) ^
+			MUL_GF256(0x0b, state[i * 4 + 1]) ^
+			MUL_GF256(0x0d, state[i * 4 + 2]) ^
+			MUL_GF256(0x09, state[i * 4 + 3]); 
+		
+		temp[1] =
+			MUL_GF256(0x09, state[i * 4]) ^
+			MUL_GF256(0x0e, state[i * 4 + 1]) ^
+			MUL_GF256(0x0b, state[i * 4 + 2]) ^
+			MUL_GF256(0x0d, state[i * 4 + 3]);
+		
+		temp[2] =
+			MUL_GF256(0x0d, state[i * 4]) ^
+			MUL_GF256(0x09, state[i * 4 + 1]) ^
+			MUL_GF256(0x0e, state[i * 4 + 2]) ^
+			MUL_GF256(0x0b, state[i * 4 + 3]);
+		
+		temp[3] =
+			MUL_GF256(0x0b, state[i * 4]) ^
+			MUL_GF256(0x0d, state[i * 4 + 1]) ^
+			MUL_GF256(0x09, state[i * 4 + 2]) ^
+			MUL_GF256(0x0e, state[i * 4 + 3]);
+		
+		for (int j = 0; j < 4; j++)
+			state[i * 4 + j] = temp[j];
+	}
+}
+\end{lstlisting}
 
 
 \newpage

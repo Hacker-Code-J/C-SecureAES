@@ -1,3 +1,13 @@
+/**
+ * @file aes_key_expansion.c
+ * @brief Implementation of AES key expansion functions.
+ *
+ * This source file contains the implementations of the functions declared
+ * in aes_key_expansion.h for the key expansion process in the AES algorithm.
+ * It includes the routines to transform and expand the original key into
+ * multiple round keys.
+ */
+
 #include "aes_key_expansion.h"
 
 /* Original ver. */

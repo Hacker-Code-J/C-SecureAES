@@ -112,10 +112,13 @@
 		rCon, SubWord, RotWord, MUL\_GF256
 	},
 	morekeywords=[5]{
-		KeyExpansion, AddRoundKey, SubBytes, ShiftRows, MixColums
+		KeyExpansion, AddRoundKey,
+		SubBytes, InvSubBytes,
+		ShiftRows, InvShiftRows,
+		MixColumns, InvMixColumns
 	},
 	morekeywords=[6]{false, true, MAX, MIN},
-	morekeywords=[7]{AES\_KEY\_SIZE},
+	morekeywords=[7]{AES\_KEY\_SIZE, s\_box, inv\_s\_box},
 	numberstyle=\tiny\color{gray},
 	stringstyle=\color{purple},
 	showstringspaces=false,
