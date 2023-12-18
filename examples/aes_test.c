@@ -19,22 +19,22 @@ double measure_time(void (*func)(const u8*, const u8*, u8*), u8* input, u8* key,
 
 
 int main() {
-    const char* inputString = "00112233445566778899aabbccddeeff";
+    const char* inputString = "761c1fe41a18acf20d241650611d90f1";
     u8 input[16];
     stringToByteArray(inputString, input);
     // Print the plaintext
     printf("Plaintext: ");
     for (int i = 0; i < 16; i++) {
-        printf("%02x ", input[i]);
+        printf("%02x", input[i]);
     }
     printf("\n");
 
-    const char* keyString = "000102030405060708090a0b0c0d0e0f";
-    u8 key[16];
+    const char* keyString = "0000000000000000000000000000000000000000000000000000000000000000";
+    u8 key[AES_VERSION / 8];
     stringToByteArray(keyString, key);
     printf("Key: ");
-    for (int i = 0; i < 16; i++) {
-        printf("%02x ", key[i]);
+    for (int i = 0; i < AES_VERSION / 8; i++) {
+        printf("%02x", key[i]);
     }
     printf("\n");
 
@@ -51,25 +51,25 @@ int main() {
     u8 output[16];
 
     // Call the AES128_Encrypt function
-    AES128_Encrypt(input, key, output);
+    AES_Encrypt(input, key, output);
 
     // Print the ciphertext
     printf("Ciphertext: ");
     for (int i = 0; i < 16; i++) {
-        printf("%02x ", output[i]);
+        printf("%02x", output[i]);
     }
     printf("\n\n");
 
     u8 decrypted[16] = { 0x00, };
-    AES128_Decrypt(output, key, decrypted);
+    AES_Decrypt(output, key, decrypted);
     printf("Decrypted-text: ");
     for (int i = 0; i < 16; i++) {
-        printf("%02x ", decrypted[i]);
+        printf("%02x", decrypted[i]);
     }
     printf("\n\n");
 
-    double time_enc = measure_time(AES128_Encrypt, input, key, output);
-    double time_dec = measure_time(AES128_Decrypt, input, key, output);
+    double time_enc = measure_time(AES_Encrypt, input, key, output);
+    double time_dec = measure_time(AES_Decrypt, input, key, output);
 
     printf("Time for AES128_Encrypt: %.3f s\n", time_enc);
     printf("Time for AES128_Decrypt: %.3f s\n", time_dec);

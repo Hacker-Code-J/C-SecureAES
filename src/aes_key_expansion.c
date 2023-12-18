@@ -54,6 +54,39 @@
 
 /* Optimized ver. */
 
+/*
+// Inlined RotWord
+#define RotWord(word) (((word) << 0x08) | ((word) >> 0x18))
+
+// Inlined SubWord (assuming s_box is a constant array)
+#define SubWord(word) ( \
+    ((u32)s_box[(word) >> 0x18] << 0x18) | \
+    ((u32)s_box[((word) >> 0x10) & 0xFF] << 0x10) | \
+    ((u32)s_box[((word) >> 0x08) & 0xFF] << 0x08) | \
+    ((u32)s_box[(word) & 0xFF]) \
+)
+*/
+// void KeyExpansion(const u8* uKey, u32* rKey) {
+// 	u32 temp;
+	
+// 	// Unroll the initial uKey copying loop
+//     rKey[0] = (u32)uKey[0] << 0x18 | (u32)uKey[1] << 0x10 | (u32)uKey[2] << 0x08 | (u32)uKey[3];
+//     rKey[1] = (u32)uKey[4] << 0x18 | (u32)uKey[5] << 0x10 | (u32)uKey[6] << 0x08 | (u32)uKey[7];
+//     rKey[2] = (u32)uKey[8] << 0x18 | (u32)uKey[9] << 0x10 | (u32)uKey[10] << 0x08 | (u32)uKey[11];
+//     rKey[3] = (u32)uKey[12] << 0x18 | (u32)uKey[13] << 0x10 | (u32)uKey[14] << 0x08 | (u32)uKey[15];
+	
+//     // Optimize the round uKey generation loop
+//     for (int i = 4; i < 44; ++i) {
+//         temp = rKey[i - 1];
+//         if ((i & 3) == 0) { // Equivalent to i % 4 == 0 but faster
+//             temp = SubWord(RotWord(temp)) ^ rCon[i / 4 - 1];
+//         }
+//         rKey[i] = rKey[i - 4] ^ temp;
+//     }
+// }
+
+/* General ver. */
+
 // Inlined RotWord
 #define RotWord(word) (((word) << 0x08) | ((word) >> 0x18))
 
@@ -68,18 +101,21 @@
 void KeyExpansion(const u8* uKey, u32* rKey) {
 	u32 temp;
 	
-	// Unroll the initial uKey copying loop
-    rKey[0] = (u32)uKey[0] << 0x18 | (u32)uKey[1] << 0x10 | (u32)uKey[2] << 0x08 | (u32)uKey[3];
-    rKey[1] = (u32)uKey[4] << 0x18 | (u32)uKey[5] << 0x10 | (u32)uKey[6] << 0x08 | (u32)uKey[7];
-    rKey[2] = (u32)uKey[8] << 0x18 | (u32)uKey[9] << 0x10 | (u32)uKey[10] << 0x08 | (u32)uKey[11];
-    rKey[3] = (u32)uKey[12] << 0x18 | (u32)uKey[13] << 0x10 | (u32)uKey[14] << 0x08 | (u32)uKey[15];
-	
-    // Optimize the round uKey generation loop
-    for (int i = 4; i < 44; ++i) {
+	for (int i = 0; i < Nk; i++) {
+        rKey[i] = (u32)uKey[4*i] << 0x18 | 
+                  (u32)uKey[4*i+1] << 0x10 | 
+                  (u32)uKey[4*i+2] << 0x08 | 
+                  (u32)uKey[4*i+3];
+    }
+    
+    for (int i = Nk; i < (Nr + 1) * 4; i++) {
         temp = rKey[i - 1];
-        if ((i & 3) == 0) { // Equivalent to i % 4 == 0 but faster
-            temp = SubWord(RotWord(temp)) ^ rCon[i / 4 - 1];
+        if (i % Nk == 0) {
+            temp = SubWord(RotWord(temp)) ^ rCon[i / Nk - 1];
+        } else if (Nk > 6 && i % Nk == 4) {
+            // Additional S-box transformation for AES-256
+            temp = SubWord(temp);
         }
-        rKey[i] = rKey[i - 4] ^ temp;
+        rKey[i] = rKey[i - Nk] ^ temp;
     }
 }

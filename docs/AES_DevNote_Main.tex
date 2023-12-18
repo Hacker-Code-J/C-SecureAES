@@ -85,10 +85,12 @@
 \usepackage{tikz}
 \usetikzlibrary{matrix, positioning, arrows.meta, calc, shapes.geometric, shapes.multipart, chains}
 \usetikzlibrary{decorations.pathreplacing,calligraphy}
+
 % Pseudo-code
 \usepackage[linesnumbered,ruled]{algorithm2e}
 \usepackage{algpseudocode}
 \SetKwComment{Comment}{/* }{ */}
+\SetKw{End}{end}
 
 % Listings
 \usepackage{listings}
@@ -118,7 +120,7 @@
 		MixColumns, InvMixColumns
 	},
 	morekeywords=[6]{false, true, MAX, MIN},
-	morekeywords=[7]{AES\_KEY\_SIZE, s\_box, inv\_s\_box},
+	morekeywords=[7]{AES\_VERSION, AES\_BLOCK\_SIZE, ROUND\_KEYS\_SIZE, s\_box, inv\_s\_box, Nk, Nr},
 	numberstyle=\tiny\color{gray},
 	stringstyle=\color{purple},
 	showstringspaces=false,
@@ -137,7 +139,9 @@
 }
 
 % Table
+\usepackage{booktabs}
 \usepackage{tabularx}
+\usepackage{multirow}
 \usepackage{array}
 \usepackage{longtable}
 
@@ -231,7 +235,7 @@
 	\newpage
 	\mainmatter
 	\input{chapters/chapter1.tex}
-%	\input{chapters/chapter2.tex}
+	\input{chapters/chapter2.tex}
 	% Include more chapters as needed
 	
 	\appendix

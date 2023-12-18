@@ -38,20 +38,20 @@
 //     }
 // }
 void AddRoundKey(u8* state, const u32* rKey) {
-    for (int i = 0; i < AES_KEY_SIZE; i++) {
+    for (int i = 0; i < AES_BLOCK_SIZE; i++) {
         // Extract the corresponding byte from the round key word
         state[i] ^= (rKey[i / 4] >> (8 * (3 - (i % 4)))) & 0xFF;
     }
 }
 
 void SubBytes(u8* state) {
-    for (int i = 0; i < AES_KEY_SIZE; i++) {
+    for (int i = 0; i < AES_BLOCK_SIZE; i++) {
         state[i] = s_box[state[i]];
     }
 }
 
 void InvSubBytes(u8* state) {
-    for (int i = 0; i < AES_KEY_SIZE; i++) {
+    for (int i = 0; i < AES_BLOCK_SIZE; i++) {
         state[i] = inv_s_box[state[i]];
     }
 }
@@ -175,9 +175,9 @@ void InvMixColumns(u8* state) {
 	}
 }
 
-// AES128 Encrypt function
-void AES128_Encrypt(const u8* plaintext, const u8* key, u8* ciphertext) {
-    u32 roundKey[AES_KEY_EXP_SIZE / sizeof(u32)];
+// AES Encrypt function
+void AES_Encrypt(const u8* plaintext, const u8* key, u8* ciphertext) {
+    u32 roundKey[ROUND_KEYS_SIZE / sizeof(u32)];
     u8 state[AES_BLOCK_SIZE];
 
     // Copy plaintext to state
@@ -192,10 +192,10 @@ void AES128_Encrypt(const u8* plaintext, const u8* key, u8* ciphertext) {
     AddRoundKey(state, roundKey);
 
     // Main rounds
-    for (int round = 1; round <= 10; round++) {
+    for (int round = 1; round <= Nr; round++) {
         SubBytes(state);
         ShiftRows(state);
-        if (round != 10) {
+        if (round != Nr) {
             MixColumns(state);
         }
         AddRoundKey(state, roundKey + round * AES_BLOCK_SIZE / sizeof(u32));
@@ -208,8 +208,8 @@ void AES128_Encrypt(const u8* plaintext, const u8* key, u8* ciphertext) {
 
 }
 
-void AES128_Decrypt(const u8* ciphertext, const u8* key, u8* plaintext) {
-    u32 roundKey[AES_KEY_EXP_SIZE / sizeof(u32)];
+void AES_Decrypt(const u8* ciphertext, const u8* key, u8* plaintext) {
+    u32 roundKey[ROUND_KEYS_SIZE / sizeof(u32)];
     u8 state[AES_BLOCK_SIZE];
 
     // Key expansion
@@ -221,10 +221,10 @@ void AES128_Decrypt(const u8* ciphertext, const u8* key, u8* plaintext) {
     }
 
     // Initial round with the last round key
-    AddRoundKey(state, roundKey + 10 * AES_BLOCK_SIZE / sizeof(u32));
+    AddRoundKey(state, roundKey + Nr * AES_BLOCK_SIZE / sizeof(u32));
 
     // Main rounds in reverse order
-    for (int round = 9; round >= 0; round--) {
+    for (int round = Nr - 1; round >= 0; round--) {
         InvShiftRows(state);
         InvSubBytes(state);
         AddRoundKey(state, roundKey + round * AES_BLOCK_SIZE / sizeof(u32));
@@ -249,8 +249,8 @@ Optimization Notes:
 
 Remember, optimizing cryptographic code also needs to consider security implications, like side-channel attacks. Ensure that any optimization does not inadvertently introduce vulnerabilities.
 */
-void AES128_Encrypt_Opt(const u8* plaintext, const u8* key, u8* ciphertext) {
-    u32 roundKey[AES_KEY_EXP_SIZE / sizeof(u32)];
+void AES_Encrypt_Opt(const u8* plaintext, const u8* key, u8* ciphertext) {
+    u32 roundKey[ROUND_KEYS_SIZE / sizeof(u32)];
 
     // Key expansion
     KeyExpansion(key, roundKey);
@@ -259,10 +259,10 @@ void AES128_Encrypt_Opt(const u8* plaintext, const u8* key, u8* ciphertext) {
     AddRoundKey((u8*)plaintext, roundKey);
 
     // Main rounds
-    for (int round = 1; round <= 10; round++) {
+    for (int round = 1; round <= Nr; round++) {
         SubBytes((u8*)plaintext);
         ShiftRows((u8*)plaintext);
-        if (round != 10) {
+        if (round != Nr) {
             MixColumns((u8*)plaintext);
         }
         AddRoundKey((u8*)plaintext, roundKey + round * AES_BLOCK_SIZE / sizeof(u32));

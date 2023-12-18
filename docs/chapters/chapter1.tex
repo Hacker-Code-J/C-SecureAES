@@ -374,7 +374,7 @@ void InvShiftRows(u8* state) {
 \end{lstlisting}
 
 \newpage
-\subsection{MixColums / InvMixColmums}
+\subsection{MixColumns / InvMixColumns}
 \begin{itemize}
 	\item Multiplication in the finite filed $\text{GF}(2^8)$. \[
 	\text{MUL}_{GF256}:\binaryfield^{8}\times\binaryfield^8\to\binaryfield^8.
@@ -528,8 +528,8 @@ u8 MUL_GF256(u8 a, u8 b) {
 })
 	\end{lstlisting}
 	\newpage
-	\item $\text{MixColums}:\binaryfield^{128}\to\binaryfield^{128}$ is defined by \[
-	\text{MixColums}\left(\begin{pmatrix}
+	\item $\text{MixColumns}:\binaryfield^{128}\to\binaryfield^{128}$ is defined by \[
+	\text{MixColumns}\left(\begin{pmatrix}
 		X_0 & X_4 & X_8 & X_{12} \\
 		X_1 & X_5 & X_9 & X_{13} \\
 		X_2 & X_6 & X_{10} & X_{14} \\
@@ -636,40 +636,3 @@ void InvMixColumns(u8* state) {
 	}
 }
 \end{lstlisting}
-
-
-\newpage
-\section{Code Structure}
-\begin{enumerate}
-	\item Rcon Array Declaration
-	\item Function Definition
-	\item Variable Declarations and Initial Checks
-	\item Key Expansion Logic
-\end{enumerate}
-
-\section{Detailed Analysis}
-\subsection{Rcon Array Declaration}
-
-
-\subsection{Function Definition}
-\begin{lstlisting}[language=C]
-	int AES_set_encrypt_key(const unsigned char *userKey, const int bits, AES_KEY *key);
-\end{lstlisting}
-
-\subsection{Variable Declarations and Initial Checks}
-\begin{lstlisting}[language=C]
-	u32 *rk;
-	int i = 0;
-	u32 temp;
-	if (!userKey || !key)
-	return -1;
-	if (bits != 128 && bits != 192 && bits != 256)
-	return -2;
-\end{lstlisting}
-
-\subsection{Key Expansion Logic}
-\begin{enumerate}
-	\item Initial Key Setup
-	\item Key Expansion based on key size
-\end{enumerate}
-

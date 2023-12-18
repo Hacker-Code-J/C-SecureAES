@@ -71,8 +71,8 @@ void InvMixColumns(u8 *state);
  * @param key A pointer to the 128-bit key used for encryption.
  * @param ciphertext A pointer to the buffer where the encrypted data will be stored.
  */
-void AES128_Encrypt(const u8* plaintext, const u8* key, u8* ciphertext);
-void AES128_Encrypt_Opt(const u8* plaintext, const u8* key, u8* ciphertext);
+void AES_Encrypt(const u8* plaintext, const u8* key, u8* ciphertext);
+void AES_Encrypt_Opt(const u8* plaintext, const u8* key, u8* ciphertext);
 
 
 /**
@@ -87,7 +87,7 @@ void AES128_Encrypt_Opt(const u8* plaintext, const u8* key, u8* ciphertext);
  * @param key A pointer to the 128-bit key used for decryption.
  * @param plaintext A pointer to the buffer where the decrypted plaintext will be stored.
  */
-void AES128_Decrypt(const u8* ciphertext, const u8* key, u8* plaintext);
+void AES_Decrypt(const u8* ciphertext, const u8* key, u8* plaintext);
 
 // /* Error codes */
 // typedef enum {

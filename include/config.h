@@ -40,21 +40,28 @@ typedef unsigned long long u64;
  */
 #define true  1
 
-// #define AES_BLOCK_SIZE 16 // AES-128 block size is 16 bytes
-// // #define AES_BLOCK_SIZE 24 // AES-192 block size is 24 bytes
-// // #define AES_BLOCK_SIZE 32 // AES-256 block size is 32 bytes
+// Define macros for AES key length
+#define AES_VERSION 256 // Can be 128, 192, or 256
 
-/* Key lengths */
-#define AES_KEY_SIZE (128 / 8) // 16
-// AES constants
+// Define macro for AES block size
 #define AES_BLOCK_SIZE 16
-#define AES_KEY_EXP_SIZE 176
-// #define AES_KEY_SIZE (192 / 8) // 24
-// #define AES_KEY_SIZE (256 / 8) // 32
 
-#define Nk 16 // Number of 32-bit words in the key.
-#define Nb 16 // Number of blocks.
-#define Nr 10 // Number of rounds.
+// Define Nk and Nr based on AES key length
+#if AES_VERSION == 128
+    #define Nk 4
+    #define Nr (Nk + 6) // 10
+    #define ROUND_KEYS_SIZE (16 * (Nr + 1)) // 176
+#elif AES_VERSION == 192
+    #define Nk 6
+    #define Nr (Nk + 6) // 12
+    #define ROUND_KEYS_SIZE (16 * (Nr + 1)) // 208
+#elif AES_VERSION == 256
+    #define Nk 8
+    #define Nr (Nk + 6) // 14
+    #define ROUND_KEYS_SIZE (16 * (Nr + 1)) // 240
+#else
+    #error "Invalid AES key length"
+#endif
 
 static const u8 s_box[256] = {
     0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
