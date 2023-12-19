@@ -7,7 +7,7 @@ SRC = ./src/utils.c ./src/aes_key_expansion.c ./src/aes.c
 OBJ = $(SRC:./src/%.c=./obj/%.o)
 
 # Test program
-TEST_SRC = ./examples/aes_test.c
+TEST_SRC = ./tests/aes_test.c
 TEST_OUT = a.out
 
 # Compile and build
@@ -34,8 +34,8 @@ leak:
 test-key:
 	@echo "Testing ..."
 	./a.out > round_keys.txt
-	mv round_keys.txt tests/
-	(cd tests && python3 key_expansion.py)
+	mv round_keys.txt examples/
+	(cd examples && python3 key_expansion.py)
 
 # Phony targets
 .PHONY: all clean
