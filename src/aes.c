@@ -175,81 +175,82 @@ void InvMixColumns(u8* state) {
 	}
 }
 
-// AES Encrypt function
-void AES_Encrypt(const u8* plaintext, const u8* key, u8* ciphertext) {
-    u32 roundKey[ROUND_KEYS_SIZE / sizeof(u32)];
-    u8 state[AES_BLOCK_SIZE];
+// // AES Encrypt function
+// void AES_Encrypt(const u8* plaintext, const u8* key, u8* ciphertext) {
+//     u32 roundKey[ROUND_KEYS_SIZE / sizeof(u32)];
+//     u8 state[AES_BLOCK_SIZE];
 
-    // Copy plaintext to state
-    for (int i = 0; i < AES_BLOCK_SIZE; ++i) {
-        state[i] = plaintext[i];
-    }
+//     // Copy plaintext to state
+//     for (int i = 0; i < AES_BLOCK_SIZE; ++i) {
+//         state[i] = plaintext[i];
+//     }
 
-    // Key expansion
-    KeyExpansion(key, roundKey);
+//     // Key expansion
+//     KeyExpansion(key, roundKey);
 
-    // Initial round
-    AddRoundKey(state, roundKey);
+//     // Initial round
+//     AddRoundKey(state, roundKey);
 
-    // Main rounds
-    for (int round = 1; round <= Nr; round++) {
-        SubBytes(state);
-        ShiftRows(state);
-        if (round != Nr) {
-            MixColumns(state);
-        }
-        AddRoundKey(state, roundKey + round * AES_BLOCK_SIZE / sizeof(u32));
-    }
+//     // Main rounds
+//     for (int round = 1; round <= Nr; round++) {
+//         SubBytes(state);
+//         ShiftRows(state);
+//         if (round != Nr) {
+//             MixColumns(state);
+//         }
+//         AddRoundKey(state, roundKey + round * AES_BLOCK_SIZE / sizeof(u32));
+//     }
 
-    // Copy state to ciphertext
-    for (int i = 0; i < AES_BLOCK_SIZE; ++i) {
-        ciphertext[i] = state[i];
-    }
+//     // Copy state to ciphertext
+//     for (int i = 0; i < AES_BLOCK_SIZE; ++i) {
+//         ciphertext[i] = state[i];
+//     }
 
-}
+// }
 
-void AES_Decrypt(const u8* ciphertext, const u8* key, u8* plaintext) {
-    u32 roundKey[ROUND_KEYS_SIZE / sizeof(u32)];
-    u8 state[AES_BLOCK_SIZE];
+// void AES_Decrypt(const u8* ciphertext, const u8* key, u8* plaintext) {
+//     u32 roundKey[ROUND_KEYS_SIZE / sizeof(u32)];
+//     u8 state[AES_BLOCK_SIZE];
 
-    // Key expansion
-    KeyExpansion(key, roundKey);
+//     // Key expansion
+//     KeyExpansion(key, roundKey);
 
-    // Copy ciphertext to state
-    for (int i = 0; i < AES_BLOCK_SIZE; ++i) {
-        state[i] = ciphertext[i];
-    }
+//     // Copy ciphertext to state
+//     for (int i = 0; i < AES_BLOCK_SIZE; ++i) {
+//         state[i] = ciphertext[i];
+//     }
 
-    // Initial round with the last round key
-    AddRoundKey(state, roundKey + Nr * AES_BLOCK_SIZE / sizeof(u32));
+//     // Initial round with the last round key
+//     AddRoundKey(state, roundKey + Nr * AES_BLOCK_SIZE / sizeof(u32));
 
-    // Main rounds in reverse order
-    for (int round = Nr - 1; round >= 0; round--) {
-        InvShiftRows(state);
-        InvSubBytes(state);
-        AddRoundKey(state, roundKey + round * AES_BLOCK_SIZE / sizeof(u32));
-        if (round != 0) {
-            InvMixColumns(state);
-        }
-    }
+//     // Main rounds in reverse order
+//     for (int round = Nr - 1; round >= 0; round--) {
+//         InvShiftRows(state);
+//         InvSubBytes(state);
+//         AddRoundKey(state, roundKey + round * AES_BLOCK_SIZE / sizeof(u32));
+//         if (round != 0) {
+//             InvMixColumns(state);
+//         }
+//     }
 
-    // Copy state to plaintext
-    for (int i = 0; i < AES_BLOCK_SIZE; ++i) {
-        plaintext[i] = state[i];
-    }
-}
+//     // Copy state to plaintext
+//     for (int i = 0; i < AES_BLOCK_SIZE; ++i) {
+//         plaintext[i] = state[i];
+//     }
+// }
 
 /*
-Optimization Notes:
-
-- The `state` array is removed, and the `plaintext` array is used directly. This is assuming `plaintext` is not a `const` in the calling code, otherwise, you'd need a temporary buffer.
-- The `plaintext` buffer is cast to `(u8*)` to allow writing. If `plaintext` is `const` in the calling code, this would be invalid.
-- Inline and SIMD optimizations are not explicitly shown but should be applied in the implementations of `SubBytes`, `ShiftRows`, `MixColumns`, and `AddRoundKey`.
-- The loop and memory access optimizations are applied within the limits of maintaining the algorithm's correctness and structure.
-
-Remember, optimizing cryptographic code also needs to consider security implications, like side-channel attacks. Ensure that any optimization does not inadvertently introduce vulnerabilities.
+ * Notes:
+ * The `state` array is removed, and the `plaintext` array is used directly.
+ * This is assuming `plaintext` is not a `const` in the calling code, otherwise, you'd need a temporary buffer.
+ * The `plaintext` buffer is cast to `(u8*)` to allow writing. If `plaintext` is `const` in the calling code, this would be invalid.
+ * Inline and SIMD optimizations are not explicitly shown but should be applied in the implementations of `SubBytes`, `ShiftRows`, `MixColumns`, and `AddRoundKey`.
+ * The loop and memory access optimizations are applied within the limits of maintaining the algorithm's correctness and structure.
+ * Remember, optimizing cryptographic code also needs to consider security implications, like side-channel attacks.
+ * Ensure that any optimization does not inadvertently introduce vulnerabilities.
 */
-void AES_Encrypt_Opt(const u8* plaintext, const u8* key, u8* ciphertext) {
+
+void AES_Encrypt(const u8* plaintext, const u8* key, u8* ciphertext) {
     u32 roundKey[ROUND_KEYS_SIZE / sizeof(u32)];
 
     // Key expansion
@@ -273,7 +274,7 @@ void AES_Encrypt_Opt(const u8* plaintext, const u8* key, u8* ciphertext) {
         ciphertext[i] = plaintext[i];
     }
 }
-void AES_Decrypt_Opt(const u8* ciphertext, const u8* key, u8* plaintext) {
+void AES_Decrypt(const u8* ciphertext, const u8* key, u8* plaintext) {
     u32 roundKey[ROUND_KEYS_SIZE / sizeof(u32)];
     
     // Key expansion
@@ -303,11 +304,11 @@ void AES_Encrypt_32BIT(const u8* plaintext, const u8* key, u8* ciphertext) {
     u32 state[4];
 
     // Copy plaintext to state
-    for (int i = 0; i < AES_BLOCK_SIZE; i += 4) {
-        state[i / 4] = ((u32)plaintext[i] << 24) |
-					   ((u32)plaintext[i + 1] << 16) |
-					   ((u32)plaintext[i + 2] << 8) |
-					   plaintext[i + 3];
+    for (int i = 0; i < 4; i++) {
+        state[i] = ((u32)plaintext[4 * i] << 0x18) |
+				   ((u32)plaintext[4 * i + 1] << 0x10) |
+				   ((u32)plaintext[4 * i + 2] << 0x08) |
+				   (plaintext[4 * i + 3]);
     }
 
     // Key expansion
@@ -319,27 +320,31 @@ void AES_Encrypt_32BIT(const u8* plaintext, const u8* key, u8* ciphertext) {
     // Main rounds
     for (int round = 1; round < Nr; round++) {
         u32 temp[4];
-        temp[0] = Te0[(state[0] >> 24)] ^ 
-				  Te1[(state[1] >> 16) & 0xff] ^
-				  Te2[(state[2] >> 8) & 0xff] ^
-				  Te3[state[3] & 0xff] ^
-				  roundKey[round * 4];
-        temp[1] = Te0[(state[1] >> 24)] ^
-				  Te1[(state[2] >> 16) & 0xff] ^
-				  Te2[(state[3] >> 8) & 0xff] ^
+        
+        ShiftRows((u8*)plaintext);
+		
+		temp[0] = Te0[(state[0] >> 0x18) & 0xff] ^ 
+				  Te1[(state[0] >> 0x10) & 0xff] ^
+				  Te2[(state[0] >> 0x08) & 0xff] ^
 				  Te3[state[0] & 0xff] ^
-				  roundKey[round * 4 + 1];
-        temp[2] = Te0[(state[2] >> 24)] ^
-				  Te1[(state[3] >> 16) & 0xff] ^
-				  Te2[(state[0] >> 8) & 0xff] ^
+				  roundKey[0];
+        temp[1] = Te0[(state[1] >> 0x18) & 0xff] ^ 
+				  Te1[(state[1] >> 0x10) & 0xff] ^
+				  Te2[(state[1] >> 0x08) & 0xff] ^
 				  Te3[state[1] & 0xff] ^
-				  roundKey[round * 4 + 2];
-        temp[3] = Te0[(state[3] >> 24)] ^
-				  Te1[(state[0] >> 16) & 0xff] ^
-				  Te2[(state[1] >> 8) & 0xff] ^
+				  roundKey[1];
+		temp[2] = Te0[(state[2] >> 0x18) & 0xff] ^ 
+				  Te1[(state[2] >> 0x10) & 0xff] ^
+				  Te2[(state[2] >> 0x08) & 0xff] ^
 				  Te3[state[2] & 0xff] ^
-				  roundKey[round * 4 + 3];
-        memcpy(state, temp, sizeof(temp));
+				  roundKey[2];
+		temp[3] = Te0[(state[3] >> 0x18) & 0xff] ^ 
+				  Te1[(state[3] >> 0x10) & 0xff] ^
+				  Te2[(state[3] >> 0x08) & 0xff] ^
+				  Te3[state[3] & 0xff] ^
+				  roundKey[3];
+
+		memcpy(state, temp, sizeof(temp));
     }
 
     // Final round (without MixColumns)
@@ -348,22 +353,22 @@ void AES_Encrypt_32BIT(const u8* plaintext, const u8* key, u8* ciphertext) {
 			  (Te1[(state[1] >> 16) & 0xff] & 0x00ff0000) ^
 			  (Te2[(state[2] >> 8) & 0xff] & 0x0000ff00) ^
 			  (Te3[state[3] & 0xff] & 0x000000ff) ^
-			  roundKey[Nr * 4];
+			  roundKey[Nr];
     temp[1] = (Te0[(state[0] >> 24)] & 0xff000000) ^
 			  (Te1[(state[1] >> 16) & 0xff] & 0x00ff0000) ^
 			  (Te2[(state[2] >> 8) & 0xff] & 0x0000ff00) ^
 			  (Te3[state[3] & 0xff] & 0x000000ff) ^
-			  roundKey[Nr * 4 + 1];
+			  roundKey[Nr];
     temp[2] = (Te0[(state[0] >> 24)] & 0xff000000) ^
 			  (Te1[(state[1] >> 16) & 0xff] & 0x00ff0000) ^
 			  (Te2[(state[2] >> 8) & 0xff] & 0x0000ff00) ^
 			  (Te3[state[3] & 0xff] & 0x000000ff) ^
-			  roundKey[Nr * 4 + 2];
+			  roundKey[Nr];
     temp[3] = (Te0[(state[0] >> 24)] & 0xff000000) ^
 			  (Te1[(state[1] >> 16) & 0xff] & 0x00ff0000) ^
 			  (Te2[(state[2] >> 8) & 0xff] & 0x0000ff00) ^
 			  (Te3[state[3] & 0xff] & 0x000000ff) ^
-			  roundKey[Nr * 4 + 3];
+			  roundKey[Nr];
     // Repeat for temp[1], temp[2], temp[3]
 
     // Copy state to ciphertext

@@ -41,7 +41,7 @@ typedef unsigned long long u64;
 #define true  1
 
 // Define macros for AES key length
-#define AES_VERSION 256 // Can be 128, 192, or 256
+#define AES_VERSION 128 // Can be 128, 192, or 256
 
 // Define macro for AES block size
 #define AES_BLOCK_SIZE 16

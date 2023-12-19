@@ -51,11 +51,31 @@ u32 SubWord(u32 word);
  *
  * This function takes the initial key for AES and expands it into
  * several round keys as required by the AES algorithm. It uses the
- * helper functions RotWord and SubWord in the process.
+ * helper functions RotWord and SubWord in the process. The expansion
+ * involves transformations and XOR operations with round constants.
  *
- * @param ukey The initial key for AES.
- * @param rKey The expanded round keys.
+ * @param ukey The initial key for AES. This is an array of bytes (u8).
+ * @param rKey The array where the expanded round keys will be stored.
+ *             This is an array of 32-bit words (u32).
  */
 void KeyExpansion(const u8* ukey, u32* rKey);
+
+/**
+ * @brief Reverses the AES key expansion to retrieve the original key.
+ *
+ * This function attempts to reverse the AES key expansion process to
+ * recover the original AES key from the final round key. It assumes
+ * that the inverse operations for RotWord and SubWord are available,
+ * and it correctly applies the round constants in reverse order. This
+ * function is primarily for academic or testing purposes, as reversing
+ * the key expansion is not a standard cryptographic operation and is
+ * generally impractical in real-world scenarios.
+ *
+ * @param rKey The expanded round keys from which the original key will
+ *             be derived. This is an array of 32-bit words (u32).
+ * @param originalKey The array where the recovered original AES key will
+ *                    be stored. This is an array of bytes (u8).
+ */
+void ReverseKeyExpansion(const u32* rKey, u8* originalKey);
 
 #endif // _AES_KEY_EXPANSION_H

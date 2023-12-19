@@ -119,3 +119,33 @@ void KeyExpansion(const u8* uKey, u32* rKey) {
         rKey[i] = rKey[i - Nk] ^ temp;
     }
 }
+
+void ReverseKeyExpansion(const u32* rKey, u8* originalKey) {
+    u32 temp;
+    u32 reversedKey[ROUND_KEYS_SIZE / sizeof(u32)];
+
+    // Copy the last round key as the starting point
+    for (int i = 0; i < Nk; i++) {
+        reversedKey[(Nr * Nk) + i] = rKey[(Nr * Nk) + i];
+    }
+
+    // Reverse the key expansion process
+    for (int i = (Nr * Nk) - 1; i >= 0; i--) {
+        temp = reversedKey[i + 1];
+        if (i % Nk == 0) {
+            temp = RotWord(temp);
+            temp = SubWord(temp) ^ rCon[i / Nk];
+        } else if (Nk > 6 && i % Nk == 4) {
+            temp = SubWord(temp);
+        }
+        reversedKey[i] = reversedKey[i + Nk] ^ temp;
+    }
+
+    // Extract the original key
+    for (int i = 0; i < Nk; i++) {
+        originalKey[4 * i]     = (u8)(reversedKey[i] >> 24);
+        originalKey[4 * i + 1] = (u8)(reversedKey[i] >> 16);
+        originalKey[4 * i + 2] = (u8)(reversedKey[i] >> 8);
+        originalKey[4 * i + 3] = (u8)(reversedKey[i]);
+    }
+}

@@ -93,6 +93,7 @@
 \SetKwComment{Comment}{/* }{ */}
 \SetKwProg{Fn}{Function}{:}{end}
 \SetKw{End}{end}
+\SetKw{DownTo}{downto}
 
 % Define a new environment for algorithms without line numbers
 \newenvironment{algorithm2}[1][]{
@@ -171,6 +172,8 @@
 	filecolor=black,      
 	urlcolor=titleblue,
 }
+
+\newcommand{\mathcolorbox}[2]{\colorbox{#1}{$\displaystyle #2$}}
 
 \newcommand{\F}{\mathbb{F}}
 \newcommand{\zero}{\textcolor{red}{\texttt{0}}}

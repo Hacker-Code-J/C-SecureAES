@@ -41,7 +41,7 @@ double measure_time(void (*func)(const u8*, const u8*, u8*), u8* input, u8* key,
 
 
 int main() {
-    const char* inputString = "761c1fe41a18acf20d241650611d90f1";
+    const char* inputString = "f34481ec3cc627bacd5dc3fb08f273e6";
     u8 input[16];
     stringToByteArray(inputString, input);
     // Print the plaintext
@@ -51,7 +51,7 @@ int main() {
     }
     printf("\n");
 
-    const char* keyString = "0000000000000000000000000000000000000000000000000000000000000000";
+    const char* keyString = "00000000000000000000000000000000";
     u8 key[AES_VERSION / 8];
     stringToByteArray(keyString, key);
     printf("Key: ");
@@ -59,21 +59,11 @@ int main() {
         printf("%02x", key[i]);
     }
     printf("\n");
-
-    // Define input plaintext and cipher key in hexadecimal format
-    // u8 input[16] = {
-    //     0x32, 0x43, 0xf6, 0xa8, 0x88, 0x5a, 0x30, 0x8d,
-    //     0x31, 0x31, 0x98, 0xa2, 0xe0, 0x37, 0x07, 0x34
-    // };
-    // u8 key[16] = {
-    //     0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
-    //     0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c
-    // };
     
     u8 output[16];
 
-    // Call the AES128_Encrypt function
-    AES_Encrypt_32BIT(input, key, output);
+    // Call the AES_Encrypt function
+    AES_Encrypt(input, key, output);
 
     // Print the ciphertext
     printf("Ciphertext: ");
@@ -83,7 +73,10 @@ int main() {
     printf("\n\n");
 
     u8 decrypted[16] = { 0x00, };
+
+    // Call the AES_Decrypt function
     AES_Decrypt(output, key, decrypted);
+
     printf("Decrypted-text: ");
     for (int i = 0; i < 16; i++) {
         printf("%02x", decrypted[i]);
