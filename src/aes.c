@@ -273,9 +273,169 @@ void AES_Encrypt_Opt(const u8* plaintext, const u8* key, u8* ciphertext) {
         ciphertext[i] = plaintext[i];
     }
 }
+void AES_Decrypt_Opt(const u8* ciphertext, const u8* key, u8* plaintext) {
+    u32 roundKey[ROUND_KEYS_SIZE / sizeof(u32)];
+    
+    // Key expansion
+    KeyExpansion(key, roundKey);
 
+    // Initial round with the last round key
+    AddRoundKey((u8*)ciphertext, roundKey + Nr * AES_BLOCK_SIZE / sizeof(u32));
 
+    // Main rounds in reverse order
+    for (int round = Nr - 1; round >= 0; round--) {
+        InvShiftRows((u8*)ciphertext);
+        InvSubBytes((u8*)ciphertext);
+        AddRoundKey((u8*)ciphertext, roundKey + round * AES_BLOCK_SIZE / sizeof(u32));
+        if (round != 0) {
+            InvMixColumns((u8*)ciphertext);
+        }
+    }
 
+    // Copy state to plaintext
+    for (int i = 0; i < AES_BLOCK_SIZE; i++) {
+        plaintext[i] = ciphertext[i];
+    }
+}
+
+void AES_Encrypt_32BIT(const u8* plaintext, const u8* key, u8* ciphertext) {
+    u32 roundKey[ROUND_KEYS_SIZE / sizeof(u32)];
+    u32 state[4];
+
+    // Copy plaintext to state
+    for (int i = 0; i < AES_BLOCK_SIZE; i += 4) {
+        state[i / 4] = ((u32)plaintext[i] << 24) |
+					   ((u32)plaintext[i + 1] << 16) |
+					   ((u32)plaintext[i + 2] << 8) |
+					   plaintext[i + 3];
+    }
+
+    // Key expansion
+    KeyExpansion(key, roundKey);
+
+    // Initial round
+    AddRoundKey((u8*)state, roundKey);
+
+    // Main rounds
+    for (int round = 1; round < Nr; round++) {
+        u32 temp[4];
+        temp[0] = Te0[(state[0] >> 24)] ^ 
+				  Te1[(state[1] >> 16) & 0xff] ^
+				  Te2[(state[2] >> 8) & 0xff] ^
+				  Te3[state[3] & 0xff] ^
+				  roundKey[round * 4];
+        temp[1] = Te0[(state[1] >> 24)] ^
+				  Te1[(state[2] >> 16) & 0xff] ^
+				  Te2[(state[3] >> 8) & 0xff] ^
+				  Te3[state[0] & 0xff] ^
+				  roundKey[round * 4 + 1];
+        temp[2] = Te0[(state[2] >> 24)] ^
+				  Te1[(state[3] >> 16) & 0xff] ^
+				  Te2[(state[0] >> 8) & 0xff] ^
+				  Te3[state[1] & 0xff] ^
+				  roundKey[round * 4 + 2];
+        temp[3] = Te0[(state[3] >> 24)] ^
+				  Te1[(state[0] >> 16) & 0xff] ^
+				  Te2[(state[1] >> 8) & 0xff] ^
+				  Te3[state[2] & 0xff] ^
+				  roundKey[round * 4 + 3];
+        memcpy(state, temp, sizeof(temp));
+    }
+
+    // Final round (without MixColumns)
+    u32 temp[4];
+    temp[0] = (Te0[(state[0] >> 24)] & 0xff000000) ^
+			  (Te1[(state[1] >> 16) & 0xff] & 0x00ff0000) ^
+			  (Te2[(state[2] >> 8) & 0xff] & 0x0000ff00) ^
+			  (Te3[state[3] & 0xff] & 0x000000ff) ^
+			  roundKey[Nr * 4];
+    temp[1] = (Te0[(state[0] >> 24)] & 0xff000000) ^
+			  (Te1[(state[1] >> 16) & 0xff] & 0x00ff0000) ^
+			  (Te2[(state[2] >> 8) & 0xff] & 0x0000ff00) ^
+			  (Te3[state[3] & 0xff] & 0x000000ff) ^
+			  roundKey[Nr * 4 + 1];
+    temp[2] = (Te0[(state[0] >> 24)] & 0xff000000) ^
+			  (Te1[(state[1] >> 16) & 0xff] & 0x00ff0000) ^
+			  (Te2[(state[2] >> 8) & 0xff] & 0x0000ff00) ^
+			  (Te3[state[3] & 0xff] & 0x000000ff) ^
+			  roundKey[Nr * 4 + 2];
+    temp[3] = (Te0[(state[0] >> 24)] & 0xff000000) ^
+			  (Te1[(state[1] >> 16) & 0xff] & 0x00ff0000) ^
+			  (Te2[(state[2] >> 8) & 0xff] & 0x0000ff00) ^
+			  (Te3[state[3] & 0xff] & 0x000000ff) ^
+			  roundKey[Nr * 4 + 3];
+    // Repeat for temp[1], temp[2], temp[3]
+
+    // Copy state to ciphertext
+    for (int i = 0; i < 4; ++i) {
+        ciphertext[4 * i]     = (u8)(temp[i] >> 24);
+        ciphertext[4 * i + 1] = (u8)(temp[i] >> 16);
+        ciphertext[4 * i + 2] = (u8)(temp[i] >> 8);
+        ciphertext[4 * i + 3] = (u8)temp[i];
+    }
+}
+
+void AES_Decrypt_32BIT(const u8* ciphertext, const u8* key, u8* plaintext) {
+    u32 roundKey[ROUND_KEYS_SIZE / sizeof(u32)];
+    u32 state[4];
+
+    // Copy ciphertext to state
+    for (int i = 0; i < AES_BLOCK_SIZE; i += 4) {
+        state[i / 4] = ((u32)ciphertext[i] << 24) |
+					   ((u32)ciphertext[i + 1] << 16) |
+					   ((u32)ciphertext[i + 2] << 8) |
+					   ciphertext[i + 3];
+    }
+
+    // Key expansion
+    KeyExpansion(key, roundKey);
+
+    // Initial round with the last round key
+    AddRoundKey((u8*)state, roundKey + Nr * 4);
+
+    // Main rounds in reverse order
+    for (int round = Nr - 1; round > 0; round--) {
+        u32 temp[4];
+        temp[0] = Td0[state[0] >> 24] ^
+				  Td1[(state[3] >> 16) & 0xff] ^
+				  Td2[(state[2] >> 8) & 0xff] ^
+				  Td3[state[1] & 0xff] ^
+				  roundKey[round * 4];
+        temp[1] = Td0[state[1] >> 24] ^
+				  Td1[(state[0] >> 16) & 0xff] ^
+				  Td2[(state[3] >> 8) & 0xff] ^
+				  Td3[state[2] & 0xff] ^
+				  roundKey[round * 4 + 1];
+        temp[2] = Td0[state[2] >> 24] ^
+				  Td1[(state[1] >> 16) & 0xff] ^
+				  Td2[(state[0] >> 8) & 0xff] ^
+				  Td3[state[3] & 0xff] ^
+				  roundKey[round * 4 + 2];
+        temp[3] = Td0[state[3] >> 24] ^
+				  Td1[(state[2] >> 16) & 0xff] ^
+				  Td2[(state[1] >> 8) & 0xff] ^
+				  Td3[state[0] & 0xff] ^ roundKey[round * 4 + 3];
+        memcpy(state, temp, sizeof(temp));
+    }
+
+    // Final round (without InvMixColumns)
+    u32 temp[4];
+    for (int i = 0; i < 4; i++) {
+        temp[i] = (Td4[(state[i] >> 24)] << 24) |
+				  (Td4[(state[(i + 3) % 4] >> 16) & 0xff] << 16) |
+				  (Td4[(state[(i + 2) % 4] >> 8) & 0xff] << 8) |
+				  (Td4[state[(i + 1) % 4] & 0xff]);
+    }
+    AddRoundKey((u8*)temp, roundKey);
+
+    // Copy state to plaintext
+    for (int i = 0; i < 4; i++) {
+        plaintext[4 * i]     = (u8)(temp[i] >> 24);
+        plaintext[4 * i + 1] = (u8)(temp[i] >> 16);
+        plaintext[4 * i + 2] = (u8)(temp[i] >> 8);
+        plaintext[4 * i + 3] = (u8)temp[i];
+    }
+}
 
 
 

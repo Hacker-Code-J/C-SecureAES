@@ -233,21 +233,29 @@ where $\begin{cases}
 		\KwIn{$X_0\parallel X_1\parallel X_2\parallel X_3$}
 		\KwOut{$Y_0\parallel Y_1\parallel Y_2\parallel Y_3$}
 		\BlankLine
-		\For{$k\gets 0$ \KwTo $3$}{
-		
+		\Fn{$\mathsf{SubMix}$}{
+			\For{$i\gets 0$ \KwTo $3$}{
+				$Y_i\gets Te_0\left((X_i\gg \texttt{0x18})\texttt{ \& 0xff}\right)$\;
+				$Y_i\gets Y_i\oplus Te_1\left((X_i\gg \texttt{0x10})\texttt{ \& 0xff}\right)$\;
+				$Y_i\gets Y_i\oplus Te_2\left((X_i\gg \texttt{0x08})\texttt{ \& 0xff}\right)$\;
+				$Y_i\gets Y_i\oplus Te_3\left(X_i\texttt{ \& 0xff}\right)$\;
+			}
 		}
-		\If{$n=2$}{
-			\Return Prime\;
-		}
-		\If{$2\mid n$}{
-			\Return Compostie\;
-		}
+		\Return $Y_0\parallel Y_1\parallel Y_2\parallel Y_3$ \\
 		\columnbreak % Move to the next column
 		\setcounter{AlgoLine}{0}  % Reset line numbering
-		\KwData{Odd $n\in Z_{>1}$}
-		\KwResult{Composite or Prime}
+		\KwIn{$X_0\parallel X_1\parallel X_2\parallel X_3$}
+		\KwOut{$Y_0\parallel Y_1\parallel Y_2\parallel Y_3$}
 		\BlankLine
-		a
+		\Fn{$\mathsf{InvSubInvMix}$}{
+			\For{$i\gets 0$ \KwTo $3$}{
+				$Y_i\gets Td_0\left((X_i\gg \texttt{0x18})\texttt{ \& 0xff}\right)$\;
+				$Y_i\gets Y_i\oplus Td_1\left((X_i\gg \texttt{0x10})\texttt{ \& 0xff}\right)$\;
+				$Y_i\gets Y_i\oplus Td_2\left((X_i\gg \texttt{0x08})\texttt{ \& 0xff}\right)$\;
+				$Y_i\gets Y_i\oplus Td_3\left(X_i\texttt{ \& 0xff}\right)$\;
+			}
+		}
+		\Return $Y_0\parallel Y_1\parallel Y_2\parallel Y_3$ \\
 	\end{multicols}
 	\BlankLine
 \end{algorithm}

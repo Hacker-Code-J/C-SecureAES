@@ -88,6 +88,10 @@ void AES_Encrypt_Opt(const u8* plaintext, const u8* key, u8* ciphertext);
  * @param plaintext A pointer to the buffer where the decrypted plaintext will be stored.
  */
 void AES_Decrypt(const u8* ciphertext, const u8* key, u8* plaintext);
+void AES_Decrypt_Opt(const u8* ciphertext, const u8* key, u8* plaintext);
+
+void AES_Encrypt_32BIT(const u8* plaintext, const u8* key, u8* ciphertext);
+void AES_Decrypt_32BIT(const u8* plaintext, const u8* key, u8* ciphertext);
 
 // /* Error codes */
 // typedef enum {
