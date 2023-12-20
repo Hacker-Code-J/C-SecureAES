@@ -84,17 +84,13 @@ int main() {
     printf("\n\n");
 
     double time_enc = measure_time(AES_Encrypt, input, key, output);
-    double time_enc_opt = measure_time(AES_Encrypt_Opt, input, key, output);
     double time_enc_32 = measure_time(AES_Encrypt_32BIT, input, key, output);
     double time_dec = measure_time(AES_Decrypt, input, key, output);
-    double time_dec_opt = measure_time(AES_Decrypt_Opt, input, key, output);
     double time_dec_32 = measure_time(AES_Decrypt_32BIT, input, key, output);
 
     printf("Time for AES_Encrypt: %.9f s\n", time_enc);
-    printf("Time for AES_Encrypt_Opt: %.9f s\n", time_enc_opt);
     printf("Time for AES_Encrypt_32: %.9f s\n", time_enc_32);
     printf("Time for AES_Decrypt: %.9f s\n", time_dec);
-    printf("Time for AES_Decrypt_Opt: %.9f s\n", time_dec_opt);
     printf("Time for AES_Decrypt_32: %.9f s\n", time_dec_32);
 
 

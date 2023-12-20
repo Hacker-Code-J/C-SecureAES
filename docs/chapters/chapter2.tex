@@ -11,9 +11,9 @@
 		& Size & Length & Rounds &  Length & Round-Keys & Round-Keys \\
 		& ($N_b$-byte) & ($N_k$-byte) & ($N_r$)& (byte) & ($N_r+1$)& ($N_b(N_r+1)$)\\
 		\hline\hline
-		AES-128 & 16 & 16 (128-bit) & 10 & 16 & 11 & 176 \\
-		AES-192 & 16 & 24 (192-bit) & 12 & 16 & 13 & 208 \\
-		AES-256 & 16 & 32 (256-bit) & 14 & 16 & 15 & 240 \\
+		AES-128 & 16 & 16 (4$\cdot$32-bit) & 10 & 16 & 11 & 176 \\
+		AES-192 & 16 & 24 (6$\cdot$32-bit) & 12 & 16 & 13 & 208 \\
+		AES-256 & 16 & 32 (8$\cdot$32-bit) & 14 & 16 & 15 & 240 \\
 		\bottomrule[1.2pt]
 	\end{tabular*}
 \end{table}
@@ -59,8 +59,8 @@
 	\For{\( i = l \) \KwTo \( 4(N_r+1) -1 \)}{
 		\( t \leftarrow rk_{i-1} \)\;
 		\uIf{\( i \bmod l = 0 \)}{
-			\( t \leftarrow \text{SubWord}\circ\text{RotWord}(t) \)\;
-			\( t \leftarrow t \oplus (\texttt{rCon}_{i/l}\parallel\texttt{0x00}\parallel\texttt{0x00}\parallel\texttt{0x00}) \)\;
+			\( t \leftarrow (\text{SubWord}\circ\text{RotWord})(t) \)\;
+			\( t \leftarrow t \oplus_{32} (\texttt{rCon}_{i/l}\parallel\texttt{0x00}\parallel\texttt{0x00}\parallel\texttt{0x00}) \)\;
 		}\uElseIf{\( l > 6\ \&\&\ i\bmod l = 4\)}{
 			\( t \leftarrow \text{SubWord}(t) \)\;
 		}\End
@@ -93,20 +93,19 @@ void KeyExpansion(const u8* uKey, u32* rKey) {
 \end{lstlisting}
 
 \newpage
-\section{Advanced Encryption Standard - 128 / 192 / 256}
+\section{8-bit AES - 128 / 192 / 256}
 
 \begin{algorithm}[H]
-	\caption{Encryption of AES}
+	\caption{Encryption of 8-bit AES}
 	
-	\KwIn{block $\mathsf{src} \in \binaryfield^{128}$, round-keys $\{rk_i\}_{i=0}^{N_r+1}$ ($rk_i \in \binaryfield^{128}$)}
+	\KwIn{block $\mathsf{src} \in \binaryfield^{128}$, round-keys $\{rk_i\}_{i=0}^{N_r+1}$ ($rk_i \in \binaryfield^{32*4}$)}
 	\KwOut{block $\mathsf{dst} \in \binaryfield^{128}$}
 	\BlankLine
-	$t \leftarrow \mathsf{src}$\;
-	$t \leftarrow \text{AddRoundKey}(t, rk_0)$\;
+	$t \leftarrow \text{AddRoundKey}(\mathsf{src}, rk_0)$\tcp*{AddRoundKey$:\binaryfield^{8*16}\times\binaryfield^{32*4}\to\binaryfield^{8*16}$}
 	\For{$i \leftarrow 1$ \KwTo $N_r - 1$}{
-		$t \leftarrow \text{SubBytes}(t)$\;
-		$t \leftarrow \text{ShiftRows}(t)$\;
-		$t \leftarrow \text{MixColumns}(t)$\;
+		$t \leftarrow \text{SubBytes}(t)$\tcp*{SubBytes$:\binaryfield^{8*16}\to \binaryfield^{8*16}$}
+		$t \leftarrow \text{ShiftRows}(t)$\tcp*{ShiftRows$:\binaryfield^{8*16}\to \binaryfield^{8*16}$}
+		$t \leftarrow \text{MixColumns}(t)$\tcp*{MixColumns$:\binaryfield^{8*16}\to \binaryfield^{8*16}$}
 		$t \leftarrow \text{AddRoundKey}(t, rk_i)$\;
 	}
 	$t \leftarrow \text{SubBytes}(t)$\;
@@ -115,29 +114,89 @@ void KeyExpansion(const u8* uKey, u32* rKey) {
 	$\mathsf{dst} \leftarrow t$\;
 	\Return{$\mathsf{dst}$}\;
 \end{algorithm}
-\vspace{24pt}
-\begin{algorithm}[H]
-	\caption{Decryption of AES}
+
+\begin{lstlisting}[style=C, caption={8-bit AES Encryption},captionpos=t]
+void AES_Encrypt(const u8* plaintext, const u8* key,
+	u8* ciphertext) {
+	// AES-128/192/256: roundKey[44]/roundKey[52]/roundKey[60]
+	u32 roundKey[ROUND_KEYS_SIZE / sizeof(u32)];
+	u8 state[AES_BLOCK_SIZE]; // state[16]
 	
-	\KwIn{block $\mathsf{src} \in \binaryfield^{128}$, round-keys $\{rk_i\}_{i=0}^{N_r+1}$ ($rk_i \in \binaryfield^{128}$)}
+	// Copy plaintext to state
+	for (int i = 0; i < AES_BLOCK_SIZE; i++)
+		state[i] = plaintext[i];
+	
+	KeyExpansion(key, roundKey);
+	
+// 0: roundKey[  0] | roundKey[1] | roundKey[ 2] | roundKey[    3]
+	AddRoundKey(state, roundKey); // Initial round
+	
+	for (int round = 1; round <= Nr; round++) { // Main rounds
+		SubBytes(state); ShiftRows(state);
+		if (round != Nr) MixColumns(state);
+// 1: roundKey[  4] | roundKey[5] | roundKey[ 6] | roundKey[    7]
+// 2: roundKey[  8] | roundKey[9] | roundKey[10] | roundKey[   11]
+// i: roundKey[4*i] |    ...      |    ...       | roundKey[4*i+3]
+		AddRoundKey(state, roundKey + 4 * round);
+	}
+	
+	// Copy state to ciphertext
+	for (int i = 0; i < AES_BLOCK_SIZE; i++)
+		ciphertext[i] = state[i];
+}
+\end{lstlisting}
+
+\newpage
+\begin{algorithm}[H]
+	\caption{Decryption of 8-bit AES}
+	
+	\KwIn{block $\mathsf{src} \in \binaryfield^{128}$, round-keys $\{rk_i\}_{i=0}^{N_r+1}$ ($rk_i \in \binaryfield^{32*4}$)}
 	\KwOut{block $\mathsf{dst} \in \binaryfield^{128}$}
 	\BlankLine
-	$t \leftarrow \mathsf{src}$\;
-	$t \leftarrow \text{AddRoundKey}(t, rk_{N_r})$\;
+	$t \leftarrow \text{AddRoundKey}(\mathsf{src}, rk_{N_r})$\;
 	\For{$i \leftarrow N_r-1$ \KwTo $1$}{
 		$t \leftarrow \text{InvShiftRows}(t)$\;
 		$t \leftarrow \text{InvSubBytes}(t)$\;
 		$t \leftarrow \text{AddRoundKey}(t, rk_i)$\;
 		$t \leftarrow \text{InvMixColumns}(t)$\;
 	}
-	$t \leftarrow \text{InvSubBytes}(t)$\;
 	$t \leftarrow \text{InvShiftRows}(t)$\;
+	$t \leftarrow \text{InvSubBytes}(t)$\;
 	$t \leftarrow \text{AddRoundKey}(t, rk_{0})$\;
 	$\mathsf{dst} \leftarrow t$\;
 	\Return{$\mathsf{dst}$}\;
 \end{algorithm}
-
-
+\vspace{18pt}
+\begin{lstlisting}[style=C, caption={8-bit AES Decryption},captionpos=t]
+void AES_Decrypt(const u8* ciphertext, const u8* key,
+	u8* plaintext) {
+	u32 roundKey[ROUND_KEYS_SIZE / sizeof(u32)];
+	u8 state[AES_BLOCK_SIZE];
+	
+	KeyExpansion(key, roundKey);
+	
+	for (int i = 0; i < AES_BLOCK_SIZE; i++)
+		state[i] = ciphertext[i];
+	
+	// Initial round with the last round key
+	AddRoundKey(state, roundKey + 4 * Nr);
+	
+	// Main rounds in reverse order
+	for (int round = Nr - 1; round >= 0; round--) {
+		InvShiftRows(state);
+		InvSubBytes(state);
+// i: roundKey[4*i] |    ...      |    ...       | roundKey[4*i+3]
+// 1: roundKey[  4] | roundKey[5] | roundKey[ 6] | roundKey[    7]
+// 0: roundKey[  0] | roundKey[1] | roundKey[ 2] | roundKey[    3]
+		AddRoundKey(state, roundKey + 4 * round);
+		if (round != 0)
+			InvMixColumns(state);
+	}
+	
+	for (int i = 0; i < AES_BLOCK_SIZE; i++)
+		plaintext[i] = state[i];
+}
+\end{lstlisting}
 
 \newpage
 

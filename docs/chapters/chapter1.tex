@@ -106,7 +106,7 @@ static const u32 rCon[10] = {
 	}
 \end{algorithm}
 \vspace{24pt}
-\begin{lstlisting}[style=C, caption={AES Key Expansion},captionpos=t]
+\begin{lstlisting}[style=C, caption={AES-128 Key Expansion},captionpos=t]
 void KeyExpansion(const u8* uKey, u32* rKey) {
 	u32 temp;
 	int i = 0;
@@ -152,7 +152,7 @@ void KeyExpansion(const u8* uKey, u32* rKey) {
 \end{itemize}
 \begin{lstlisting}[style=C, caption={AES AddRoundKey},captionpos=t]
 void AddRoundKey(u8* state, const u32* rKey) {
-	for (int i = 0; i < AES_KEY_SIZE; i++) {
+	for (int i = 0; i < AES_BLOCK_SIZE; i++) {
 		// i =  0,  1,  2,  3 => wordIndex = 0
 		// i =  4,  5,  6,  7 => wordIndex = 1
 		// i =  8,  9, 10, 11 => wordIndex = 2
@@ -249,7 +249,7 @@ void AddRoundKey(u8* state, const u32* rKey) {
 
 \begin{lstlisting}[style=C, caption={Byte Substitution},captionpos=t]
 void SubBytes(u8* state) {
-	for (int i = 0; i < AES_KEY_SIZE; i++) {
+	for (int i = 0; i < AES_BLOCK_SIZE; i++) {
 		state[i] = s_box[state[i]];
 	}
 }
@@ -257,7 +257,7 @@ void SubBytes(u8* state) {
 
 \begin{lstlisting}[style=C, caption={Inverse Byte Substitution},captionpos=t]
 void SubBytes(u8* state) {
-	for (int i = 0; i < AES_KEY_SIZE; i++) {
+	for (int i = 0; i < AES_BLOCK_SIZE; i++) {
 		state[i] = inv_s_box[state[i]];
 	}
 }
