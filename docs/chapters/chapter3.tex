@@ -1,4 +1,4 @@
-\chapter{AES - 128 / 192 / 256 (32-bit Version)}
+\chapter{Pre-Computation using SubMix}
 \section{SubMix and InvSubInvMix}
 
 \begin{itemize}
@@ -280,6 +280,57 @@ U_3 & := & Td_0(X_{12}) & \oplus_{32} & Td_1(X_{13}) &\oplus_{32} & Td_2(X_{14})
 \end{array}
 \]
 
+\newpage
+\section{Implementation of SubMix and InvSubInvMix}
+
+\begin{lstlisting}[style=C, caption={SubMix},captionpos=t]
+void SubMix(u8* state) {
+	u32 temp[4];
+	
+	// temp[0] = Te0[state[ 0]] ^ Te1[state[ 1]] ^
+	// 		  	 Te2[state[ 2]] ^ Te3[state[ 3]];
+	// temp[1] = Te0[state[ 4]] ^ Te1[state[ 5]] ^
+	//			 Te2[state[ 6]] ^ Te3[state[ 7]];
+	// temp[2] = Te0[state[ 8]] ^ Te1[state[ 9]] ^
+	// 			 Te2[state[10]] ^ Te3[state[11]];
+	// temp[3] = Te0[state[11]] ^ Te1[state[12]] ^
+	// 			 Te2[state[13]] ^ Te3[state[14]];
+			  
+	for (int i = 0; i < 4; i++) {
+		temp[i] = Te0[state[4*i + 0]] ^
+				  Te1[state[4*i + 1]] ^
+				  Te2[state[4*i + 2]] ^
+				  Te3[state[4*i + 3]];
+	}
+
+	for (int i = 0; i < 4; i++) {
+		state[4*i + 0] = (temp[i] >> 0x18) & 0xff;
+		state[4*i + 1] = (temp[i] >> 0x10) & 0xff;
+		state[4*i + 2] = (temp[i] >> 0x08) & 0xff;
+		state[4*i + 3] = temp[i] & 0xff;
+	}
+}
+\end{lstlisting}
+\vspace{12pt}
+\begin{lstlisting}[style=C, caption={InvSubInvMix},captionpos=t]
+void InvSubInvMix(u8* state) {
+	u32 temp[4];
+	
+	for (int i = 0; i < 4; i++) {
+		temp[i] = Td0[state[4*i + 0]] ^
+				  Td1[state[4*i + 1]] ^
+				  Td2[state[4*i + 2]] ^
+				  Td3[state[4*i + 3]];
+	}
+	
+	for (int i = 0; i < 4; i++) {
+		state[4*i + 0] = (temp[i] >> 0x18) & 0xff;
+		state[4*i + 1] = (temp[i] >> 0x10) & 0xff;
+		state[4*i + 2] = (temp[i] >> 0x08) & 0xff;
+		state[4*i + 3] = temp[i] & 0xff;
+	}
+}
+\end{lstlisting}
 
 
 

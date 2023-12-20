@@ -57,6 +57,9 @@ void InvShiftRows(u8* state);
 void MixColumns(u8 *state);
 void InvMixColumns(u8 *state);
 
+void SubMix(u8* state);
+void InvSubInvMix(u8* state);
+
 /**
  * @brief Encrypts a single block of plaintext using AES-128.
  *
@@ -72,7 +75,7 @@ void InvMixColumns(u8 *state);
  * @param ciphertext A pointer to the buffer where the encrypted data will be stored.
  */
 void AES_Encrypt(const u8* plaintext, const u8* key, u8* ciphertext);
-void AES_Encrypt_Opt(const u8* plaintext, const u8* key, u8* ciphertext);
+void AES_Encrypt_Precomp(const u8* plaintext, const u8* key, u8* ciphertext);
 
 
 /**
@@ -88,7 +91,7 @@ void AES_Encrypt_Opt(const u8* plaintext, const u8* key, u8* ciphertext);
  * @param plaintext A pointer to the buffer where the decrypted plaintext will be stored.
  */
 void AES_Decrypt(const u8* ciphertext, const u8* key, u8* plaintext);
-void AES_Decrypt_Opt(const u8* ciphertext, const u8* key, u8* plaintext);
+void AES_Decrypt_Precomp(const u8* ciphertext, const u8* key, u8* plaintext);
 
 void AES_Encrypt_32BIT(const u8* plaintext, const u8* key, u8* ciphertext);
 void AES_Decrypt_32BIT(const u8* plaintext, const u8* key, u8* ciphertext);

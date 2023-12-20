@@ -136,10 +136,15 @@
 		SubBytes, InvSubBytes,
 		ShiftRows, InvShiftRows,
 		MixColumns, InvMixColumns,
+		SubMix, InvSubInvMix,
 		AES\_Encrypt, AES\_Decrypt
 	},
 	morekeywords=[6]{false, true, MAX, MIN},
-	morekeywords=[7]{AES\_VERSION, AES\_BLOCK\_SIZE, ROUND\_KEYS\_SIZE, s\_box, inv\_s\_box, Nk, Nr},
+	morekeywords=[7]{AES\_VERSION, AES\_BLOCK\_SIZE, ROUND\_KEYS\_SIZE,
+		s\_box, inv\_s\_box, Nk, Nr,
+		Te0, Te1, Te2, Te3,
+		Td0, Td1, Td2, Td3
+	},
 	numberstyle=\tiny\color{gray},
 	stringstyle=\color{purple},
 	showstringspaces=false,
