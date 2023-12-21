@@ -80,6 +80,10 @@
     "aes_key_expansion.h": "c",
     "aes.h": "c",
     "string.h": "c",
-    "cmath": "c"
+    "cmath": "c",
+    "utils.h": "c",
+    "stddef.h": "c",
+    "aes_modes.h": "c",
+    "xmmintrin.h": "c"
   }
 }

@@ -6,7 +6,7 @@
  * encryption and decryption processes. It uses the key expansion, utility functions,
  * and performs the core AES algorithm operations.
  */
-
+#include <emmintrin.h> // SSE2
 #include <string.h> // For memcpy
 
 #include "aes_key_expansion.h"
@@ -363,7 +363,7 @@ void AES_Encrypt_Precomp(const u8* plaintext, const u8* key, u8* ciphertext) {
 		ciphertext[i] = state[i];
 }
 
-void AES_Decrypt(const u8* ciphertext, const u8* key, u8* plaintext) {
+void AES_Decrypt_Precomp(const u8* ciphertext, const u8* key, u8* plaintext) {
 	u32 roundKey[ROUND_KEYS_SIZE / sizeof(u32)];
 	u8 state[AES_BLOCK_SIZE];
 
@@ -377,7 +377,7 @@ void AES_Decrypt(const u8* ciphertext, const u8* key, u8* plaintext) {
 	for (int round = Nr - 1; round > 0; round--) {
 		InvShiftRows(state);
 		InvSubInvMix(state);
-		u32* p = roundKey + round;
+		// u32* p = roundKey + round;
 		AddRoundKey(state, roundKey + 4 * round);
 	}
 
@@ -528,18 +528,6 @@ void AES_Decrypt_32BIT(const u8* ciphertext, const u8* key, u8* plaintext) {
         plaintext[4 * i + 3] = (u8)temp[i];
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 // aes_error_t aes_init(aes_ctx_t *ctx, const uint8_t *key, size_t key_length) {
 //     // Check for null pointers to prevent undefined behavior

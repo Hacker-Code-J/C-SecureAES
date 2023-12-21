@@ -7,6 +7,7 @@
  * It includes the routines to transform and expand the original key into
  * multiple round keys.
  */
+#include <immintrin.h>
 
 #include "aes_key_expansion.h"
 
@@ -149,3 +150,69 @@ void ReverseKeyExpansion(const u32* rKey, u8* originalKey) {
         originalKey[4 * i + 3] = (u8)(reversedKey[i]);
     }
 }
+
+// // Vectorized RotWord
+// __m128i RotWord_SSE(__m128i word) {
+//     return _mm_shuffle_epi32(word, _MM_SHUFFLE(2, 1, 0, 3));
+// }
+
+// // Helper function to load a single 32-bit word into an SSE register
+// __m128i load_word_sse(u32 word) {
+//     return _mm_cvtsi32_si128((int)word);
+// }
+
+// // Vectorized SubWord using SSE2 intrinsics
+// __m128i SubWord_SSE(__m128i word) {
+//     // Split the word into 4 bytes and duplicate each byte across 32-bit lanes
+//     __m128i t1 = _mm_shuffle_epi8(word, _mm_set_epi8(
+//         -1, -1, -1, 3,
+//         -1, -1, -1, 2,
+//         -1, -1, -1, 1,
+//         -1, -1, -1, 0));
+
+//     // Use _mm_shuffle_epi8 or a combination of shifts and masks to replace each byte
+//     // with its corresponding s_box value. This requires a strategy to vectorize the lookup.
+
+//     // Placeholder for actual s_box lookup implementation
+//     // ...
+
+//     // Combine the transformed bytes back into a single 32-bit word
+//     __m128i result = _mm_or_si128(_mm_or_si128(
+//         _mm_srli_si128(t1, 12), 
+//         _mm_srli_si128(t1, 8)), 
+//         _mm_or_si128(_mm_srli_si128(t1, 4), t1));
+
+//     return result;
+// }
+
+// // Example usage
+// u32 optimized_subword(u32 word) {
+//     __m128i wordVec = load_word_sse(word);
+//     __m128i transformed = SubWord_SSE(wordVec);
+//     return (u32)_mm_cvtsi128_si32(transformed);
+// }
+
+// void KeyExpansion_SSE(const u8* uKey, u32* rKey) {
+//     __m128i temp;
+//     __m128i* rKeyVec = (__m128i*)rKey;
+
+//     // Load initial keys
+//     for (int i = 0; i < Nk; i++) {
+//         rKeyVec[i] = _mm_set_epi32(
+//             (u32)uKey[4*i] << 0x18 | (u32)uKey[4*i+1] << 0x10 | 
+//             (u32)uKey[4*i+2] << 0x08 | (u32)uKey[4*i+3],
+//             0, 0, 0
+//         );
+//     }
+
+//     // Rest of key expansion
+//     for (int i = Nk; i < (Nr + 1) * 4; i++) {
+//         temp = rKeyVec[i - 1];
+//         if (i % Nk == 0) {
+//             temp = _mm_xor_si128(SubWord_SSE(RotWord_SSE(temp)), _mm_load_si128((__m128i*)&rCon[i / Nk - 1]));
+//         } else if (Nk > 6 && i % Nk == 4) {
+//             temp = SubWord_SSE(temp);
+//         }
+//         rKeyVec[i] = _mm_xor_si128(rKeyVec[i - Nk], temp);
+//     }
+// }

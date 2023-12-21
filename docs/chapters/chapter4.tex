@@ -1,105 +1,337 @@
-\chapter{Cryptanalysis}
+\chapter{Pre-Computation using SubMix}
+\section{SubMix and InvSubInvMix}
 
-\section{Linear Cryptanalysis}
-
-Linear cryptanalysis is an advanced cryptanalytic technique primarily used to attack symmetric key ciphers. It exploits the linear relations (approximations) between input bits, output bits, and key bits of a cipher. The technique was first introduced by Mitsuru Matsui and has since been instrumental in the analysis of various cryptographic algorithms.
-
-\subsection{Linear Approximation Example}
-
-Consider a block cipher with an input block $X$ and an output block $Y$. The essence of linear cryptanalysis lies in finding a linear approximation that correlates certain bits of $X$, $Y$, and the key $K$. A typical linear approximation can be expressed as follows:
-\[ P(X) \oplus Q(Y) = 0 \]
-where $P(X)$ and $Q(Y)$ are linear functions of the input and output blocks, respectively, $\oplus$ denotes the bitwise XOR operation, and $K'$ is a subkey or a combination of bits from the key $K$. Ideally, this equation holds with a probability significantly different from 0.5.
-
-\subsection{Linear Approximation Table (LAT)}
-
-A crucial tool in linear cryptanalysis is the Linear Approximation Table (LAT), particularly for analyzing S-boxes in block ciphers. An S-box is a fundamental component in many block ciphers that performs substitution, and LAT is used to measure the correlation between input and output bits of this S-box.
-
-The LAT is a matrix where each cell corresponds to a particular input-output bit combination and contains a value representing the correlation between these bits. These values are critical in identifying which linear approximations are strong (i.e., have a high correlation) and can be exploited in an attack.
+\begin{itemize}
+	\item $\text{SubMix}:\binaryfield^{128}\to\binaryfield^{128}$ and $\text{InvSubInvMix}:\binaryfield^{128}\to\binaryfield^{128}$ are defined by \begin{align*}
+		\text{SubMix} &:= \text{MixColumns}\circ\text{SubBytes}\\
+		\text{InvSubInvMix} &:= \text{InvMixColumns}\circ\text{InvSubBytes}.
+	\end{align*}
+\end{itemize}
+\vspace{24pt}
+\begin{algorithm}[H]
+	\caption{Encryption and Decryption of AES using SubMix and InvSubInvMix}
+	
+	\KwIn{block $\mathsf{src} \in \binaryfield^{128}$, round-keys $\{rk_i\}_{i=0}^{N_r+1}$ ($rk_i \in \binaryfield^{128}$)}
+	\KwOut{block $\mathsf{dst} \in \binaryfield^{128}$}
+	\BlankLine
+	\begin{multicols}{2}
+		\BlankLine
+		\Fn{$\mathsf{AES\_ENC}$}{
+			$t \leftarrow \mathsf{src}$\;
+			$t \leftarrow \text{AddRoundKey}(t, rk_0)$\;
+			\For{$i \leftarrow 1$ \KwTo $N_r - 1$}{
+				$t \leftarrow \textcolor{red}{\text{ShiftRows}(t)}$\;
+				$t \leftarrow \textcolor{blue}{\textbf{SubMix}(t)}$\;
+				$t \leftarrow \text{AddRoundKey}(t, rk_i)$\;
+			}
+			$t \leftarrow \text{SubBytes}(t)$\;
+			$t \leftarrow \text{ShiftRows}(t)$\;
+			$t \leftarrow \text{AddRoundKey}(t, rk_{N_r})$\;
+			$\mathsf{dst} \leftarrow t$\;
+			\Return{$\mathsf{dst}$}\;
+		}
+		\columnbreak % Move to the next column
+		\setcounter{AlgoLine}{0}  % Reset line numbering
+		\BlankLine
+		\Fn{$\mathsf{AES\_DEC}$}{
+			$t \leftarrow \mathsf{src}$\;
+			$t \leftarrow \text{AddRoundKey}(t, rk_{N_r})$\;
+			\For{$i \leftarrow N_r - 1$ \DownTo $1$}{
+				$t \leftarrow {\text{InvShiftRows}(t)}$\;
+				$t \leftarrow \textcolor{blue}{\textbf{InvSubInvMix}(t)}$\;
+				$t'\gets \textcolor{red}{\text{InvMixColumns}(rk_i)}$\;
+				$t \leftarrow \textcolor{red}{\text{AddRoundKey}(t, t')}$\;
+			}
+			$t \leftarrow \text{InvShiftRows}(t)$\;
+			$t \leftarrow \text{InvSubBytes}(t)$\;
+			$t \leftarrow \text{AddRoundKey}(t, rk_{0})$\;
+			$\mathsf{dst} \leftarrow t$\;
+			\Return{$\mathsf{dst}$}\;
+		}
+	\end{multicols}
+	\BlankLine
+\end{algorithm}
 
 \newpage
-\subsection{Attack Process}
+\section{$8\times 32$ Table Look Up}
 
-The general process of conducting a linear cryptanalytic attack involves several steps:
+Convert the 8-bit string $\set{X_i}_{i=0}^{15} (X_i\in\binaryfield^8)$ into a 32-bit string $\set{W_i}_{i=0}^3 (W_i\in\binaryfield^{32})$ as follows: \[
+W_i:=(X_{4i}\ll 24)\parallel(X_{4i+1}\ll 16)\parallel(X_{4i+2}\ll 8)\parallel(X_{4i+3})\in\binaryfield^{32}
+\] for $i=0,1,2,3$. In other words, \begin{table}[h!]
+	\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}|c|r|c|r|}
+		\hline
+		$X_0$ & \texttt{($W_0\gg$ 0x18) \& 0xff} & $X_4$ & \texttt{($W_1\gg$ 0x18) \& 0xff} \\
+		$X_1$ & \texttt{($W_0\gg$ 0x10) \& 0xff} & $X_5$ & \texttt{($W_1\gg$ 0x10) \& 0xff} \\
+		$X_2$ & \texttt{($W_0\gg$ 0x08) \& 0xff} & $X_6$ & \texttt{($W_1\gg$ 0x08) \& 0xff} \\
+		$X_3$ & \texttt{($W_0$) \& 0xff} & $X_7$ & \texttt{($W_1$) \& 0xff} \\
+		\hline
+		$X_8$ & \texttt{($W_2\gg$ 0x18) \& 0xff} & $X_{12}$ & \texttt{($W_3\gg$ 0x18) \& 0xff} \\
+		$X_9$ & \texttt{($W_2\gg$ 0x10) \& 0xff} & $X_{13}$ & \texttt{($W_3\gg$ 0x10) \& 0xff} \\
+		$X_{10}$ & \texttt{($W_2\gg$ 0x08) \& 0xff} & $X_{14}$ & \texttt{($W_3\gg$ 0x08) \& 0xff} \\
+		$X_{11}$ & \texttt{($W_2$) \& 0xff} & $X_{15}$ & \texttt{($W_3$) \& 0xff} \\
+		\hline
+	\end{tabular*}
+\end{table}\\
+Note that \begin{table}[h!]
+	\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+		\hline
+		$X_0$ & $X_1$ & $X_2$ & $X_3$ & $X_4$ & $X_5$ & $X_6$ & $X_7$ &
+		$X_8$ & $X_9$ & $X_{10}$ & $X_{11}$ & $X_{12}$ & $X_{13}$ & $X_{14}$ & $X_{15}$\\
+		\hline
+		\multicolumn{4}{|c|}{$W_0$} & \multicolumn{4}{c|}{$W_1$} & \multicolumn{4}{c|}{$W_2$} & \multicolumn{4}{c|}{$W_3$}\\
+		\hline
+	\end{tabular*}
+\end{table}
 
-\begin{enumerate}
-	\item \textbf{Identify Strong Linear Approximations:} Using the LAT, identify the linear approximations with the highest bias. The bias is the deviation of the approximation's probability from 0.5.
-	\begin{itemize}
-		\item \textit{Mathematical Foundation:} Analyze the Linear Approximation Table (LAT) for strong linear correlations. LAT is a 2D matrix with biases of linear approximations as entries.
-		\item \textit{Calculation:} For an S-box with \( n \) input and output bits, LAT is a \( 2^n \times 2^n \) matrix. Bias is calculated as \( \frac{\#matches}{2^n} - \frac{1}{2} \).
-		\item \textit{Selection Criterion:} Choose approximations with the highest absolute bias values.
-	\end{itemize}
-	\item \textbf{Estimate Bias:} Accurately estimate the bias of the chosen approximation. This estimation is crucial for the success of the attack.
-	\begin{itemize}
-		\item \textit{Theory:} Bias is the deviation of the approximation's probability from 0.5.
-		\item \textit{Mathematical Approach:} Use statistical methods like maximum likelihood estimation or Bayesian inference for bias refinement.
-		\item \textit{Accuracy Considerations:} More data leads to more accurate bias estimation.
-	\end{itemize}
-	\item \textbf{Collect Plaintext-Ciphertext Pairs:} Amass a large number of plaintext-ciphertext pairs that correspond to the chosen approximation. The number of required pairs depends on the bias; weaker biases require more pairs.
-	\begin{itemize}
-		\item \textit{Data Requirement Analysis:} Required pairs \( N \approx \frac{1}{\epsilon^2} \), where \( \epsilon \) is the bias.
-		\item \textit{Collection Methodology:} Data collection can vary based on the cipher and scenario.
-		\item \textit{Computational Aspects:} Consider the complexity of storing and processing large amounts of data.
-	\end{itemize}
-	\item \textbf{Key Recovery:} Apply statistical methods to analyze the collected data. Exploit the bias to make informed guesses about the key bits or subkey, thereby incrementally recovering parts of the encryption key.
-	\begin{itemize}
-		\item \textit{Statistical Analysis:} Use statistical tests like chi-squared tests to analyze data.
-		\item \textit{Exploiting Bias:} Use bias to infer key bits probabilistically.
-		\item \textit{Incremental Key Recovery:} Recover different segments of the key gradually.
-		\item \textit{Complexity Considerations:} Analyze the time complexity and employ optimization techniques if necessary.
-	\end{itemize}
-\end{enumerate}
-
-In practice, the effectiveness of linear cryptanalysis depends on the cipher's structure, the quality of the linear approximations, and the amount of available data. It has been notably applied to attack DES (Data Encryption Standard) and has influenced the design of new cryptographic algorithms to be resistant to this form of analysis.
+\vspace{24pt}
+\begin{algorithm}[H]
+	\caption{SubMix and InvSubInvMix}
+	\begin{multicols}{2}
+		\KwIn{$(W_0, W_1, W_2, W_3)\in\binaryfield^{128=32\times 4}$}
+		\KwOut{$(V_0, V_1, V_2, V_3)\in\binaryfield^{128=32\times 4}$}
+		\BlankLine
+		\Fn{$\mathsf{SubMix}$}{
+			\For{$i\gets 0$ \KwTo $3$}{
+				$V_i\gets Te_0\left((W_i\gg \texttt{0x18})\texttt{ \& 0xff}\right)$\\
+				$\quad\quad\oplus_{32}\ Te_1\left((W_i\gg \texttt{0x10})\texttt{ \& 0xff}\right)$\\
+				$\quad\quad\oplus_{32}\ Te_2\left((W_i\gg \texttt{0x08})\texttt{ \& 0xff}\right)$\\
+				$\quad\quad\oplus_{32}\ Te_3\left(W_i\texttt{ \& 0xff}\right)$\;
+			}
+			\Return $(V_0, V_1, V_2, V_3)$\;
+		}
+		\columnbreak % Move to the next column
+		\setcounter{AlgoLine}{0}  % Reset line numbering
+		\KwIn{$(W_0, W_1, W_2, W_3)\in\binaryfield^{128=32\times 4}$}
+		\KwOut{$(U_0, U_1, U_2, U_3)\in\binaryfield^{128=32\times 4}$}
+		\BlankLine
+		\Fn{$\mathsf{InvSubInvMix}$}{
+			\For{$i\gets 0$ \KwTo $3$}{
+				$U_i\gets Td_0\left((W_i\gg \texttt{0x18})\texttt{ \& 0xff}\right)$\\
+				$\quad\quad\oplus_{32}\ Td_1\left((W_i\gg \texttt{0x10})\texttt{ \& 0xff}\right)$\\
+				$\quad\quad\oplus_{32}\ Td_2\left((W_i\gg \texttt{0x08})\texttt{ \& 0xff}\right)$\\
+				$\quad\quad\oplus_{32}\ Td_3\left(W_i\texttt{ \& 0xff}\right)$\;
+			}
+			\Return $(U_0, U_1, U_2, U_3)$\;
+		}
+	\end{multicols}
+	\BlankLine
+\end{algorithm}
 
 \newpage
-\section{Differential Cryptanalysis}
+\section{Generation of $8\times 32$ Tables}
+Note that \begin{align*}
+	\begin{pmatrix}
+		V_0 & V_4 & V_8 & V_{12} \\
+		V_1 & V_5 & V_9 & V_{13} \\
+		V_2 & V_6 & V_{10} & V_{14} \\
+		V_3 & V_7 & V_{11} & V_{15}
+	\end{pmatrix}&=\text{SubMix}\left(\begin{pmatrix}
+		X_0 & X_4 & X_8 & X_{12} \\
+		X_1 & X_5 & X_9 & X_{13} \\
+		X_2 & X_6 & X_{10} & X_{14} \\
+		X_3 & X_7 & X_{11} & X_{15}
+	\end{pmatrix}\right):=\\
+&\begin{pmatrix}
+		\texttt{0x02} & \texttt{0x03} & \texttt{0x01} & \texttt{0x01}\\
+		\texttt{0x01} & \texttt{0x02} & \texttt{0x03} & \texttt{0x01}\\
+		\texttt{0x01} & \texttt{0x01} & \texttt{0x02} & \texttt{0x03}\\
+		\texttt{0x03} & \texttt{0x01} & \texttt{0x01} & \texttt{0x02}
+	\end{pmatrix}\begin{pmatrix}
+		s(X_0) & s(X_4) & s(X_8) & s(X_{12}) \\
+		s(X_1) & s(X_5) & s(X_9) & s(X_{13}) \\
+		s(X_2) & s(X_6) & s(X_{10}) & s(X_{14}) \\
+		s(X_3) & s(X_7) & s(X_{11}) & s(X_{15})
+	\end{pmatrix},\\
+\begin{pmatrix}
+	U_0 & V_4 & U_8 & U_{12} \\
+	U_1 & V_5 & U_9 & U_{13} \\
+	U_2 & V_6 & U_{10} & U_{14} \\
+	U_3 & V_7 & U_{11} & U_{15}
+\end{pmatrix}&=\text{InvSubInvMix}\left(\begin{pmatrix}
+	X_0 & X_4 & X_8 & X_{12} \\
+	X_1 & X_5 & X_9 & X_{13} \\
+	X_2 & X_6 & X_{10} & X_{14} \\
+	X_3 & X_7 & X_{11} & X_{15}
+\end{pmatrix}\right):=\\
+&\begin{pmatrix}
+	\texttt{0x0e} & \texttt{0x0b} & \texttt{0x0d} & \texttt{0x09}\\
+	\texttt{0x09} & \texttt{0x0e} & \texttt{0x0b} & \texttt{0x0d}\\
+	\texttt{0x0d} & \texttt{0x09} & \texttt{0x0e} & \texttt{0x0b}\\
+	\texttt{0x0b} & \texttt{0x0d} & \texttt{0x09} & \texttt{0x0e}
+\end{pmatrix}\begin{pmatrix}
+	s^{-1}(X_0) & s^{-1}(X_4) & s^{-1}(X_8) & s^{-1}(X_{12}) \\
+	s^{-1}(X_1) & s^{-1}(X_5) & s^{-1}(X_9) & s^{-1}(X_{13}) \\
+	s^{-1}(X_2) & s^{-1}(X_6) & s^{-1}(X_{10}) & s^{-1}(X_{14}) \\
+	s^{-1}(X_3) & s^{-1}(X_7) & s^{-1}(X_{11}) & s^{-1}(X_{15})
+\end{pmatrix}.
+\end{align*}
+Then \begin{align*}
+\left(\begin{array}{l}
+	V_{4i} \\
+	V_{4i+1} \\
+	V_{4i+2} \\
+	V_{4i+3}
+\end{array}\right)&=\begin{pmatrix}
+	\texttt{0x02} & \texttt{0x03} & \texttt{0x01} & \texttt{0x01}\\
+	\texttt{0x01} & \texttt{0x02} & \texttt{0x03} & \texttt{0x01}\\
+	\texttt{0x01} & \texttt{0x01} & \texttt{0x02} & \texttt{0x03}\\
+	\texttt{0x03} & \texttt{0x01} & \texttt{0x01} & \texttt{0x02}
+\end{pmatrix}\left(\begin{array}{l}
+s(X_{4i})\\
+s(X_{4i+1})\\
+s(X_{4i+2})\\
+s(X_{4i+3})
+\end{array}\right)\\
+&=s(X_{4i})\begin{pmatrix}
+	\texttt{0x02}\\
+	\texttt{0x01}\\
+	\texttt{0x01}\\
+	\texttt{0x03}
+\end{pmatrix}\oplus_{32} s(X_{4i+1})\begin{pmatrix}
+\texttt{0x03}\\
+\texttt{0x02}\\
+\texttt{0x01}\\
+\texttt{0x01}
+\end{pmatrix}\oplus_{32} s(X_{4i+2})\begin{pmatrix}
+\texttt{0x01}\\
+\texttt{0x03}\\
+\texttt{0x02}\\
+\texttt{0x01}
+\end{pmatrix}\oplus_{32} s(X_{4i+3})\begin{pmatrix}
+\texttt{0x01}\\
+\texttt{0x01}\\
+\texttt{0x03}\\
+\texttt{0x02}
+\end{pmatrix},\\
+\left(\begin{array}{l}
+	U_{4i} \\
+	U_{4i+1} \\
+	U_{4i+2} \\
+	U_{4i+3}
+\end{array}\right)&=\begin{pmatrix}
+	\texttt{0x0e} & \texttt{0x0b} & \texttt{0x0d} & \texttt{0x09}\\
+	\texttt{0x09} & \texttt{0x0e} & \texttt{0x0b} & \texttt{0x0d}\\
+	\texttt{0x0d} & \texttt{0x09} & \texttt{0x0e} & \texttt{0x0b}\\
+	\texttt{0x0b} & \texttt{0x0d} & \texttt{0x09} & \texttt{0x0e}
+\end{pmatrix}\left(\begin{array}{l}
+	s^{-1}(X_{4i})\\
+	s^{-1}(X_{4i+1})\\
+	s^{-1}(X_{4i+2})\\
+	s^{-1}(X_{4i+3})
+\end{array}\right)\\
+&=s^{-1}(X_{4i})\begin{pmatrix}
+	\texttt{0x0e}\\
+	\texttt{0x09}\\
+	\texttt{0x0d}\\
+	\texttt{0x0b}
+\end{pmatrix}\oplus s^{-1}(X_{4i+1})\begin{pmatrix}
+	\texttt{0x0b}\\
+	\texttt{0x0e}\\
+	\texttt{0x09}\\
+	\texttt{0x0d}
+\end{pmatrix}\oplus s^{-1}(X_{4i+2})\begin{pmatrix}
+	\texttt{0x0d}\\
+	\texttt{0x0b}\\
+	\texttt{0x0e}\\
+	\texttt{0x09}
+\end{pmatrix}\oplus s^{-1}(X_{4i+3})\begin{pmatrix}
+	\texttt{0x09}\\
+	\texttt{0x0d}\\
+	\texttt{0x0b}\\
+	\texttt{0x0e}
+\end{pmatrix}.
+\end{align*}
 
-Differential Cryptanalysis is a method used in cryptography to analyze the effect of specific differences in input pairs on the differences in the resulting output pairs. This technique is especially powerful in the analysis of block ciphers.
+\newpage
+We define $Te_i/Td_i:\binaryfield^{8}\to\binaryfield^{32} (i\in\set{0,1,2,3})$ as follows:
+\begin{align*}
+Te_0(X)&:=\left(\mathcolorbox{green!20}{\texttt{0x02}\otimes_8 s(X)},\mathcolorbox{red!20}{s(X)},\mathcolorbox{red!20}{s(X)},\mathcolorbox{blue!20}{\texttt{0x03}\otimes_8 s(X)}\right),\\
+Te_1(X)&:=\left(\mathcolorbox{blue!20}{\texttt{0x03}\otimes_8 s(X)},\mathcolorbox{green!20}{\texttt{0x02}\otimes_8 s(X)},\mathcolorbox{red!20}{s(X)},\mathcolorbox{red!20}{s(X)}\right),\\
+Te_2(X)&:=\left(\mathcolorbox{red!20}{s(X)}, \mathcolorbox{blue!20}{\texttt{0x03}\otimes_8 s(X)}, \mathcolorbox{green!20}{\texttt{0x02}\otimes_8 s(X)}, \mathcolorbox{red!20}{s(X)}\right),\\
+Te_3(X)&:=\left(\mathcolorbox{red!20}{s(X)}, \mathcolorbox{red!20}{s(X)}, \mathcolorbox{blue!20}{\texttt{0x03}\otimes_8 s(X)}, \mathcolorbox{green!20}{\texttt{0x02}\otimes_8 s(X)}\right),
+\end{align*}
+and \begin{align*}
+Td_0(X)&:=\left(\mathcolorbox{cyan!20}{\texttt{0x0e}\otimes_8 s^{-1}(X)}, \mathcolorbox{yellow!20}{\texttt{0x09}\otimes_8 s^{-1}(X)}, \mathcolorbox{magenta!20}{\texttt{0x0d}\otimes_8 s^{-1}(X)}, \mathcolorbox{orange!20}{\texttt{0x0b}\otimes_8 s^{-1}(X)}\right),\\
+Td_1(X)&:=\left(\mathcolorbox{orange!20}{\texttt{0x0b}\otimes_8 s^{-1}(X)}, \mathcolorbox{cyan!20}{\texttt{0x0e}\otimes_8 s^{-1}(X)}, \mathcolorbox{yellow!20}{\texttt{0x09}\otimes_8 s^{-1}(X)}, \mathcolorbox{magenta!20}{\texttt{0x0d}\otimes_8 s^{-1}(X)}\right),\\
+Td_2(X)&:=\left(\mathcolorbox{magenta!20}{\texttt{0x0d}\otimes_8 s^{-1}(X)}, \mathcolorbox{orange!20}{\texttt{0x0b}\otimes_8 s^{-1}(X)}, \mathcolorbox{cyan!20}{\texttt{0x0e}\otimes_8 s^{-1}(X)}, \mathcolorbox{yellow!20}{\texttt{0x09}\otimes_8 s^{-1}(X)} \right),\\
+Td_3(X)&:=\left(\mathcolorbox{yellow!20}{\texttt{0x09}\otimes_8 s^{-1}(X)}, \mathcolorbox{magenta!20}{\texttt{0x0d}\otimes_8 s^{-1}(X)}, \mathcolorbox{orange!20}{\texttt{0x0b}\otimes_8 s^{-1}(X)}, \mathcolorbox{cyan!20}{\texttt{0x0e}\otimes_8 s^{-1}(X)}\right).
+\end{align*}
+\\
+$\text{SubMix}/\text{InvSubInvMix}:\binaryfield^{128}\to\binaryfield^{128}$ are computed as follows: \begin{align*}
+	\text{SubMix}(W_0,W_1,W_2,W_3)&:=(V_0,V_1,V_2,V_3), \\
+	\text{InvSubInvMix}(W_0,W_1,W_2,W_3)&:=(U_0,U_1,U_2,U_3)
+\end{align*}
+where $\begin{cases}
+	W_0:=X_0\parallel X_1\parallel X_2\parallel X_3\\
+	W_1:=X_4\parallel X_5\parallel X_6\parallel X_7\\
+	W_2:=X_8\parallel X_9\parallel X_{10}\parallel X_{11}\\
+	W_3:=X_{12}\parallel X_{13}\parallel X_{14}\parallel X_{15}
+\end{cases} (W_i\in\binaryfield^{32})$ and \[
+\begin{array}{ccccccccc}
+V_0 & := & Te_0(X_0) & \oplus_{32} & Te_1(X_1) &\oplus_{32} & Te_2(X_2) &\oplus_{32} & Te_3(X_3), \\
+V_1 & := & Te_0(X_4) & \oplus_{32} & Te_1(X_5) &\oplus_{32} & Te_2(X_6) &\oplus_{32} & Te_3(X_7), \\
+V_2 & := & Te_0(X_8) & \oplus_{32} & Te_1(X_9) &\oplus_{32} & Te_2(X_{10}) &\oplus_{32} & Te_3(X_{11}), \\
+V_3 & := & Te_0(X_{12}) & \oplus_{32} & Te_1(X_{13}) &\oplus_{32} & Te_2(X_{14}) &\oplus_{32} & Te_3(X_{15}), \\
+\\
+U_0 & := & Td_0(X_0) & \oplus_{32} & Td_1(X_1) &\oplus_{32} & Td_2(X_2) &\oplus_{32} & Td_3(X_3), \\
+U_1 & := & Td_0(X_4) & \oplus_{32} & Td_1(X_5) &\oplus_{32} & Td_2(X_6) &\oplus_{32} & Td_3(X_7), \\
+U_2 & := & Td_0(X_8) & \oplus_{32} & Td_1(X_9) &\oplus_{32} & Td_2(X_{10}) &\oplus_{32} & Td_3(X_{11}), \\
+U_3 & := & Td_0(X_{12}) & \oplus_{32} & Td_1(X_{13}) &\oplus_{32} & Td_2(X_{14}) &\oplus_{32} & Td_3(X_{15}). \\
+\end{array}
+\]
 
-\subsection{Differential Example}
+\newpage
+\section{Implementation of SubMix and InvSubInvMix}
 
-Given a pair of inputs $(X, X')$ and their corresponding outputs $(Y, Y')$ under a cryptographic transformation. The differentials are defined as follows:
-\[ \Delta X = X \oplus X', \quad \Delta Y = Y \oplus Y' \]
-where $\oplus$ denotes the bitwise XOR operation. This operation highlights the changes from $X$ to $X'$
-and from $Y$ to $Y'$ at the bit level.
-
-\subsection{Differential Characteristic}
-
-A differential characteristic is a crucial concept in this analysis. It is a sequence of expected input and output differentials for each round or stage of the cipher. These characteristics are probabilistic in nature and provide insights into how certain input differentials propagate to output differentials through the cipher's structure.
-
-\subsubsection{Probability of a Differential Characteristic}
-The probability of a differential characteristic is a key metric in differential cryptanalysis. It measures the likelihood that a specific input differential will result in the expected output differential after passing through the rounds of the cipher
-
-\subsection{Attack Process}
-\begin{enumerate}
-	\item \textbf{Select Pairs of Plaintexts with a Certain Difference:}
-	Choose plaintext pairs 
-	$(P,P')$ such that the difference 
-	$\Delta P=P\oplus P'$ is specific and strategically chosen based on the cipher's structure.
-	\begin{itemize}
-		\item \textit{Concept:} Choose plaintext pairs \((P_1, P_2)\) such that \(\Delta P = P_1 \oplus P_2\), where \(\oplus\) is the bitwise XOR operation.
-		\item \textit{Method:} Selection of \(\Delta P\) is based on cipher's structure analysis. Aim to identify a \(\Delta P\) that can cause predictable effects in ciphertexts.
-		\item \textit{Mathematical Formulation:} This involves a heuristic approach to identify exploitable differences.
-	\end{itemize}
+\begin{lstlisting}[style=C, caption={SubMix},captionpos=t]
+void SubMix(u8* state) {
+	u32 temp[4];
 	
-	\item \textbf{Analyze How This Difference Propagates Through the Cipher:} Study the propagation of \(\Delta P\) through the cipher. This involves analyzing the impact of the differential on the cipher's components like S-boxes, permutation layers, etc.
-	\begin{itemize}
-		\item \textit{Theory:} Study the propagation of \(\Delta P\) through the cipher's rounds.
-		\item \textit{Mathematical Tools:} Use differential characteristics and probabilistic analysis of the cipher components.
-		\item \textit{Computational Analysis:} Combine analytical techniques and computational experiments to understand difference propagation.
-	\end{itemize}
+	// temp[0] = Te0[state[ 0]] ^ Te1[state[ 1]] ^
+	// 		  	 Te2[state[ 2]] ^ Te3[state[ 3]];
+	// temp[1] = Te0[state[ 4]] ^ Te1[state[ 5]] ^
+	//			 Te2[state[ 6]] ^ Te3[state[ 7]];
+	// temp[2] = Te0[state[ 8]] ^ Te1[state[ 9]] ^
+	// 			 Te2[state[10]] ^ Te3[state[11]];
+	// temp[3] = Te0[state[11]] ^ Te1[state[12]] ^
+	// 			 Te2[state[13]] ^ Te3[state[14]];
+			  
+	for (int i = 0; i < 4; i++) {
+		temp[i] = Te0[state[4*i + 0]] ^
+				  Te1[state[4*i + 1]] ^
+				  Te2[state[4*i + 2]] ^
+				  Te3[state[4*i + 3]];
+	}
+
+	for (int i = 0; i < 4; i++) {
+		state[4*i + 0] = (temp[i] >> 0x18) & 0xff;
+		state[4*i + 1] = (temp[i] >> 0x10) & 0xff;
+		state[4*i + 2] = (temp[i] >> 0x08) & 0xff;
+		state[4*i + 3] = temp[i] & 0xff;
+	}
+}
+\end{lstlisting}
+\vspace{12pt}
+\begin{lstlisting}[style=C, caption={InvSubInvMix},captionpos=t]
+void InvSubInvMix(u8* state) {
+	u32 temp[4];
 	
-	\item \textbf{Gather Plaintext-Ciphertext Pairs Following the Differential:} Collect a significant number of plaintext-ciphertext pairs that conform to the chosen differential. This data is used to analyze the behavior of the cipher under the differential attack.
-	\begin{itemize}
-		\item \textit{Data Collection:} Accumulate pairs \((P, C)\) that conform to \(\Delta P\).
-		\item \textit{Statistical Analysis:} Analyze the distribution of output difference \(\Delta C = C_1 \oplus C_2\).
-		\item \textit{Data Requirements:} The number of pairs depends on the differential characteristic's probability and cipher's strength.
-	\end{itemize}
+	for (int i = 0; i < 4; i++) {
+		temp[i] = Td0[state[4*i + 0]] ^
+				  Td1[state[4*i + 1]] ^
+				  Td2[state[4*i + 2]] ^
+				  Td3[state[4*i + 3]];
+	}
 	
-	\item \textbf{Make Key Hypotheses Based on Output Differences:} Based on the differences observed in the ciphertext pairs, hypothesize about the possible key or subkey values. These hypotheses are then tested and refined to recover the key or reduce the key space.
-	\begin{itemize}
-		\item \textit{Hypothesis Generation:} Formulate hypotheses about the key based on \(\Delta C\).
-		\item \textit{Mathematical Techniques:} Use linear algebra, probability theory, and optimization algorithms for hypothesis refinement.
-		\item \textit{Verification:} Test hypotheses against multiple plaintext-ciphertext pairs.
-	\end{itemize}
-\end{enumerate}
+	for (int i = 0; i < 4; i++) {
+		state[4*i + 0] = (temp[i] >> 0x18) & 0xff;
+		state[4*i + 1] = (temp[i] >> 0x10) & 0xff;
+		state[4*i + 2] = (temp[i] >> 0x08) & 0xff;
+		state[4*i + 3] = temp[i] & 0xff;
+	}
+}
+\end{lstlisting}
+
+
+
+

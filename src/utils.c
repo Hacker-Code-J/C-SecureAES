@@ -38,6 +38,99 @@ void RANDOM_KEY_GENERATION(u8* key) {
     }
 }
 
+// Base64 characters
+static const char base64_chars[] = 
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+// Function to find the index of a base64 character
+static int base64_char_value(char c) {
+    if (c >= 'A' && c <= 'Z') return c - 'A';
+    if (c >= 'a' && c <= 'z') return c - 'a' + 26;
+    if (c >= '0' && c <= '9') return c - '0' + 52;
+    if (c == '+') return 62;
+    if (c == '/') return 63;
+    return -1;
+}
+
+// Function to encode a string into base64
+char *base64_encode(const u8* input, int length) {
+    int i = 0, j = 0;
+    int enc_len = 4 * ((length + 2) / 3);
+    char *encoded = malloc(enc_len + 1);
+
+    for (i = 0; i < length; i += 3) {
+        int val = (0xFF & (int)input[i]) << 16;
+        val += (i + 1 < length) ? (0xFF & (int)input[i + 1]) << 8 : 0;
+        val += (i + 2 < length) ? 0xFF & (int)input[i + 2] : 0;
+
+        encoded[j++] = base64_chars[(val >> 18) & 0x3F];
+        encoded[j++] = base64_chars[(val >> 12) & 0x3F];
+        encoded[j++] = (i + 1 < length) ? base64_chars[(val >> 6) & 0x3F] : '=';
+        encoded[j++] = (i + 2 < length) ? base64_chars[val & 0x3F] : '=';
+    }
+
+    encoded[enc_len] = '\0';
+    return encoded;
+}
+
+// Function to convert a string to hexadecimal
+char *string_to_hex(const char *input) {
+    if (input == NULL) return NULL;
+
+    size_t length = strlen(input);
+    char *hex_output = malloc(2 * length + 1);
+    char *hex_ptr = hex_output;
+
+    for (size_t i = 0; i < length; ++i) {
+        hex_ptr += sprintf(hex_ptr, "%02x", (unsigned char)input[i]);
+    }
+
+    hex_output[2 * length] = '\0';
+    return hex_output;
+}
+
+// Function to decode a base64 encoded string
+u8 *base64_decode(const char *input, int *out_length) {
+    int length = strlen(input);
+    int pad = (input[length - 1] == '=') + (input[length - 2] == '=');
+
+    *out_length = 3 * length / 4 - pad;
+    unsigned char *decoded = malloc(*out_length);
+    if (!decoded) return NULL;
+
+    for (int i = 0, j = 0; i < length; i += 4, j += 3) {
+        int n = base64_char_value(input[i]) << 18;
+        n += base64_char_value(input[i + 1]) << 12;
+        n += base64_char_value(input[i + 2]) << 6;
+        n += base64_char_value(input[i + 3]);
+
+        decoded[j] = (n >> 16) & 0xFF;
+        if (i + 2 < length && input[i + 2] != '=') decoded[j + 1] = (n >> 8) & 0xFF;
+        if (i + 3 < length && input[i + 3] != '=') decoded[j + 2] = n & 0xFF;
+    }
+
+    return decoded;
+}
+
+// Function to convert a hexadecimal string to a byte array
+u8 *hex_to_bytes(const char *hex, int *out_length) {
+    if (hex == NULL) return NULL;
+
+    size_t len = strlen(hex);
+    if (len % 2 != 0) return NULL; // Hex string must be even length
+
+    size_t final_len = len / 2;
+    *out_length = final_len;
+    unsigned char *bytes = malloc(final_len);
+    if (!bytes) return NULL;
+
+    for (size_t i = 0; i < final_len; ++i) {
+        sscanf(hex + 2*i, "%2hhx", &bytes[i]);
+    }
+
+    return bytes;
+}
+
 // u8 MUL_GF256(u8 a, u8 b) {
 // 	u8 res = 0;
 // 	// Mask for detecting the MSB (0x80 = 0b10000000)

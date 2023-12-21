@@ -10,12 +10,19 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
-#include "config.h"
+#include <stddef.h>
 
+#include "config.h"
 
 void stringToByteArray(const char* hexString, u8* byteArray);
 
 void RANDOM_KEY_GENERATION(u8 *key);
+
+char *base64_encode(const u8* input, int length);
+char *string_to_hex(const char *input);
+
+u8 *base64_decode(const char *input, int *out_length);
+u8 *hex_to_bytes(const char *hex, int *out_length);
 
 // /**
 //  * Performs multiplication in the Galois Field (2^8), which is used in the MixColumns step of AES.

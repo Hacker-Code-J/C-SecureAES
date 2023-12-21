@@ -1,9 +1,10 @@
 # Compiler settings - Can be customized.
 CC = gcc
 CFLAGS = -I./include -O2 -Wall -Wextra
+LDFLAGS = -lcrypto
 
 # Source files
-SRC = ./src/utils.c ./src/aes_key_expansion.c ./src/aes.c
+SRC = ./src/utils.c ./src/aes_key_expansion.c ./src/aes.c ./src/aes_modes.c
 OBJ = $(SRC:./src/%.c=./obj/%.o)
 
 # Test program
@@ -14,7 +15,7 @@ TEST_OUT = a.out
 all: $(TEST_OUT)
 
 $(TEST_OUT): $(OBJ)
-	$(CC) $(CFLAGS) -o $(TEST_OUT) $(TEST_SRC) $(OBJ)
+	$(CC) $(CFLAGS) -o $(TEST_OUT) $(TEST_SRC) $(OBJ) $(LDFLAGS)
 
 # Compile source files into object files
 ./obj/%.o: ./src/%.c
