@@ -11,24 +11,9 @@
 		& Size & Length & Rounds &  Length & Round-Keys & Round-Keys \\
 		& ($N_b$-word) & ($N_k$-word) & ($N_r$)& (word) & ($N_r+1$)& ($N_b(N_r+1)$)\\
 		\hline\hline
-		AES-128 & 4 & 4 (4$\cdot$32-bit) & 10 & 4 & 11 & 176-byte (44-word) \\
-		AES-192 & 4 & 6 (6$\cdot$32-bit) & 12 & 4 & 13 & 208(=4$\cdot$44)-bit \\
-		AES-256 & 4 & 8 (8$\cdot$32-bit) & 14 & 4 & 15 & 240(=4$\cdot$44)-bit \\
-		\bottomrule[1.2pt]
-	\end{tabular*}
-\end{table}
-
-\begin{table}[h!]\centering\renewcommand{\arraystretch}{1.25} % Increase row height by 1.5 times
-	\caption{Parameters of the Block Cipher AES (1-word = 32-bit)}
-	\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}c||cccccc}
-		\toprule[1.2pt]
-		\multirow{3}{*}{Algorithms} & Block & Key & Number of & Round-Key & Number of & Total Size of\\
-		& Size & Length & Rounds &  Length & Round-Keys & Round-Keys \\
-		& ($N_b$-word) & ($N_k$-word) & ($N_r$)& (word) & ($N_r+1$)& ($N_b(N_r+1)$)\\
-		\hline\hline
-		AES-128 & 4 & 4 (4$\cdot$32-bit) & 10 & 4 & 11 & 176-byte (44-word) \\
-		AES-192 & 4 & 6 (6$\cdot$32-bit) & 12 & 4 & 13 & 208(=4$\cdot$44)-bit \\
-		AES-256 & 4 & 8 (8$\cdot$32-bit) & 14 & 4 & 15 & 240(=4$\cdot$44)-bit \\
+		AES-128 & 4 & 4 (4$\cdot$32-bit) & 10 & 4 & 11 & 44 (176-byte) \\
+		AES-192 & 4 & 6 (6$\cdot$32-bit) & 12 & 4 & 13 & 52 (208-byte) \\
+		AES-256 & 4 & 8 (8$\cdot$32-bit) & 14 & 4 & 15 & 60 (240-byte) \\
 		\bottomrule[1.2pt]
 	\end{tabular*}
 \end{table}
@@ -104,6 +89,50 @@ void KeyExpansion(const u8* uKey, u32* rKey) {
 		}
 		rKey[i] = rKey[i - Nk] ^ temp;
 	}
+}
+\end{lstlisting}
+
+\newpage
+
+\begin{lstlisting}[style=C, caption={Key Expansion Test},captionpos=t]
+void RANDOM_KEY_GENERATION(u8* key) {
+	srand((u32)time(NULL));
+	
+	// Initialize pointer to the start of the key array
+	u8* p = key;
+	
+	// Set the counter to 16 bytes
+	int cnt = 0;
+	
+	// Loop until all 16 bytes are filled
+	while (cnt < AES_BLOCK_SIZE) {
+		*p = rand() & 0xff; // Assign a random byte (0 to 255) 
+		p++;                // Move to the next byte
+		cnt++;              // Decrement the byte count
+	}
+}
+
+void KeyExpansionTest() {
+	u8 uKey[AES_BLOCK_SIZE] = { 0x00, };
+	RANDOM_KEY_GENERATION(uKey);
+	// u8 uKey[AES_BLOCK_SIZE] = { 
+	// 	 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
+	//	 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c
+	// };
+	for (int i = 0; i < AES_BLOCK_SIZE; i++) {
+		printf("%02x", uKey[i]);
+	} printf("\n");
+	
+	u32 rKeys[ROUND_KEYS_SIZE / sizeof(u32)];
+	KeyExpansion(uKey, rKeys);
+	for (int i = 0; i < ROUND_KEYS_SIZE / sizeof(u32); i++) {
+		printf("%08x\n", rKeys[i]);
+	}
+}
+
+int main() {
+	KeyExpansionTest();
+	return 0;
 }
 \end{lstlisting}
 

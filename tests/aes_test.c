@@ -42,7 +42,7 @@
 
 
 double measure_time(void (*func)(const u8*, const u8*, u8*), u8* input, u8* key, u8* output) {
-    srand((u32)time(NULL));
+    // srand((u32)time(NULL));
     // clock_t start, end;
     // double cpu_time_used;
 
@@ -178,7 +178,7 @@ int main() {
     double time_dec = measure_time(AES_Decrypt, input, key, output);
     double time_dec_32 = measure_time(AES_Decrypt_32BIT, input, key, output);
 
-    printf("Time for AES_Encrypt: %.9f s\n", time_enc);
+    printf("Time for AES_Encrypt: %.3f µs\n", time_enc*1000000);
     printf("Time for AES_Encrypt_Precomp: %.9f s\n", time_enc_32);
     printf("Time for AES_Decrypt: %.9f s\n", time_dec);
     printf("Time for AES_Decrypt_32: %.9f s\n", time_dec_32);
