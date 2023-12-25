@@ -1,105 +1,30 @@
-\chapter{Cryptanalysis}
+\chapter{Base64 Encoding and Decoding}
 
-\section{Linear Cryptanalysis}
+\section{Introduction}
+Base64 encoding is a method of converting binary data into a set of 64 printable characters from the ASCII standard. This encoding is commonly used to encode data when there is a requirement to transmit binary data over media that are designed to deal with textual data. The Base64 index table consists of the characters \texttt{A-Z}, \texttt{a-z}, \texttt{0-9}, plus two additional characters, commonly \texttt{+} and \texttt{/}, for a total of 64 characters.
 
-Linear cryptanalysis is an advanced cryptanalytic technique primarily used to attack symmetric key ciphers. It exploits the linear relations (approximations) between input bits, output bits, and key bits of a cipher. The technique was first introduced by Mitsuru Matsui and has since been instrumental in the analysis of various cryptographic algorithms.
+\section{Principles of Base64 Encoding}
+Base64 encoding processes data in blocks of 3 bytes (24 bits) at a time. Each block of 24 bits is then divided into four 6-bit groups. Each 6-bit group is used as an index into the Base64 character table, resulting in a 4-character encoding of the original 24-bit block.
 
-\subsection{Linear Approximation Example}
+Let the input stream be a sequence of bits represented by $\mathbf{b}$. This stream is divided into blocks of 24 bits:
+\[\mathbf{b} = b_1 b_2 b_3 \ldots b_{24} b_{25} b_{26} \ldots\]
 
-Consider a block cipher with an input block $X$ and an output block $Y$. The essence of linear cryptanalysis lies in finding a linear approximation that correlates certain bits of $X$, $Y$, and the key $K$. A typical linear approximation can be expressed as follows:
-\[ P(X) \oplus Q(Y) = 0 \]
-where $P(X)$ and $Q(Y)$ are linear functions of the input and output blocks, respectively, $\oplus$ denotes the bitwise XOR operation, and $K'$ is a subkey or a combination of bits from the key $K$. Ideally, this equation holds with a probability significantly different from 0.5.
+Each block of 24 bits $(b_1 b_2 \ldots b_{24})$ is then split into four 6-bit groups:
+\[\mathbf{g}_1 = b_1 b_2 \ldots b_6, \; \mathbf{g}_2 = b_7 b_8 \ldots b_{12}, \; \mathbf{g}_3 = b_{13} b_{14} \ldots b_{18}, \; \mathbf{g}_4 = b_{19} b_{20} \ldots b_{24}\]
 
-\subsection{Linear Approximation Table (LAT)}
+Each group $\mathbf{g}_i$ is then converted into a decimal index $n_i$:
+\[n_i = \sum_{k=0}^{5} g_{i,k} \cdot 2^{5-k}\]
+where $g_{i,k}$ is the $k$-th bit of group $\mathbf{g}_i$.
 
-A crucial tool in linear cryptanalysis is the Linear Approximation Table (LAT), particularly for analyzing S-boxes in block ciphers. An S-box is a fundamental component in many block ciphers that performs substitution, and LAT is used to measure the correlation between input and output bits of this S-box.
+Each index $n_i$ is used to select a character from the Base64 table, forming the encoded string.
 
-The LAT is a matrix where each cell corresponds to a particular input-output bit combination and contains a value representing the correlation between these bits. These values are critical in identifying which linear approximations are strong (i.e., have a high correlation) and can be exploited in an attack.
+\section{Principles of Base64 Decoding}
+Base64 decoding is the reverse process. Each character in the encoded string is mapped back to its corresponding 6-bit group. These groups are then concatenated to form the original byte sequence.
 
-\newpage
-\subsection{Attack Process}
+Given a Base64 encoded string, each character is converted back into a 6-bit group according to the Base64 index table. Let these groups be $\mathbf{d}_1, \mathbf{d}_2, \mathbf{d}_3, \mathbf{d}_4$. The original 24-bit block is reconstructed by concatenating these groups:
+\[\mathbf{b}' = \mathbf{d}_1 \mathbf{d}_2 \mathbf{d}_3 \mathbf{d}_4\]
 
-The general process of conducting a linear cryptanalytic attack involves several steps:
+The binary sequence $\mathbf{b}'$ is then divided back into the original bytes to retrieve the original data.
 
-\begin{enumerate}
-	\item \textbf{Identify Strong Linear Approximations:} Using the LAT, identify the linear approximations with the highest bias. The bias is the deviation of the approximation's probability from 0.5.
-	\begin{itemize}
-		\item \textit{Mathematical Foundation:} Analyze the Linear Approximation Table (LAT) for strong linear correlations. LAT is a 2D matrix with biases of linear approximations as entries.
-		\item \textit{Calculation:} For an S-box with \( n \) input and output bits, LAT is a \( 2^n \times 2^n \) matrix. Bias is calculated as \( \frac{\#matches}{2^n} - \frac{1}{2} \).
-		\item \textit{Selection Criterion:} Choose approximations with the highest absolute bias values.
-	\end{itemize}
-	\item \textbf{Estimate Bias:} Accurately estimate the bias of the chosen approximation. This estimation is crucial for the success of the attack.
-	\begin{itemize}
-		\item \textit{Theory:} Bias is the deviation of the approximation's probability from 0.5.
-		\item \textit{Mathematical Approach:} Use statistical methods like maximum likelihood estimation or Bayesian inference for bias refinement.
-		\item \textit{Accuracy Considerations:} More data leads to more accurate bias estimation.
-	\end{itemize}
-	\item \textbf{Collect Plaintext-Ciphertext Pairs:} Amass a large number of plaintext-ciphertext pairs that correspond to the chosen approximation. The number of required pairs depends on the bias; weaker biases require more pairs.
-	\begin{itemize}
-		\item \textit{Data Requirement Analysis:} Required pairs \( N \approx \frac{1}{\epsilon^2} \), where \( \epsilon \) is the bias.
-		\item \textit{Collection Methodology:} Data collection can vary based on the cipher and scenario.
-		\item \textit{Computational Aspects:} Consider the complexity of storing and processing large amounts of data.
-	\end{itemize}
-	\item \textbf{Key Recovery:} Apply statistical methods to analyze the collected data. Exploit the bias to make informed guesses about the key bits or subkey, thereby incrementally recovering parts of the encryption key.
-	\begin{itemize}
-		\item \textit{Statistical Analysis:} Use statistical tests like chi-squared tests to analyze data.
-		\item \textit{Exploiting Bias:} Use bias to infer key bits probabilistically.
-		\item \textit{Incremental Key Recovery:} Recover different segments of the key gradually.
-		\item \textit{Complexity Considerations:} Analyze the time complexity and employ optimization techniques if necessary.
-	\end{itemize}
-\end{enumerate}
-
-In practice, the effectiveness of linear cryptanalysis depends on the cipher's structure, the quality of the linear approximations, and the amount of available data. It has been notably applied to attack DES (Data Encryption Standard) and has influenced the design of new cryptographic algorithms to be resistant to this form of analysis.
-
-\newpage
-\section{Differential Cryptanalysis}
-
-Differential Cryptanalysis is a method used in cryptography to analyze the effect of specific differences in input pairs on the differences in the resulting output pairs. This technique is especially powerful in the analysis of block ciphers.
-
-\subsection{Differential Example}
-
-Given a pair of inputs $(X, X')$ and their corresponding outputs $(Y, Y')$ under a cryptographic transformation. The differentials are defined as follows:
-\[ \Delta X = X \oplus X', \quad \Delta Y = Y \oplus Y' \]
-where $\oplus$ denotes the bitwise XOR operation. This operation highlights the changes from $X$ to $X'$
-and from $Y$ to $Y'$ at the bit level.
-
-\subsection{Differential Characteristic}
-
-A differential characteristic is a crucial concept in this analysis. It is a sequence of expected input and output differentials for each round or stage of the cipher. These characteristics are probabilistic in nature and provide insights into how certain input differentials propagate to output differentials through the cipher's structure.
-
-\subsubsection{Probability of a Differential Characteristic}
-The probability of a differential characteristic is a key metric in differential cryptanalysis. It measures the likelihood that a specific input differential will result in the expected output differential after passing through the rounds of the cipher
-
-\subsection{Attack Process}
-\begin{enumerate}
-	\item \textbf{Select Pairs of Plaintexts with a Certain Difference:}
-	Choose plaintext pairs 
-	$(P,P')$ such that the difference 
-	$\Delta P=P\oplus P'$ is specific and strategically chosen based on the cipher's structure.
-	\begin{itemize}
-		\item \textit{Concept:} Choose plaintext pairs \((P_1, P_2)\) such that \(\Delta P = P_1 \oplus P_2\), where \(\oplus\) is the bitwise XOR operation.
-		\item \textit{Method:} Selection of \(\Delta P\) is based on cipher's structure analysis. Aim to identify a \(\Delta P\) that can cause predictable effects in ciphertexts.
-		\item \textit{Mathematical Formulation:} This involves a heuristic approach to identify exploitable differences.
-	\end{itemize}
-	
-	\item \textbf{Analyze How This Difference Propagates Through the Cipher:} Study the propagation of \(\Delta P\) through the cipher. This involves analyzing the impact of the differential on the cipher's components like S-boxes, permutation layers, etc.
-	\begin{itemize}
-		\item \textit{Theory:} Study the propagation of \(\Delta P\) through the cipher's rounds.
-		\item \textit{Mathematical Tools:} Use differential characteristics and probabilistic analysis of the cipher components.
-		\item \textit{Computational Analysis:} Combine analytical techniques and computational experiments to understand difference propagation.
-	\end{itemize}
-	
-	\item \textbf{Gather Plaintext-Ciphertext Pairs Following the Differential:} Collect a significant number of plaintext-ciphertext pairs that conform to the chosen differential. This data is used to analyze the behavior of the cipher under the differential attack.
-	\begin{itemize}
-		\item \textit{Data Collection:} Accumulate pairs \((P, C)\) that conform to \(\Delta P\).
-		\item \textit{Statistical Analysis:} Analyze the distribution of output difference \(\Delta C = C_1 \oplus C_2\).
-		\item \textit{Data Requirements:} The number of pairs depends on the differential characteristic's probability and cipher's strength.
-	\end{itemize}
-	
-	\item \textbf{Make Key Hypotheses Based on Output Differences:} Based on the differences observed in the ciphertext pairs, hypothesize about the possible key or subkey values. These hypotheses are then tested and refined to recover the key or reduce the key space.
-	\begin{itemize}
-		\item \textit{Hypothesis Generation:} Formulate hypotheses about the key based on \(\Delta C\).
-		\item \textit{Mathematical Techniques:} Use linear algebra, probability theory, and optimization algorithms for hypothesis refinement.
-		\item \textit{Verification:} Test hypotheses against multiple plaintext-ciphertext pairs.
-	\end{itemize}
-\end{enumerate}
+\section{Padding in Base64 Encoding}
+In cases where the input byte sequence is not a multiple of 3, padding is used. The input is padded with zeros to form a complete 24-bit block. The corresponding Base64 encoded output is then padded with the '=' character to indicate that padding was used. The number of '=' characters used indicates the number of bytes that were added as padding (one byte of padding results in two '=' characters, and two bytes of padding results in one '=' character).

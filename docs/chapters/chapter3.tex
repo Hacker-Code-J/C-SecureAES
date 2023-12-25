@@ -18,7 +18,7 @@
 	\end{tabular*}
 \end{table}
 
-\begin{lstlisting}[style=C, caption={Configuration},captionpos=t]
+\begin{lstlisting}[style=C, caption={Configuration in C},captionpos=t]
 // Define macros for AES key length
 #define AES_VERSION 128 // Can be 128, 192, or 256
 // Define macro for AES block size
@@ -27,21 +27,36 @@
 // Define Nk and Nr based on AES key length
 #if AES_VERSION == 128
 	#define Nk 4
-	#define Nr (Nk + 6) // 10
-	#define ROUND_KEYS_SIZE (16 * (Nr + 1)) // 176
 #elif AES_VERSION == 192
 	#define Nk 6
-	#define Nr (Nk + 6) // 12
-	#define ROUND_KEYS_SIZE (16 * (Nr + 1)) // 208
 #elif AES_VERSION == 256
 	#define Nk 8
-	#define Nr (Nk + 6) // 14
-	#define ROUND_KEYS_SIZE (16 * (Nr + 1)) // 240
 #else
 	#error "Invalid AES ky length"
 #endif
-\end{lstlisting}
 
+#define Nr (Nk + 6) // 10 / 12 / 14
+#define ROUND_KEYS_SIZE (16 * (Nr + 1)) // 176 / 208 / 240
+\end{lstlisting}
+\newpage
+\begin{lstlisting}[style=Rust, caption={Configuration in Rust},captionpos=t]
+// Define a constant for the AES key length.
+pub const AES_VERSION: u32 = 128; // Can be 128, 192, or 256
+
+// Define constant for AES block size
+pub const AES_BLOCK_SIZE: usize = 16;
+
+// Define constants Nk and Nr based on AES key length
+pub const NK: usize = match AES_VERSION {
+	128 => 4,
+	192 => 6,
+	256 => 8,
+	_ => panic!("Invalid AES key length"),
+};
+
+pub const NR: usize = NK + 6;
+pub const ROUND_KEYS_SIZE: usize = 16 * (NR + 1);
+\end{lstlisting}
 
 \newpage
 \section{Key Expansion (General Version)}
@@ -68,7 +83,7 @@
 		\( rk_i \leftarrow rk_{i-l} \oplus_{32} t \)\;
 	}
 \end{algorithm}
-\begin{lstlisting}[style=C, caption={Key Expansion (General ver.)},captionpos=t]
+\begin{lstlisting}[style=C, caption={Key Expansion in C (General ver.)},captionpos=t]
 void KeyExpansion(const u8* uKey, u32* rKey) {
 	u32 temp;
 	
@@ -91,6 +106,7 @@ void KeyExpansion(const u8* uKey, u32* rKey) {
 	}
 }
 \end{lstlisting}
+\newpage
 
 \newpage
 
@@ -243,4 +259,3 @@ void AES_Decrypt(const u8* ciphertext, const u8* key,
 \end{lstlisting}
 
 \newpage
-

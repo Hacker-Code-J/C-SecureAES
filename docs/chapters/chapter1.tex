@@ -181,22 +181,59 @@ There are several padding schemes used in practice, such as:
 
 \end{center}
 
+\vspace{24pt}
+\begin{remark}
+\ \begin{enumerate}[(1)]
+	\item For a pair of plaintext/ciphertext $(P, C)$ and $(P', C')$, \[
+	P=P'\implies C=C'.
+	\]
+	\item A single-bit error in the ciphertext affects only the corresponding block in the decryption.
+	\item Block order changes, as well as additions/deletions, are possible. Therefore, to ensure the integrity of the ciphertext (i.e., detection or prevention of tampering), it should be used in conjunction with a checksum or a Message Authentication Code (MAC).
+\end{enumerate}
+\end{remark}
+
+\newpage
 \subsection{$\CBC$ (Cipher Block Chaining)}
+\begin{algorithm}[H]
+	\caption{Cipher Block Chaining}
+	\begin{multicols}{2}
+		\KwIn{$K$, $IV$ and $P=P_1\parallel\cdots\parallel P_N$}
+		\KwOut{$C=C_1\parallel\cdots\parallel C_N$}
+		\BlankLine
+		$C_0\gets IV$\;
+		\For{$i\gets 1$ \KwTo $N$}{
+			$C_i\gets\EncryptBlk(K, P_i\oplus C_{i-1})$\;
+		}
+		\Return $C=C_1\parallel\cdots\parallel C_N$\;
+		\columnbreak % Move to the next column
+		\setcounter{AlgoLine}{0}  % Reset line numbering
+		\KwIn{$K$, $IV$ and $C=C_1\parallel\cdots\parallel C_N$}
+		\KwOut{$P=P_1\parallel\cdots\parallel P_N$}
+		\BlankLine
+		$C_0\gets IV$\;
+		\For{$i\gets 1$ \KwTo $N$}{
+			$P_i\gets C_{i-1}\oplus\DecryptBlk(K, C_{i})$\;
+		}
+		\Return $P=P_1\parallel\cdots\parallel P_N$\;
+	\end{multicols}
+	\BlankLine
+\end{algorithm}
+
 \begin{center}
+\begin{minipage}{.49\textwidth}\centering
 \begin{tikzpicture}
 	% Define styles
 	\tikzset{
-		block/.style={rectangle, draw, fill=blue!20, text width=2.5em, text centered, minimum height=2.5em},
+		block/.style={rectangle, draw, fill=blue!20, text width=1em, text centered, minimum height=1em},
 		line/.style={draw, -Latex},
 		xor/.style={circle, draw, minimum size=0cm, inner sep=0pt}
 	}
-	
 	% Nodes
 	\node[block] (iv) {IV};
-	\node[block, right=1cm of iv] (p1) {P1};
-	\node[block, right=1cm of p1] (p2) {P2};
+	\node[block, right=1cm of iv] (p1) {$P_1$};
+	\node[block, right=1cm of p1] (p2) {$P_2$};
 	\node[block, right=1cm of p2] (p3) {...};
-	\node[block, right=1cm of p3] (p4) {Pn};
+	\node[block, right=1cm of p3] (p4) {$P_n$};
 	
 	\node[below=1cm of p1] (xor1) {\Huge $\oplus$};
 	\node[below=1cm of p2] (xor2) {\Huge $\oplus$};
@@ -208,12 +245,10 @@ There are several padding schemes used in practice, such as:
 	\node[block, below=1cm of xor3] (e3) {...};
 	\node[block, below=1cm of xor4] (e4) {$E_K$};
 	
-	
-	
-	\node[block, below=1cm of e1] (c1) {C1};
-	\node[block, below=1cm of e2] (c2) {C2};
+	\node[block, below=1cm of e1] (c1) {$C_1$};
+	\node[block, below=1cm of e2] (c2) {$C_2$};
 	\node[block, below=1cm of e3] (c3) {...};
-	\node[block, below=1cm of e4] (c4) {Cn};
+	\node[block, below=1cm of e4] (c4) {$C_n$};
 	
 	% Arrows
 	\draw[line] (iv.south) to[bend right=45] (xor1.west);
@@ -235,10 +270,73 @@ There are several padding schemes used in practice, such as:
 	\draw[line] (p4) -- (xor4);
 	\draw[line] (xor4) -- (e4);
 	\draw[line] (e4) -- (c4);
-	
 \end{tikzpicture}
+\end{minipage}
+\begin{minipage}{.49\textwidth}\centering
+	\begin{tikzpicture}
+		% Define styles
+		\tikzset{
+			block/.style={rectangle, draw, fill=blue!20, text width=1em, text centered, minimum height=1em},
+			line/.style={draw, -Latex},
+			xor/.style={circle, draw, minimum size=0cm, inner sep=0pt}
+		}
+		
+		% Nodes
+		\node[block] (iv) {IV};
+		\node[block, right=1cm of iv] (p1) {$P_1$};
+		\node[block, right=1cm of p1] (p2) {$P_2$};
+		\node[block, right=1cm of p2] (p3) {...};
+		\node[block, right=1cm of p3] (p4) {$P_n$};
+		
+		\node[below=1cm of p1] (xor1) {\Huge $\oplus$};
+		\node[below=1cm of p2] (xor2) {\Huge $\oplus$};
+		\node[below=1cm of p3] (xor3) {\Huge $\oplus$};
+		\node[below=1cm of p4] (xor4) {\Huge $\oplus$};
+		
+		\node[block, below=1cm of xor1] (e1) {$E_K$};
+		\node[block, below=1cm of xor2] (e2) {$E_K$};
+		\node[block, below=1cm of xor3] (e3) {...};
+		\node[block, below=1cm of xor4] (e4) {$E_K$};
+		
+		\node[block, below=1cm of e1] (c1) {$C_1$};
+		\node[block, below=1cm of e2] (c2) {$C_2$};
+		\node[block, below=1cm of e3] (c3) {...};
+		\node[block, below=1cm of e4] (c4) {$C_n$};
+		
+		% Arrows
+		\draw[line] (iv.south) to[bend right=45] (xor1.west);
+		\draw[line] (xor1) -- (p1);
+		\draw[line] (e1) -- (xor1);
+		\draw[line] (c1) -- (e1);
+		
+		\draw[line] (c1.east) to[bend right=45] ($(c1)!.5!(xor2)$) to[bend left=45] (xor2.west);
+		\draw[line] (xor2) -- (p2);
+		\draw[line] (e2) -- (xor2);
+		\draw[line] (c2) -- (e2);
+		
+		\draw[line] (c2.east) to[bend right=45] ($(c2)!.5!(xor3)$) to[bend left=45] (xor3.west);
+		\draw[line] (xor3) -- (p3);
+		\draw[line] (e3) -- (xor3);
+		\draw[line] (c3) -- (e3);
+		
+		\draw[line] (c3.east) to[bend right=45] ($(c3)!.5!(xor4)$) to[bend left=45] (xor4.west);
+		\draw[line] (xor4) -- (p4);
+		\draw[line] (e4) -- (xor4);
+		\draw[line] (c4) -- (e4);
+	\end{tikzpicture}
+\end{minipage}
 \end{center}
 
+\vspace{24pt}
+\begin{remark}
+\ \begin{enumerate}[(1)]
+	\item For a set of plaintext/ciphertext pairs $(IV, P, C)$ and $(IV', P', C')$, \[
+	IV=IV'\land P=P'\implies C=C'.
+	\]
+	\item  A one-bit error in the ciphertext will affect the corresponding block and the subsequent block in the decryption process, thereby enabling the detection of such errors.
+	\item Altering the order of blocks, as well as adding or deleting them, is not possible.
+\end{enumerate}
+\end{remark}
 \newpage
 \subsection{$\OFB$ (Output FeedBack)}
 \begin{center}

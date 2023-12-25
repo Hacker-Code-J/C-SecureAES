@@ -4,7 +4,7 @@ CFLAGS = -I./include -O2 -Wall -Wextra
 LDFLAGS = -lcrypto
 
 # Source files
-SRC = ./src/utils.c ./src/aes_key_expansion.c ./src/aes.c ./src/aes_modes.c
+SRC = ./src/utils.c ./src/aes_key_expansion.c ./src/aes.c ./src/aes32.c ./src/aes_modes.c
 OBJ = $(SRC:./src/%.c=./obj/%.o)
 
 # Test program
