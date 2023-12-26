@@ -15,6 +15,7 @@
 #include "config.h"
 
 void stringToByteArray(const char* hexString, u8* byteArray);
+void stringToWordArray(const char* hexString, u32* wordArray);
 
 void RANDOM_KEY_GENERATION(u8 *key);
 

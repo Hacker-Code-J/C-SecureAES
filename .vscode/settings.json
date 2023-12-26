@@ -84,6 +84,7 @@
     "utils.h": "c",
     "stddef.h": "c",
     "aes_modes.h": "c",
-    "xmmintrin.h": "c"
+    "xmmintrin.h": "c",
+    "config.h": "c"
   }
 }

@@ -21,6 +21,13 @@ void stringToByteArray(const char* hexString, u8* byteArray) {
     }
 }
 
+void stringToWordArray(const char* hexString, u32* wordArray) {
+    size_t length = strlen(hexString);
+    for (size_t i = 0; i < length; i += 8) {
+        sscanf(&hexString[i], "%8x", &wordArray[i / 8]);
+    }
+}
+
 void RANDOM_KEY_GENERATION(u8* key) {
     srand((u32)time(NULL));
     

@@ -8,6 +8,7 @@
 
 #include "aes_key_expansion.h"
 #include "aes.h"
+#include "aes32.h"
 #include "aes_modes.h"
 
 // // Function to convert a string to base64
@@ -73,6 +74,21 @@ double measure_time(void (*func)(const u8*, const u8*, u8*), u8* input, u8* key,
     
     return cpu_time_used / num_runs; // Average time per run
 }
+double measure_time32(void (*func)(const u32*, const u8*, u32*), u32* input, u8* key, u32* output) {
+    struct timespec start, end;
+    double cpu_time_used;
+    const int num_runs = 1000;
+    
+    func(input, key, output);
+    clock_gettime(1, &start);
+    for (int i = 0; i < num_runs; i++) {
+        func(input, key, output);
+    }
+    clock_gettime(1, &end);
+    
+    cpu_time_used = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+    return cpu_time_used / num_runs;
+}
 
 int main() {
     // u8 data[16]; // 128-bit block
@@ -135,11 +151,21 @@ int main() {
     u8 input[16];
     stringToByteArray(inputString, input);
     // Print the plaintext
-    printf("Plaintext: ");
+    printf("Plaintext(08-bit): ");
     for (int i = 0; i < 16; i++) {
         printf("%02x", input[i]);
     }
     printf("\n");
+
+    u32 input32[4];
+    stringToWordArray(inputString, input32);
+    // Print the plaintext
+    printf("Plaintext(32-bit): ");
+    for (int i = 0; i < 4; i++) {
+        printf("%08x", input32[i]);
+    }
+    printf("\n");
+
 
     const char* keyString = "00000000000000000000000000000000";
     u8 key[AES_VERSION / 8];
@@ -151,16 +177,23 @@ int main() {
     printf("\n");
     
     u8 output[16];
+    u32 output32[4];
 
     // Call the AES_Encrypt function
     AES_Encrypt(input, key, output);
-
     // Print the ciphertext
-    printf("Ciphertext: ");
+    printf("Ciphertext(08-bit): \n");
     for (int i = 0; i < 16; i++) {
         printf("%02x", output[i]);
     }
-    printf("\n\n");
+    printf("\n");
+
+    AES_Encrypt32(input32, key, output32);
+    printf("Ciphertext(32-bit): \n");
+    for (int i = 0; i < 4; i++) {
+        printf("%08x", output32[i]);
+    }
+    printf("\n");
 
     u8 decrypted[16] = { 0x00, };
 
@@ -174,14 +207,12 @@ int main() {
     printf("\n\n");
 
     double time_enc = measure_time(AES_Encrypt, input, key, output);
-    double time_enc_32 = measure_time(AES_Encrypt_Precomp, input, key, output);
+    double time_enc_32 = measure_time32(AES_Encrypt32, input32, key, output32);
     double time_dec = measure_time(AES_Decrypt, input, key, output);
-    double time_dec_32 = measure_time(AES_Decrypt_32BIT, input, key, output);
 
     printf("Time for AES_Encrypt: %.3f µs\n", time_enc*1000000);
-    printf("Time for AES_Encrypt_Precomp: %.9f s\n", time_enc_32);
+    printf("Time for AES_Encrypt32: %.3f µs\n", time_enc_32*1000000);
     printf("Time for AES_Decrypt: %.9f s\n", time_dec);
-    printf("Time for AES_Decrypt_32: %.9f s\n", time_dec_32);
 
     return 0;
 }
