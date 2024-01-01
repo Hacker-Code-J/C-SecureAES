@@ -294,15 +294,15 @@ void AES_Encrypt(const u8* plaintext, const u8* key, u8* ciphertext) {
 	KeyExpansion(key, roundKey); // Key expansion
 	
 	AddRoundKey(state, roundKey); // Initial round
-	
-	for (int round = 1; round <= Nr; round++) { // Main rounds
-		SubBytes(state); ShiftRows(state);
-		if (round != Nr) MixColumns(state);
-		// 1: roundKey[  4] | roundKey[5] | roundKey[ 6] | roundKey[    7]
-		// 2: roundKey[  8] | roundKey[9] | roundKey[10] | roundKey[   11]
-		// i: roundKey[4*i] |    ...      |    ...       | roundKey[4*i+3]
-		AddRoundKey(state, roundKey + 4 * round);
-	}
+	ShiftRows(state);
+	// for (int round = 1; round <= Nr; round++) { // Main rounds
+	// 	SubBytes(state); ShiftRows(state);
+	// 	if (round != Nr) MixColumns(state);
+	// 	// 1: roundKey[  4] | roundKey[5] | roundKey[ 6] | roundKey[    7]
+	// 	// 2: roundKey[  8] | roundKey[9] | roundKey[10] | roundKey[   11]
+	// 	// i: roundKey[4*i] |    ...      |    ...       | roundKey[4*i+3]
+	// 	AddRoundKey(state, roundKey + 4 * round);
+	// }
 	
 	// Copy state to ciphertext
 	for (int i = 0; i < AES_BLOCK_SIZE; ++i)

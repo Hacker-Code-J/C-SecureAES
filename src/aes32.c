@@ -68,17 +68,17 @@ void AES_Encrypt32(const u32* plaintext, const u8* key, u32* ciphertext) {
 	KeyExpansion32(key, roundKey); // Key expansion
 	
 	AddRoundKey32(state, roundKey); // Initial round
-	
-	for (int round = 1; round <  Nr; round++) { // Main rounds
-		ShiftRows32(state);
-		SubMix32(state);
-		AddRoundKey32(state, roundKey + 4 * round);
-	}
-	for (int i = 0; i < 4; i++) {
-		state[i] = SubWord32(*(state + i));
-	}
 	ShiftRows32(state);
-	AddRoundKey32(state, roundKey + 4 * Nr);
+	// for (int round = 1; round <  Nr; round++) { // Main rounds
+	// 	ShiftRows32(state);
+	// 	SubMix32(state);
+	// 	AddRoundKey32(state, roundKey + 4 * round);
+	// }
+	// for (int i = 0; i < 4; i++) {
+	// 	state[i] = SubWord32(*(state + i));
+	// }
+	// ShiftRows32(state);
+	// AddRoundKey32(state, roundKey + 4 * Nr);
 	
 	// Copy state to ciphertext
 	for (int i = 0; i < AES_BLOCK_SIZE / 4; i++)

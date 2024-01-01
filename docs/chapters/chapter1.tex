@@ -256,7 +256,7 @@ There are several padding schemes used in practice, such as:
 	\draw[line] (xor1) -- (e1);
 	\draw[line] (e1) -- (c1);
 	
-	\draw[line] (c1.east) to[bend right=45] ($(c1)!.5!(xor2)$) to[bend left=45] (xor2.west);
+	\draw[line] (e1.south) to[bend right=90] ($(c1)!.6!(e2)$) to[bend left=60] (xor2.west);
 	\draw[line] (p2) -- (xor2);
 	\draw[line] (xor2) -- (e2);
 	\draw[line] (e2) -- (c2);

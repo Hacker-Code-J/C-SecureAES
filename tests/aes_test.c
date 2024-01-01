@@ -167,7 +167,7 @@ int main() {
     printf("\n");
 
 
-    const char* keyString = "00000000000000000000000000000000";
+    const char* keyString = "ffffffffffffffffffffffffffffffff";
     u8 key[AES_VERSION / 8];
     stringToByteArray(keyString, key);
     printf("Key: ");
