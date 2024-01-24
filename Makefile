@@ -1,45 +1,45 @@
-# Compiler settings - Can be customized.
-CC = gcc
-CFLAGS = -I./include -O2 -Wall -Wextra
-LDFLAGS = -lcrypto
+# # Compiler settings - Can be customized.
+# CC = gcc
+# CFLAGS = -I./include -O2 -Wall -Wextra
+# LDFLAGS = -lcrypto
 
-# Source files
-SRC = ./src/utils.c ./src/aes_key_expansion.c ./src/aes.c ./src/aes32.c ./src/aes_modes.c
-OBJ = $(SRC:./src/%.c=./obj/%.o)
+# # Source files
+# SRC = ./src/utils.c ./src/aes_key_expansion.c ./src/aes.c ./src/aes32.c ./src/aes_modes.c
+# OBJ = $(SRC:./src/%.c=./obj/%.o)
 
-# Test program
-TEST_SRC = ./tests/aes_test.c
-TEST_OUT = a.out
+# # Test program
+# TEST_SRC = ./tests/aes_test.c
+# TEST_OUT = a.out
 
-# Compile and build
-all: $(TEST_OUT)
+# # Compile and build
+# all: $(TEST_OUT)
 
-$(TEST_OUT): $(OBJ)
-	$(CC) $(CFLAGS) -o $(TEST_OUT) $(TEST_SRC) $(OBJ) $(LDFLAGS)
+# $(TEST_OUT): $(OBJ)
+# 	$(CC) $(CFLAGS) -o $(TEST_OUT) $(TEST_SRC) $(OBJ) $(LDFLAGS)
 
-# Compile source files into object files
-./obj/%.o: ./src/%.c
-	mkdir -p ./obj
-	$(CC) $(CFLAGS) -c $< -o $@
+# # Compile source files into object files
+# ./obj/%.o: ./src/%.c
+# 	mkdir -p ./obj
+# 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Clean the build
-clean:
-	rm -rf ./obj $(TEST_OUT)
+# # Clean the build
+# clean:
+# 	rm -rf ./obj $(TEST_OUT)
 
-rebuild: clean all
+# rebuild: clean all
 
-# Check Memory Leak
-leak:
-	valgrind --leak-check=full --show-leak-kinds=all ./a.out
+# # Check Memory Leak
+# leak:
+# 	valgrind --leak-check=full --show-leak-kinds=all ./a.out
 
-test-key:
-	@echo "Testing ..."
-	./a.out > round_keys.txt
-	mv round_keys.txt examples/
-	(cd examples && python3 key_expansion.py)
+# test-key:
+# 	@echo "Testing ..."
+# 	./a.out > round_keys.txt
+# 	mv round_keys.txt examples/
+# 	(cd examples && python3 key_expansion.py)
 
-# Phony targets
-.PHONY: all clean
+# # Phony targets
+# .PHONY: all clean
 
 
 # # Makefile for AES Cryptographic Library
