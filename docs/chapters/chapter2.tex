@@ -256,7 +256,7 @@ void SubBytes(u8* state) {
 \end{lstlisting}
 
 \begin{lstlisting}[style=C, caption={Inverse Byte Substitution},captionpos=t]
-void SubBytes(u8* state) {
+void InvSubBytes(u8* state) {
 	for (int i = 0; i < AES_BLOCK_SIZE; i++) {
 		state[i] = inv_s_box[state[i]];
 	}
