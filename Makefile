@@ -7,7 +7,7 @@ SRCDIR=./src
 TESTDIR=./tests
 INCDIR=./include
 
-OBJS=$(OBJDIR)/aes_core.o $(OBJDIR)/key_schedule.o \
+OBJS=$(OBJDIR)/aes_core.o $(OBJDIR)/key_schedule.o $(OBJDIR)/aes_utils.o\
 	$(OBJDIR)/key_schedule_test.o \
 	$(OBJDIR)/main.o
 
@@ -33,7 +33,7 @@ $(OBJDIR)/%.o: $(TESTDIR)/%.c
 
 $(OBJDIR)/aes_core.o: $(SRCDIR)/aes_core.c $(INCDIR)/aes.h
 $(OBJDIR)/key_schedule.o: $(SRCDIR)/key_schedule.c $(INCDIR)/aes.h
-# $(OBJDIR)/aes_utils.o: $(SRCDIR)/aes_utils.c $(INCDIR)/aes.h
+$(OBJDIR)/aes_utils.o: $(SRCDIR)/aes_utils.c $(INCDIR)/aes_utils.h
 
 $(OBJDIR)/key_schedule_test.o: $(TESTDIR)/key_schedule_test.c $(INCDIR)/aes.h
 
