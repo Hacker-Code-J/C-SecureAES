@@ -73,6 +73,8 @@ static const u8 inv_sbox[256] = {
     0xe1U, 0x69U, 0x14U, 0x63U, 0x55U, 0x21U, 0x0cU, 0x7dU
 };
 
+/* key_schedule */
+
 static inline u32 ROTWORD(u32 word) {
     return (word << 0x08) | (word >> 0x18);
 }
@@ -90,8 +92,6 @@ static const u32 rCon[10] = {
     0x1b000000U, 0x36000000U
 };
 
-/* key_schedule */
-
 // AES128: 8 x 16 -> 32 x 44
 // AES192: 8 x 16 -> 32 x 52
 // AES256: 8 x 16 -> 32 x 60
@@ -99,7 +99,46 @@ void KeySchedule(u32* rKey, const u8* uKey, u8 AES_VERSION);
 
 void reverseKeySchedule(u8* uKey, const u32* rKey, u8 AES_VERSION);
 
+/* aes_core: fuctions in used in AES */
+
+static inline u8 MUL_GF256(u8 a, u8 b) {
+    u8 res = 0;
+    const u8 MSB_mask = 0x80;
+    u8 MSB;
+    const u8 modulo = 0x1B;
+    u8 temp_a = a;
+    u8 temp_b = b;
+
+    for (int i = 0; i < 8; i++) {
+        if (temp_b & 1)
+            res ^= temp_a;
+        MSB = temp_a & MSB_mask;
+        temp_a <<= 1;
+        if (MSB)
+            temp_a ^= modulo;
+        temp_b >>= 1;
+    }
+
+    return res;
+    
+    // u8 res = 0, MSB, temp_a = a, temp_b = b;
+    // for (int i = 0; i < 8; i++, temp_b >>= 1, temp_a = (temp_a << 1) ^ (MSB = temp_a & 0x80 ? 0x1B : 0)) {
+    //     res ^= (temp_b & 1) * temp_a;
+    // }
+    // return res;
+}
+
+void AddRoundKey(u8* state, const u32* rKey);
+void SubBytes(u8* state);
+void ShiftRows(u8* state);
+void MixColumns(u8* state);
+
+/* aes_core: encryption and decryption */
+
+void AES_Encrypt(u8* dst, const u8* src, const u8* uKey, const u8 AES_VERSION);
+
 /* TEST */
+
 void KeyScheduleTest(void);
 
 #endif /* _AES_H */
