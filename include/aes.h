@@ -140,5 +140,6 @@ void AES_Encrypt(u8* dst, const u8* src, const u8* uKey, const u8 AES_VERSION);
 /* TEST */
 
 void KeyScheduleTest(void);
+void AES128_Test(void);
 
 #endif /* _AES_H */
