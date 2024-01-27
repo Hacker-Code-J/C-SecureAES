@@ -12,7 +12,7 @@
 
 #include <stddef.h>
 
-#include "config.h"
+// #include "config.h"
 
 void stringToByteArray(const char* hexString, u8* byteArray);
 void stringToWordArray(const char* hexString, u32* wordArray);

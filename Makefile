@@ -1,89 +1,68 @@
-# Compiler settings - Can be customized.
-CC = gcc
-CFLAGS = -I./include -O2 -Wall -Wextra
-LDFLAGS = -lcrypto
+CC=gcc
+CFLAGS=-Wall -std=c99 -g -O2 -I./include
+LDFLAGS=
+OBJDIR=./obj
+BINDIR=./bin
+SRCDIR=./src
+VSSRCDIR=./src/aesavs
+TESTDIR=./tests
+INCDIR=./include
 
-# Source files
-SRC = ./src/utils.c ./src/aes_key_expansion.c ./src/aes.c ./src/aes32.c ./src/aes_modes.c
-OBJ = $(SRC:./src/%.c=./obj/%.o)
+OBJS=$(OBJDIR)/aes_core.o $(OBJDIR)/key_schedule.o $(OBJDIR)/aes_utils.o\
+	$(OBJDIR)/aesavs.o $(OBJDIR)/aesavs_vartxt_kat.o \
+	$(OBJDIR)/aes_test.o \
+	$(OBJDIR)/main.o
 
-# Test program
-TEST_SRC = ./tests/aes_test.c
-TEST_OUT = a.out
+TARGET=$(BINDIR)/a.out
 
-# Compile and build
-all: $(TEST_OUT)
+.PHONY: all clean dir rebuild
 
-$(TEST_OUT): $(OBJ)
-	$(CC) $(CFLAGS) -o $(TEST_OUT) $(TEST_SRC) $(OBJ) $(LDFLAGS)
+all: dir $(TARGET)
 
-# Compile source files into object files
-./obj/%.o: ./src/%.c
-	mkdir -p ./obj
-	$(CC) $(CFLAGS) -c $< -o $@
+$(TARGET): $(OBJS)
+	$(CC) $(LDFLAGS) -o $@ $^
 
-# Clean the build
+$(OBJDIR)/main.o: main.c
+	$(CC) $(CFLAGS) -c main.c -o $@
+$(OBJDIR)/%.o: $(SRCDIR)/%.c
+	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
+$(OBJDIR)/%.o: $(VSSRCDIR)/%.c
+	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
+$(OBJDIR)/%.o: $(TESTDIR)/%.c
+	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
+
+-include $(OBJS:.o=.d)
+
+$(OBJDIR)/aes_core.o: $(SRCDIR)/aes_core.c $(INCDIR)/aes.h
+$(OBJDIR)/key_schedule.o: $(SRCDIR)/key_schedule.c $(INCDIR)/aes.h
+$(OBJDIR)/aes_utils.o: $(SRCDIR)/aes_utils.c $(INCDIR)/aes_utils.h
+
+$(OBJDIR)/aesavs.o: $(VSSRCDIR)/aesavs.c $(INCDIR)/aesavs.h
+$(OBJDIR)/aesavs_vartxt_kat.o: $(VSSRCDIR)/aesavs_vartxt_kat.c $(INCDIR)/aesavs.h
+
+# $(OBJDIR)/key_schedule_test.o: $(TESTDIR)/key_schedule_test.c $(INCDIR)/aes.h
+$(OBJDIR)/aes_test.o: $(TESTDIR)/aes_test.c $(INCDIR)/aes.h
+
+KATFILES_TO_DELETE = AES_KAT/VarTxt_KAT/AES128\(VARTXT\)KAT.req \
+                  AES_KAT/VarTxt_KAT/AES128\(VARTXT\)KAT.fax \
+                  AES_KAT/VarTxt_KAT/AES128\(VARTXT\)KAT.rsp \
+				#   LEA128\(CBC\)MOVS/LEA128\(CBC\)MMT.req \
+                #   LEA128\(CBC\)MOVS/LEA128\(CBC\)MMT.fax \
+                #   LEA128\(CBC\)MOVS/LEA128\(CBC\)MMT.rsp \
+				#   LEA128\(CBC\)MOVS/LEA128\(CBC\)MCT.req \
+                #   LEA128\(CBC\)MOVS/LEA128\(CBC\)MCT.fax \
+                #   LEA128\(CBC\)MOVS/LEA128\(CBC\)MCT.rsp
+
 clean:
-	rm -rf ./obj $(TEST_OUT)
+	rm -f $(OBJS) $(TARGET) $(OBJDIR)/*.d
+	@echo "Removing AESAVS files ..."
+	rm -rf $(KATFILES_TO_DELETE)
+	@echo "AESAVS files removal completed  successfully."
+
+dir:
+	@mkdir -p $(OBJDIR) $(BINDIR)
 
 rebuild: clean all
 
-# Check Memory Leak
-leak:
-	valgrind --leak-check=full --show-leak-kinds=all ./a.out
-
-test-key:
-	@echo "Testing ..."
-	./a.out > round_keys.txt
-	mv round_keys.txt examples/
-	(cd examples && python3 key_expansion.py)
-
-# Phony targets
-.PHONY: all clean
-
-
-# # Makefile for AES Cryptographic Library
-
-# CC = gcc
-# CFLAGS = -Wall -Wextra -O2
-# INCLUDES = -Iinclude
-# SRC_DIR = src
-# OBJ_DIR = obj
-# BIN_DIR = bin
-
-# # Define the source and object files
-# SRCS = $(SRC_DIR)/aes.c $(SRC_DIR)/aes_key_expansion.c $(SRC_DIR)/aes_modes.c $(SRC_DIR)/utils.c
-# OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
-# DEPS = $(OBJS:.o=.d)
-
-# # Target binary
-# TARGET = $(BIN_DIR)/aes_library
-
-# # Default target
-# all: $(TARGET)
-
-# # Include dependencies
-# -include $(DEPS)
-
-# # Rule to create the target directory
-# $(BIN_DIR):
-# 	mkdir -p $(BIN_DIR)
-
-# # Rule to create the object directory
-# $(OBJ_DIR):
-# 	mkdir -p $(OBJ_DIR)
-
-# # Rule to create the binary
-# $(TARGET): $(OBJS) | $(BIN_DIR)
-# 	$(CC) $(CFLAGS) -o $@ $^
-
-# # Rule to create object files
-# $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
-# 	$(CC) $(CFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
-
-# # Clean target
-# clean:
-# 	rm -rf $(OBJ_DIR) $(BIN_DIR)
-
-# # Phony targets
-# .PHONY: all clean
+leak: 
+	(cd bin && valgrind --leak-check=full --show-leak-kinds=all ./a.out)

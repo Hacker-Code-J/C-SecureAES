@@ -85,6 +85,8 @@
     "stddef.h": "c",
     "aes_modes.h": "c",
     "xmmintrin.h": "c",
-    "config.h": "c"
+    "config.h": "c",
+    "aes_config.h": "c",
+    "stdint.h": "c"
   }
 }
