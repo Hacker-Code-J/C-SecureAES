@@ -8,6 +8,9 @@
 void stringToByteArray(u8* byteArray, const char* hexString);
 void stringToWordArray(u32* wordArray, const char* hexString);
 
+void byteToWord(u32* output, const u8* input, size_t input_byteLen);
+void wordToByte(u8* output, const u32* input, size_t input_wordLen);
+
 /* AESAVS */
 
 void printProgressBar(int current, int total);

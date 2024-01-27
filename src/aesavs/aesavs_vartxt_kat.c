@@ -168,7 +168,7 @@ void create_AES_VARTXT_RspFile(const char* pReqFileName, const char* pRspFileNam
             fprintf(pRspFile, "CT = ");
             AES_Encrypt(pData->ct, pData->pt, pData->key, AES128);
             for (size_t i = 0; i < byteDataLen; i++) {
-                fprintf(pRspFile, "%02x", pData->ct[i]);
+                fprintf(pRspFile, "%02X", pData->ct[i]);
             }
             fprintf(pRspFile, "\n");
             freeData(pData);
@@ -185,7 +185,7 @@ void create_AES_VARTXT_RspFile(const char* pReqFileName, const char* pRspFileNam
     fprintf(pRspFile, "CT = ");
     AES_Encrypt(pData->ct, pData->pt, pData->key, AES128);
     for (size_t i = 0; i < byteDataLen; i++) {
-        fprintf(pRspFile, "%02x", pData->ct[i]);
+        fprintf(pRspFile, "%02X", pData->ct[i]);
     }
     fprintf(pRspFile, "\n");
     freeData(pData);

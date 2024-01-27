@@ -15,6 +15,26 @@ void stringToWordArray(u32* wordArray, const char* hexString) {
     }
 }
 
+// Function to convert u8 array to u32 array
+void byteToWord(u32* output, const u8* input, size_t input_byteLen) {
+    for (size_t i = 0; i < input_byteLen / 4; ++i) {
+        output[i] = (u32)input[4 * i + 0] << 0x18 |
+                    (u32)input[4 * i + 1] << 0x10 |
+                    (u32)input[4 * i + 2] << 0x08 |
+                    (u32)input[4 * i + 3] << 0x00;
+    }
+}
+
+// Function to convert u32 array to u8 array
+void wordToByte(u8* output, const u32* input, size_t input_wordLen) {
+    for (size_t i = 0; i < input_wordLen; ++i) {
+        output[4 * i + 0] = (u8)(input[i] >> 0x18);
+        output[4 * i + 1] = (u8)(input[i] >> 0x10);
+        output[4 * i + 2] = (u8)(input[i] >> 0x08);
+        output[4 * i + 3] = (u8)(input[i] >> 0x00);
+    }
+}
+
 /* AESAVS */
 
 void printProgressBar(int current, int total) {

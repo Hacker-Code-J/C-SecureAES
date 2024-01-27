@@ -4,5 +4,6 @@
 
 int main() {
     AES128_Test();
+    MOVS_AES_VARTXT_TEST();
     return 0;
 }

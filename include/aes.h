@@ -102,34 +102,54 @@ void reverseKeySchedule(u8* uKey, const u32* rKey, u8 AES_VERSION);
 /* aes_core: fuctions in used in AES */
 
 static inline u8 MUL_GF256(u8 a, u8 b) {
+    // u8 res = 0;
+    // const u8 MSB_mask = 0x80;
+    // u8 MSB;
+    // const u8 modulo = 0x1B;
+    // u8 temp_a = a;
+    // u8 temp_b = b;
+
+    // for (int i = 0; i < 8; i++) {
+    //     if (temp_b & 1)
+    //         res ^= temp_a;
+    //     MSB = temp_a & MSB_mask;
+    //     temp_a <<= 1;
+    //     if (MSB)
+    //         temp_a ^= modulo;
+    //     temp_b >>= 1;
+    // }
+
+    // return res;
+    
     u8 res = 0;
-    const u8 MSB_mask = 0x80;
-    u8 MSB;
-    const u8 modulo = 0x1B;
-    u8 temp_a = a;
-    u8 temp_b = b;
 
     for (int i = 0; i < 8; i++) {
-        if (temp_b & 1)
-            res ^= temp_a;
-        MSB = temp_a & MSB_mask;
-        temp_a <<= 1;
-        if (MSB)
-            temp_a ^= modulo;
-        temp_b >>= 1;
+        res ^= (b & 1) * a;  // Conditional addition without branching.
+        b >>= 1;             // Prepare for the next iteration (b = b / 2).
+
+        u8 MSB = a & 0x80;
+        a <<= 1;             // a = a * 2.
+        a ^= (0 - (MSB >> 7)) & 0x1B;  // Conditional XOR without branching.
     }
 
     return res;
-    
-    // u8 res = 0, MSB, temp_a = a, temp_b = b;
-    // for (int i = 0; i < 8; i++, temp_b >>= 1, temp_a = (temp_a << 1) ^ (MSB = temp_a & 0x80 ? 0x1B : 0)) {
-    //     res ^= (temp_b & 1) * temp_a;
-    // }
-    // return res;
 }
 
+// static inline u8 XTIME(u8 f) {
+//     return (f << 1) ^ (((f >> 7) & 0x01) * 0x1B);
+// }
+
+// static inline u8 GF_MUL(u8 f, u8 g) {
+//     u8 h = 0x00;
+//     for (int i = 7; i >= 0; i--) {
+//         h = XTIME(h);
+//         h ^= (f >> i) & g;  // Conditional XOR without branching.
+//     }
+//     return h;
+// }
+
 void AddRoundKey(u8* state, const u32* rKey);
-void SubBytes(u8* state);
+void Subu8s(u8* state);
 void ShiftRows(u8* state);
 void MixColumns(u8* state);
 
