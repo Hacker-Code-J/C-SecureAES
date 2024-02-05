@@ -9,10 +9,10 @@ void KeySchedule(u32* rKey, const u8* uKey, u8 AES_VERSION) {
     u32 temp;
 	
 	for (int i = 0; i < NK; i++) {
-        rKey[i] = (u32)uKey[4*i] << 0x18 | 
-                  (u32)uKey[4*i+1] << 0x10 | 
-                  (u32)uKey[4*i+2] << 0x08 | 
-                  (u32)uKey[4*i+3];
+        rKey[i] = (u32)uKey[4 * i    ] << 0x18 | 
+                  (u32)uKey[4 * i + 1] << 0x10 | 
+                  (u32)uKey[4 * i + 2] << 0x08 | 
+                  (u32)uKey[4 * i + 3];
     }
     
     for (int i = NK; i < ((NK + 6) + 1) * 4; i++) {

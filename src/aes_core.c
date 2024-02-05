@@ -96,7 +96,7 @@ void AES_Encrypt(u8* dst, const u8* src, const u8* uKey, const u8 AES_VERSION) {
     
 	u32 rKey[TSRK];
 	u8 state[16]; // 8 x 16 = 128
-	
+
 	// Copy plaintext to state
 	// for (int i = 0; i < 16; i++)
 	// 	state[i] = src[i];
@@ -104,16 +104,30 @@ void AES_Encrypt(u8* dst, const u8* src, const u8* uKey, const u8 AES_VERSION) {
 
     KeySchedule(rKey, uKey, AES_VERSION);
 
+	puts("\n\nRound Key Start");
+	for (u8 i = 0; i < TSRK; i++) {
+		if(i % 4 == 0 && i > 1)
+			puts("");
+		printf("%08X:", rKey[i]);
+	}
+	puts("Round Key End\n\n");
+
 	AddRoundKey(state, rKey); // Initial round
-	ShiftRows(state);
-	for (int round = 1; round <= NR; round++) { // Main rounds
+
+	for (u8 r = 1; r <= NR; r++) { // Main rounds
+		for (u8 i = 0; i < 16; i++)
+			printf("%02X:", state[i]);
+		puts("");
 		SubBytes(state); ShiftRows(state);
-		if (round != NR) MixColumns(state);
+		if (r != NR) MixColumns(state);
 		// 1: roundKey[  4] | roundKey[5] | roundKey[ 6] | roundKey[    7]
 		// 2: roundKey[  8] | roundKey[9] | roundKey[10] | roundKey[   11]
 		// i: roundKey[4*i] |    ...      |    ...       | roundKey[4*i+3]
-		AddRoundKey(state, rKey + 4 * round);
+		AddRoundKey(state, rKey + 4 * r);
 	}
+	for (u8 i = 0; i < 16; i++)
+		printf("%02X:", state[i]);
+	puts("");
 	
 	// Copy state to ciphertext
 	// for (int i = 0; i < 16; ++i)
@@ -123,7 +137,6 @@ void AES_Encrypt(u8* dst, const u8* src, const u8* uKey, const u8 AES_VERSION) {
 
 /* AES on 32-bit platform */
 
-
 void AddRoundKey32(u32* state, const u32* rKey) {
 	for (int i = 0; i < 4; i++) {
         // XOR each 32-bit word of the state with the corresponding word of the round key
@@ -131,22 +144,16 @@ void AddRoundKey32(u32* state, const u32* rKey) {
     }
 }
 
-void AES32_round(u32* state, u32* rKey) {
-	u32 tmp[4];
-	/*
-	for (int k = 0; k < 4; k++) {
-	tmp[k] = Te0[state[k] >> 24] ^ Te1[(state[(k+1)%4] >> 16) & 0xff] ^
-	Te2[(state[(k+2)%4] >> 8) & 0xff] ^ Te3[state[(k+3)%4] & 0xff] ^ rk[k];
-	} */
+// void AES32_round(u32* state, u32* rKey) {
+// 	u32 tmp[4];
+// 	/*
+// 	for (int k = 0; k < 4; k++) {
+// 	tmp[k] = Te0[state[k] >> 24] ^ Te1[(state[(k+1)%4] >> 16) & 0xFF] ^
+// 	Te2[(state[(k+2)%4] >> 8) & 0xFF] ^ Te3[state[(k+3)%4] & 0xFF] ^ rk[k];
+// 	} */
 
-	tmp[0] = Te0[state[0] >> 24] ^ Te1[(state[1] >> 16) & 0xff] ^ Te2[(state[2] >> 8) & 0xff] ^ Te3[state[3] & 0xff] ^ rKey[0];
-	tmp[1] = Te0[state[1] >> 24] ^ Te1[(state[2] >> 16) & 0xff] ^ Te2[(state[3] >> 8) & 0xff] ^ Te3[state[0] & 0xff] ^ rKey[1];
-	tmp[2] = Te0[state[2] >> 24] ^ Te1[(state[3] >> 16) & 0xff] ^ Te2[(state[0] >> 8) & 0xff] ^ Te3[state[1] & 0xff] ^ rKey[2];
-	tmp[3] = Te0[state[3] >> 24] ^ Te1[(state[0] >> 16) & 0xff] ^ Te2[(state[1] >> 8) & 0xff] ^ Te3[state[2] & 0xff] ^ rKey[3];
-	for (int k = 0; k < 4; k++) {
-		state[k] = tmp[k];
-	}
-}
+
+// }
 
 void AES32_Encrypt(u8* dst, const u8* src, const u8* uKey, const u8 AES_VERSION) {
 	u8 NR, TSRK;
@@ -172,33 +179,59 @@ void AES32_Encrypt(u8* dst, const u8* src, const u8* uKey, const u8 AES_VERSION)
 	byteToWord(state, src, 16);
 
 	KeySchedule(rKey, uKey, AES_VERSION);
+	puts("\n\nRound Key32 Start");
+	for (u8 i = 0; i < TSRK; i++) {
+		if(i % 4 == 0 && i > 1)
+			puts("");
+		printf("%08X:", rKey[i]);
+	}
+	puts("Round Key32 End\n\n");
 
 	AddRoundKey32(state, rKey);
 
 	for (u8 r = 1; r < NR; r++) {
-		AES32_round(state, rKey + 4 * (r - 1));
+		for (u8 i = 0; i < 4; i++)
+			printf("%08X:", state[i]);
+		puts("");
+		tmp[0] = Te0[state[0] >> 0x18] ^ Te1[(state[1] >> 0x10) & 0xFF] ^ Te2[(state[2] >> 0x08) & 0xFF] ^ Te3[state[3] & 0xFF] ^ rKey[4 * r    ];
+		tmp[1] = Te0[state[1] >> 0x18] ^ Te1[(state[2] >> 0x10) & 0xFF] ^ Te2[(state[3] >> 0x08) & 0xFF] ^ Te3[state[0] & 0xFF] ^ rKey[4 * r + 1];
+		tmp[2] = Te0[state[2] >> 0x18] ^ Te1[(state[3] >> 0x10) & 0xFF] ^ Te2[(state[0] >> 0x08) & 0xFF] ^ Te3[state[1] & 0xFF] ^ rKey[4 * r + 2];
+		tmp[3] = Te0[state[3] >> 0x18] ^ Te1[(state[0] >> 0x10) & 0xFF] ^ Te2[(state[1] >> 0x08) & 0xFF] ^ Te3[state[2] & 0xFF] ^ rKey[4 * r + 3];
+		memcpy(state, tmp, 16);
+		// for (u8 k = 0; k < 4; k++) {
+		// 	state[k] = tmp[k];
+		// }
 	}
+	for (u8 i = 0; i < 4; i++)
+		printf("%08X:", state[i]);
+	puts("");
+	tmp[0] = (Te2[(state[0] >> 0x18)       ] & 0xFF000000) ^
+			 (Te3[(state[1] >> 0x10) & 0xFF] & 0x00FF0000) ^
+			 (Te0[(state[2] >> 0x08) & 0xFF] & 0x0000FF00) ^
+			 (Te1[state[3] 			 & 0xFF] & 0x000000FF) ^ rKey[4 * NR    ];
 
-	tmp[0] = (Te4[(state[0] >> 0x18)       ] & 0xff000000) ^
-			 (Te4[(state[1] >> 0x10) & 0xff] & 0x00ff0000) ^
-			 (Te4[(state[2] >> 0x08) & 0xff] & 0x0000ff00) ^
-			 (Te4[state[3] 			 & 0xff] & 0x000000ff) ^ rKey[40];
+	tmp[1] = (Te2[(state[1] >> 0x18)       ] & 0xFF000000) ^
+			 (Te3[(state[2] >> 0x10) & 0xFF] & 0x00FF0000) ^
+			 (Te0[(state[3] >> 0x08) & 0xFF] & 0x0000FF00) ^
+			 (Te1[(state[0]        ) & 0xFF] & 0x000000FF) ^ rKey[4 * NR + 1];
 
-	tmp[1] = (Te4[(state[1] >> 0x18)       ] & 0xff000000) ^
-			 (Te4[(state[2] >> 0x10) & 0xff] & 0x00ff0000) ^
-			 (Te4[(state[3] >> 0x08) & 0xff] & 0x0000ff00) ^
-			 (Te4[(state[0]        ) & 0xff] & 0x000000ff) ^ rKey[41];
-
-	tmp[2] = (Te4[(state[2] >> 0x18)       ] & 0xff000000) ^
-			 (Te4[(state[3] >> 0x10) & 0xff] & 0x00ff0000) ^
-			 (Te4[(state[0] >> 0x08) & 0xff] & 0x0000ff00) ^
-			 (Te4[(state[1]        ) & 0xff] & 0x000000ff) ^ rKey[42];
+	tmp[2] = (Te2[(state[2] >> 0x18)       ] & 0xFF000000) ^
+			 (Te3[(state[3] >> 0x10) & 0xFF] & 0x00FF0000) ^
+			 (Te0[(state[0] >> 0x08) & 0xFF] & 0x0000FF00) ^
+			 (Te1[(state[1]        ) & 0xFF] & 0x000000FF) ^ rKey[4 * NR + 2];
 	
-	tmp[3] = (Te4[(state[3] >> 0x18)       ] & 0xff000000) ^
-			 (Te4[(state[0] >> 0x10) & 0xff] & 0x00ff0000) ^
-			 (Te4[(state[1] >> 0x08) & 0xff] & 0x0000ff00) ^
-			 (Te4[(state[2]        ) & 0xff] & 0x000000ff) ^ rKey[43];
-	// state2byte(tmp, ct);
-	wordToByte(dst, tmp, 4);
+	tmp[3] = (Te2[(state[3] >> 0x18)       ] & 0xFF000000) ^
+			 (Te3[(state[0] >> 0x10) & 0xFF] & 0x00FF0000) ^
+			 (Te0[(state[1] >> 0x08) & 0xFF] & 0x0000FF00) ^
+			 (Te1[(state[2]        ) & 0xFF] & 0x000000FF) ^ rKey[4 * NR + 3];
 
+	memcpy(state, tmp, 16);
+	// for (int k = 0; k < 4; k++) {
+	// 	state[k] = tmp[k];
+	// }
+	for (u8 i = 0; i < 4; i++)
+		printf("%08X:", state[i]);
+	puts("");
+
+	wordToByte(dst, state, 4);
 }

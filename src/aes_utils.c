@@ -16,22 +16,30 @@ void stringToWordArray(u32* wordArray, const char* hexString) {
 }
 
 // Function to convert u8 array to u32 array
-void byteToWord(u32* output, const u8* input, size_t input_byteLen) {
-    for (size_t i = 0; i < input_byteLen / 4; ++i) {
-        output[i] = (u32)input[4 * i + 0] << 0x18 |
-                    (u32)input[4 * i + 1] << 0x10 |
-                    (u32)input[4 * i + 2] << 0x08 |
-                    (u32)input[4 * i + 3] << 0x00;
+// b7|b6|b5|b4|b3|b2|b1|b0 <=> byte[8] = { b0, b1, b2, b3, b4, b5, b6, b7 }
+// -> word[0] = b0 | b1 | b2 | b3 = w0
+// -> word[1] = b4 | b5 | b6 | b7 = w1
+void byteToWord(u32* dst, const u8* src, size_t byteLen) {
+    for (size_t i = 0; i < byteLen / 4; i++) {
+        dst[i] = (u32)src[4 * i    ] << 0x18 |
+                 (u32)src[4 * i + 1] << 0x10 |
+                 (u32)src[4 * i + 2] << 0x08 |
+                 (u32)src[4 * i + 3];
     }
 }
 
 // Function to convert u32 array to u8 array
-void wordToByte(u8* output, const u32* input, size_t input_wordLen) {
-    for (size_t i = 0; i < input_wordLen; ++i) {
-        output[4 * i + 0] = (u8)(input[i] >> 0x18);
-        output[4 * i + 1] = (u8)(input[i] >> 0x10);
-        output[4 * i + 2] = (u8)(input[i] >> 0x08);
-        output[4 * i + 3] = (u8)(input[i] >> 0x00);
+// w1|w0 <=> word[2] = { w0, w1 }
+// -> byte[0] = (w0 >> 0x18) & 0xFF = b0
+// -> byte[1] = (w0 >> 0x10) & 0xFF = b1
+// -> byte[2] = (w0 >> 0x08) & 0xFF = b2
+// -> byte[3] = (w0 >> 0x00) & 0xFF = b3
+void wordToByte(u8* dst, const u32* src, size_t wordLen) {
+    for (size_t i = 0; i < wordLen; i++) {
+        dst[4 * i + 0] = (u8)((src[i] >> 0x18) & 0xFF);
+        dst[4 * i + 1] = (u8)((src[i] >> 0x10) & 0xFF);
+        dst[4 * i + 2] = (u8)((src[i] >> 0x08) & 0xFF);
+        dst[4 * i + 3] = (u8)((src[i]        ) & 0xFF);
     }
 }
 
