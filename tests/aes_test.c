@@ -47,3 +47,22 @@ void AES128_Test() {
     printf("32-BIT-AES--TIME: %.3f µs\n", measure_encryption_time(AES32_Encrypt, output, input, key, AES128)*1000000);
 }
 
+void AES128_Opt_Comp() {
+    const char* inputString = "e0000000000000000000000000000000";
+    u8 input[16];
+    stringToByteArray(input, inputString);
+
+    const char* keyString = "00000000000000000000000000000000";
+    u8 key[16];
+    stringToByteArray(key, keyString);
+    
+    u8 output[16];
+
+    for (u8 i = 0; i < 10000; i++) {
+        printf("%.3f\n", measure_encryption_time(AES_Encrypt, output, input, key, AES128)*1000000);
+        printf("%.3f\n", measure_encryption_time(AES32_Encrypt, output, input, key, AES128)*1000000);
+        // printf("%lu\n", measure_encryption_cycle(AES_Encrypt, output, input, key, AES128));
+        // printf("%lu\n", measure_encryption_cycle(AES32_Encrypt, output, input, key, AES128));
+    }
+}
+
