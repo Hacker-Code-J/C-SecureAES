@@ -135,9 +135,13 @@ static inline u8 MUL_GF256(u8 a, u8 b) {
     return res;
 }
 
-// static inline u8 XTIME(u8 f) {
-//     return (f << 1) ^ (((f >> 7) & 0x01) * 0x1B);
-// }
+// XTIME:{0,1}^8 -> {0,1}^8: XTIME(f(x)) := xf(x) mod m(x) with m(x)=x^8+x^4+x^3+x+1
+// 0x1A * 0x02 = xtime(0x1A)
+// 0x1A * 0x03 = 0x1A*(0x02 + 0x01) = xtime(0x1A) + 0x1A
+// 0x1A * 0x04 = xtime(xtime(0x1A))
+static inline u8 XTIME(u8 f) {
+    return (f << 1) ^ (((f >> 7) & 0x01) * 0x1B);
+}
 
 // static inline u8 GF_MUL(u8 f, u8 g) {
 //     u8 h = 0x00;
@@ -149,7 +153,7 @@ static inline u8 MUL_GF256(u8 a, u8 b) {
 // }
 
 void AddRoundKey(u8* state, const u32* rKey);
-void Subu8s(u8* state);
+void Subbytes(u8* state);
 void ShiftRows(u8* state);
 void MixColumns(u8* state);
 

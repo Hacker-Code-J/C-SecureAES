@@ -22,8 +22,8 @@ all: dir $(TARGET)
 $(TARGET): $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $^
 
-$(OBJDIR)/main.o: main.c
-	$(CC) $(CFLAGS) -c main.c -o $@
+# $(OBJDIR)/main.o: main.c
+# 	$(CC) $(CFLAGS) -c main.c -o $@
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
 $(OBJDIR)/%.o: $(VSSRCDIR)/%.c
@@ -33,7 +33,7 @@ $(OBJDIR)/%.o: $(TESTDIR)/%.c
 
 -include $(OBJS:.o=.d)
 
-$(OBJDIR)/aes_core.o: $(SRCDIR)/aes_core.c $(INCDIR)/aes.h
+$(OBJDIR)/aes_core.o: $(SRCDIR)/aes_core.c $(INCDIR)/aes.h $(INCDIR)/aes32.h
 $(OBJDIR)/key_schedule.o: $(SRCDIR)/key_schedule.c $(INCDIR)/aes.h
 $(OBJDIR)/aes_utils.o: $(SRCDIR)/aes_utils.c $(INCDIR)/aes_utils.h
 

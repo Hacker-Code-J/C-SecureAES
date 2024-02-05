@@ -175,18 +175,30 @@ void AES32_Encrypt(u8* dst, const u8* src, const u8* uKey, const u8 AES_VERSION)
 
 	AddRoundKey32(state, rKey);
 
-	for (int r = 1; r < NR; r++) {
-		AES32_round(state, rKey);
+	for (u8 r = 1; r < NR; r++) {
+		AES32_round(state, rKey + 4 * (r - 1));
 	}
 
-	// tmp[0] = (Te4[state[0] >> 24] & 0xff000000) ^ (Te4[(state[1] >> 16) & 0xff] & 0x00ff0000)
-	// ^ (Te4[(state[2] >> 8) & 0xff] & 0x0000ff00) ^ (Te4[state[3] & 0xff] & 0x000000ff) ^ rk[10][0];
-	// tmp[1] = (Te4[state[1] >> 24] & 0xff000000) ^ (Te4[(state[2] >> 16) & 0xff] & 0x00ff0000)
-	// ^ (Te4[(state[3] >> 8) & 0xff] & 0x0000ff00) ^ (Te4[state[0] & 0xff] & 0x000000ff) ^ rk[10][1];
-	// tmp[2] = (Te4[state[2] >> 24] & 0xff000000) ^ (Te4[(state[3] >> 16) & 0xff] & 0x00ff0000)
-	// ^ (Te4[(state[0] >> 8) & 0xff] & 0x0000ff00) ^ (Te4[state[1] & 0xff] & 0x000000ff) ^ rk[10][2];
-	// tmp[3] = (Te4[state[3] >> 24] & 0xff000000) ^ (Te4[(state[0] >> 16) & 0xff] & 0x00ff0000)
-	// ^ (Te4[(state[1] >> 8) & 0xff] & 0x0000ff00) ^ (Te4[state[2] & 0xff] & 0x000000ff) ^ rk[10][3];
-	// state2byte(tmp, ct); //정수열  바이트열
+	tmp[0] = (Te4[(state[0] >> 0x18)       ] & 0xff000000) ^
+			 (Te4[(state[1] >> 0x10) & 0xff] & 0x00ff0000) ^
+			 (Te4[(state[2] >> 0x08) & 0xff] & 0x0000ff00) ^
+			 (Te4[state[3] 			 & 0xff] & 0x000000ff) ^ rKey[40];
+
+	tmp[1] = (Te4[(state[1] >> 0x18)       ] & 0xff000000) ^
+			 (Te4[(state[2] >> 0x10) & 0xff] & 0x00ff0000) ^
+			 (Te4[(state[3] >> 0x08) & 0xff] & 0x0000ff00) ^
+			 (Te4[(state[0]        ) & 0xff] & 0x000000ff) ^ rKey[41];
+
+	tmp[2] = (Te4[(state[2] >> 0x18)       ] & 0xff000000) ^
+			 (Te4[(state[3] >> 0x10) & 0xff] & 0x00ff0000) ^
+			 (Te4[(state[0] >> 0x08) & 0xff] & 0x0000ff00) ^
+			 (Te4[(state[1]        ) & 0xff] & 0x000000ff) ^ rKey[42];
+	
+	tmp[3] = (Te4[(state[3] >> 0x18)       ] & 0xff000000) ^
+			 (Te4[(state[0] >> 0x10) & 0xff] & 0x00ff0000) ^
+			 (Te4[(state[1] >> 0x08) & 0xff] & 0x0000ff00) ^
+			 (Te4[(state[2]        ) & 0xff] & 0x000000ff) ^ rKey[43];
+	// state2byte(tmp, ct);
+	wordToByte(dst, tmp, 4);
 
 }

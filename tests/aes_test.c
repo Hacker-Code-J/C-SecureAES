@@ -1,5 +1,6 @@
-#include "aes.h"
 #include "aes_utils.h"
+#include "aes.h"
+#include "aes32.h"
 
 void AES128_Test() {
     const char* inputString = "e0000000000000000000000000000000";
@@ -22,13 +23,22 @@ void AES128_Test() {
     printf("\n");
     
     u8 output[16];
+    u8 output2[16];
 
     // Call the AES_Encrypt function
     AES_Encrypt(output, input, key, AES128);
+    AES32_Encrypt(output2, input, key, AES128);
+    
     // Print the ciphertext
     printf("Ciphertext(08-bit): \n");
     for (int i = 0; i < 16; i++) {
         printf("%02x", output[i]);
+    }
+    printf("\n");
+
+    printf("Ciphertext(32-bit): \n");
+    for (int i = 0; i < 16; i++) {
+        printf("%02x", output2[i]);
     }
     printf("\n");
 }
