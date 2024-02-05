@@ -35,11 +35,15 @@ void AES128_Test() {
         printf("%02x", output[i]);
     }
     printf("\n");
+    printf("08-BIT-AES-CYCLE: %lu cycles\n", measure_encryption_cycle(AES_Encrypt, output, input, key, AES128));
+    printf("08-BIT-AES--TIME: %.3f µs\n", measure_encryption_time(AES_Encrypt, output, input, key, AES128)*1000000);
 
     printf("Ciphertext(32-bit): \n");
     for (int i = 0; i < 16; i++) {
         printf("%02x", output2[i]);
     }
     printf("\n");
+    printf("32-BIT-AES-CYCLE: %lu cycles\n", measure_encryption_cycle(AES32_Encrypt, output, input, key, AES128));
+    printf("32-BIT-AES--TIME: %.3f µs\n", measure_encryption_time(AES32_Encrypt, output, input, key, AES128)*1000000);
 }
 
