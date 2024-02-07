@@ -8,7 +8,7 @@ VSSRCDIR=./src/aesavs
 TESTDIR=./tests
 INCDIR=./include
 
-OBJS=$(OBJDIR)/aes_core.o $(OBJDIR)/key_schedule.o $(OBJDIR)/aes_utils.o\
+OBJS=$(OBJDIR)/aes_core.o $(OBJDIR)/key_schedule.o $(OBJDIR)/aes_utils.o $(OBJDIR)/aes32.o\
 	$(OBJDIR)/aesavs.o $(OBJDIR)/aesavs_vartxt_kat.o \
 	$(OBJDIR)/aes_test.o \
 	$(OBJDIR)/main.o
@@ -22,8 +22,8 @@ all: dir $(TARGET)
 $(TARGET): $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $^
 
-$(OBJDIR)/main.o: main.c
-	$(CC) $(CFLAGS) -c main.c -o $@
+# $(OBJDIR)/main.o: main.c
+# 	$(CC) $(CFLAGS) -c main.c -o $@
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
 $(OBJDIR)/%.o: $(VSSRCDIR)/%.c
@@ -32,16 +32,6 @@ $(OBJDIR)/%.o: $(TESTDIR)/%.c
 	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
 
 -include $(OBJS:.o=.d)
-
-$(OBJDIR)/aes_core.o: $(SRCDIR)/aes_core.c $(INCDIR)/aes.h
-$(OBJDIR)/key_schedule.o: $(SRCDIR)/key_schedule.c $(INCDIR)/aes.h
-$(OBJDIR)/aes_utils.o: $(SRCDIR)/aes_utils.c $(INCDIR)/aes_utils.h
-
-$(OBJDIR)/aesavs.o: $(VSSRCDIR)/aesavs.c $(INCDIR)/aesavs.h
-$(OBJDIR)/aesavs_vartxt_kat.o: $(VSSRCDIR)/aesavs_vartxt_kat.c $(INCDIR)/aesavs.h
-
-# $(OBJDIR)/key_schedule_test.o: $(TESTDIR)/key_schedule_test.c $(INCDIR)/aes.h
-$(OBJDIR)/aes_test.o: $(TESTDIR)/aes_test.c $(INCDIR)/aes.h
 
 KATFILES_TO_DELETE = AES_KAT/VarTxt_KAT/AES128\(VARTXT\)KAT.req \
                   AES_KAT/VarTxt_KAT/AES128\(VARTXT\)KAT.fax \
@@ -66,3 +56,8 @@ rebuild: clean all
 
 leak: 
 	(cd bin && valgrind --leak-check=full --show-leak-kinds=all ./a.out)
+
+comp:
+	(cd bin && ./a.out > speed.txt)
+	(cd bin && mv speed.txt ../view/)
+	(cd view && python3 compare_opt.py)

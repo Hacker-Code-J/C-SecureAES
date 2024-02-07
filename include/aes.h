@@ -135,21 +135,28 @@ static inline u8 MUL_GF256(u8 a, u8 b) {
     return res;
 }
 
+// XTIME:{0,1}^8 -> {0,1}^8: XTIME(f(x)) := xf(x) mod m(x) with m(x)=x^8+x^4+x^3+x+1
+// 0x1A * 0x02 = xtime(0x1A)
+// 0x1A * 0x03 = 0x1A*(0x02 + 0x01) = xtime(0x1A) + 0x1A
+// 0x1A * 0x04 = xtime(xtime(0x1A))
 // static inline u8 XTIME(u8 f) {
 //     return (f << 1) ^ (((f >> 7) & 0x01) * 0x1B);
 // }
 
 // static inline u8 GF_MUL(u8 f, u8 g) {
-//     u8 h = 0x00;
-//     for (int i = 7; i >= 0; i--) {
-//         h = XTIME(h);
-//         h ^= (f >> i) & g;  // Conditional XOR without branching.
+//     u8 h, coef;
+//     h = 0x00;
+//     for (u8 i = 7; i >= 0; i--) {
+//         coef = (f >> i) & 0x01;
+//         h = GF_xtime(h);
+//         if (coef == 1)
+//             h ^= g;
 //     }
 //     return h;
 // }
 
 void AddRoundKey(u8* state, const u32* rKey);
-void Subu8s(u8* state);
+void Subbytes(u8* state);
 void ShiftRows(u8* state);
 void MixColumns(u8* state);
 
@@ -161,5 +168,6 @@ void AES_Encrypt(u8* dst, const u8* src, const u8* uKey, const u8 AES_VERSION);
 
 void KeyScheduleTest(void);
 void AES128_Test(void);
+void AES128_Opt_Comp(void);
 
 #endif /* _AES_H */

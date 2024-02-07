@@ -1,8 +1,11 @@
+#define _POSIX_C_SOURCE 200809L
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <time.h>
 
 #ifndef _AES_CONFIG_H
 #define _AES_CONFIG_H
