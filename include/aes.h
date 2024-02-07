@@ -143,14 +143,17 @@ static inline u8 XTIME(u8 f) {
     return (f << 1) ^ (((f >> 7) & 0x01) * 0x1B);
 }
 
-// static inline u8 GF_MUL(u8 f, u8 g) {
-//     u8 h = 0x00;
-//     for (int i = 7; i >= 0; i--) {
-//         h = XTIME(h);
-//         h ^= (f >> i) & g;  // Conditional XOR without branching.
-//     }
-//     return h;
-// }
+static inline u8 GF_MUL(u8 f, u8 g) {
+    u8 h, coef;
+    h = 0x00;
+    for (u8 i = 7; i >= 0; i--) {
+        coef = (f >> i) & 0x01;
+        h = GF_xtime(h);
+        if (coef == 1)
+            h ^= g;
+    }
+    return h;
+}
 
 void AddRoundKey(u8* state, const u32* rKey);
 void Subbytes(u8* state);
