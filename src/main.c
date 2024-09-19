@@ -5,6 +5,7 @@
 int main() {
     // AES128_Opt_Comp();
     // AES128_Test();
-    MOVS_AES_VARTXT_TEST();
+    // MOVS_AES_VARTXT_TEST();
+    GF_MUL_Test();
     return 0;
 }

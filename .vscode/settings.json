@@ -90,6 +90,7 @@
     "stdint.h": "c",
     "aes32.h": "c",
     "aes_utils.h": "c",
-    "stdbool.h": "c"
+    "stdbool.h": "c",
+    "aesavs.h": "c"
   }
 }

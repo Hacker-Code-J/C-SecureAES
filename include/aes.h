@@ -100,31 +100,28 @@ void KeySchedule(u32* rKey, const u8* uKey, u8 AES_VERSION);
 void reverseKeySchedule(u8* uKey, const u32* rKey, u8 AES_VERSION);
 
 /* aes_core: fuctions in used in AES */
+// u8 res = 0;
+// const u8 MSB_mask = 0x80;
+// u8 MSB;
+// const u8 modulo = 0x1B;
+// u8 temp_a = a;
+// u8 temp_b = b;
 
+// for (int i = 0; i < 8; i++) {
+//     if (temp_b & 1)
+//         res ^= temp_a;
+//     MSB = temp_a & MSB_mask;
+//     temp_a <<= 1;
+//     if (MSB)
+//         temp_a ^= modulo;
+//     temp_b >>= 1;
+// }
+
+// return res;
 static inline u8 MUL_GF256(u8 a, u8 b) {
-    // u8 res = 0;
-    // const u8 MSB_mask = 0x80;
-    // u8 MSB;
-    // const u8 modulo = 0x1B;
-    // u8 temp_a = a;
-    // u8 temp_b = b;
-
-    // for (int i = 0; i < 8; i++) {
-    //     if (temp_b & 1)
-    //         res ^= temp_a;
-    //     MSB = temp_a & MSB_mask;
-    //     temp_a <<= 1;
-    //     if (MSB)
-    //         temp_a ^= modulo;
-    //     temp_b >>= 1;
-    // }
-
-    // return res;
-    
     u8 res = 0;
-
     for (int i = 0; i < 8; i++) {
-        res ^= (b & 1) * a;  // Conditional addition without branching.
+        res ^= (b & 1) * a;  
         b >>= 1;             // Prepare for the next iteration (b = b / 2).
 
         u8 MSB = a & 0x80;
@@ -139,21 +136,21 @@ static inline u8 MUL_GF256(u8 a, u8 b) {
 // 0x1A * 0x02 = xtime(0x1A)
 // 0x1A * 0x03 = 0x1A*(0x02 + 0x01) = xtime(0x1A) + 0x1A
 // 0x1A * 0x04 = xtime(xtime(0x1A))
-// static inline u8 XTIME(u8 f) {
-//     return (f << 1) ^ (((f >> 7) & 0x01) * 0x1B);
-// }
+static inline u8 GF256_xtime(u8 f) {
+    return (f << 1) ^ (((f >> 7) & 0x01) * 0x1B);
+}
 
-// static inline u8 GF_MUL(u8 f, u8 g) {
-//     u8 h, coef;
-//     h = 0x00;
-//     for (u8 i = 7; i >= 0; i--) {
-//         coef = (f >> i) & 0x01;
-//         h = GF_xtime(h);
-//         if (coef == 1)
-//             h ^= g;
-//     }
-//     return h;
-// }
+static inline u8 GF256_mul(u8 f, u8 g) {
+    u8 h, coef;
+    h = 0x00;
+    for (u8 i = 7; i >= 0; i--) {
+        coef = (f >> i) & 0x01;
+        h = GF256_xtime(h);
+        if (coef == 1)
+            h ^= g;
+    }
+    return h;
+}
 
 void AddRoundKey(u8* state, const u32* rKey);
 void Subbytes(u8* state);
@@ -165,7 +162,7 @@ void MixColumns(u8* state);
 void AES_Encrypt(u8* dst, const u8* src, const u8* uKey, const u8 AES_VERSION);
 
 /* TEST */
-
+void GF_MUL_Test(void);
 void KeyScheduleTest(void);
 void AES128_Test(void);
 void AES128_Opt_Comp(void);

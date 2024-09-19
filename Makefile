@@ -5,7 +5,7 @@ OBJDIR=./obj
 BINDIR=./bin
 SRCDIR=./src
 VSSRCDIR=./src/aesavs
-TESTDIR=./tests
+TESTDIR=./test
 INCDIR=./include
 
 OBJS=$(OBJDIR)/aes_core.o $(OBJDIR)/key_schedule.o $(OBJDIR)/aes_utils.o $(OBJDIR)/aes32.o\
@@ -53,6 +53,9 @@ dir:
 	@mkdir -p $(OBJDIR) $(BINDIR)
 
 rebuild: clean all
+
+run:
+	(cd bin && ./a.out)
 
 leak: 
 	(cd bin && valgrind --leak-check=full --show-leak-kinds=all ./a.out)

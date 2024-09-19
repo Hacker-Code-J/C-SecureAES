@@ -2,6 +2,35 @@
 
 /* Measure */
 
+u64 measure_mul_cycle(u8 (*func)(u8, u8), u8 a, u8 b) {
+    u64 start, end;
+    const u64 num_runs = 10000;
+    func(a, b);
+
+    start = rdtsc();
+    for (int i = 0; i < num_runs; i++)
+        func(a, b);
+    end = rdtsc();
+    
+    return (end - start) / num_runs;
+}
+
+double measure_mul_time(u8 (*func)(u8, u8), u8 a, u8 b) {
+    struct timespec start, end;
+    double cpu_time_used;
+    const double num_runs = 10000;
+    
+    func(a, b);
+    clock_gettime(1, &start);
+    for (int i = 0; i < num_runs; i++) {
+        func(a, b);
+    }
+    clock_gettime(1, &end);
+    
+    cpu_time_used = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+    return cpu_time_used / num_runs;
+}
+
 u64 measure_encryption_cycle(void (*func)(u8*, const u8*, const u8*, const u8), u8* dst, const u8* src, const u8* uKey, const u8 AES_VERSION) {
     u64 start, end;
     const u64 num_runs = 10000;

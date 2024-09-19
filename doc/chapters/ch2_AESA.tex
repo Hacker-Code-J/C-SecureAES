@@ -1,0 +1,66 @@
+\chapter{AES Algorithm}
+Let $m(x):=x^8+x^4+x^3+x+1$.
+\begin{align*}
+	GF(2^8)&=GF(2)[x]/\langle x^8+x^4+x^3+x+1\rangle \\
+	&=GF(2)[x]/\langle m(x)\rangle \\
+	&=\set{b_0+b_1x+\cdots+b_6x^6+b_7x^7+\langle m(x)\rangle:b_0,b_1,\cdots, b_6,b_7\in GF(2)}\\
+	&=\set{\sum_{i=0}^7b_ix^i+\langle m(x)\rangle:b_i\in\set{0,1}}.
+\end{align*}
+Let $f(x),g(x)\in GF(2^8)$, say, \[
+f(x)=\sum_{i=0}^7a_ix^i+\langle m(x)\rangle,\quad g(x)=\sum_{j=0}^7b_jx^j+\langle m(x)\rangle.
+\] Then
+\[
+f(x)+g(x)=\sum_{i=0}^7(a_i+b_i)x^i+\langle m(x)\rangle=\sum_{i=0}^7(a_i\oplus b_i)x^i+\langle m(x)\rangle.
+\] Here, $\oplus:GF(2)\times GF(2)\to GF(2)$. And \begin{align*}
+	f(x)\cdot g(x)=m(x)\cdot q(x) + r(x).
+\end{align*} Here $\deg r \leq 7$.
+\newpage
+We define \[
+\fullfunction{\texttt{xtime}}{GF(2^8)}{GF(2^8)}{f(x)}{x\cdot f(x)}.
+\]
+Then \begin{enumerate}
+	\item $f(x) = a_0 + a_1x + \cdots + a_6x^6 + a_7x^7$
+	\item \begin{align*}
+		x\cdot f(x) &= a_0x + a_1x^2 + \cdots + a_6x^7 + a_7x^8 \\
+		&= a_0x + a_1x^2 + \cdots + a_6x^7 + a_7(x^4+x^3+x+1)\quad\because x^8\equiv x^4+x^3+x+1\pmod{m(x)} \\
+		&=\begin{cases}
+			\sum_{i=0}^6a_ix^{i+1} + 0 &:a_7=0\\
+			\sum_{i=0}^6a_ix^{i+1} + (x^4+x^3+x+1) &:a_7=1
+		\end{cases} \\
+		&=\begin{cases}
+			(f(x) \ll \texttt{1}) &:a_7=0\\
+			(f(x) \ll \texttt{1}) \oplus \texttt{0x1b} &:a_7=1
+		\end{cases}
+	\end{align*}
+\end{enumerate}
+
+\lstinputlisting[style=C]{../doc/codes/GF256_xtime.c}
+
+\begin{align*}
+	g(x)\cdot f(x) &= \sum_{i=0}^7g(x)a_ix^i \\
+	&= g(x)a_0 + \sum_{i=1}^7g(x)a_ix^i \\
+	&= g(x)a_0 + \textcolor{red}{x}\sum_{i=1}^7g(x)a_ix^{i-1} \\
+	&= g(x)a_0 + \textcolor{red}{x}\left(g(x)a_1 + \sum_{i=2}^7g(x)a_ix^{i-2}\right) \\
+	&= g(x)a_0 + \textcolor{red}{x}\left(g(x)a_1 + \textcolor{red}{x}\left(g(x)a_2 + \sum_{i=3}^7g(x)a_ix^{i-3}\right)\right) \\
+	&= \cdots \\
+	&= g(x)a_0 + \textcolor{red}{x}(g(x)a_1 + \textcolor{red}{x}(g(x)a_2 + \textcolor{red}{x}(g(x)a_3 + \textcolor{red}{x}(g(x)a_4 + \textcolor{red}{x}(g(x)a_5 + \textcolor{red}{x}(g(x)a_6 + \textcolor{red}{x}(g(x)a_7)))))))
+\end{align*}
+
+That is, \begin{align*}
+	&x &\cdot& 0 & + & (g(x)\cdot a_7)\\
+	&x &\cdot& (g(x)\cdot a_7) & + & (g(x)\cdot a_6)\\
+	&x &\cdot& (x\cdot (g(x)\cdot a_7) + (g(x)\cdot a_6)) & + & (g(x)\cdot a_5)\\
+\end{align*}\begin{enumerate}[Step 1.]
+	\item $x\cdot 0 + g(x)\cdot a_7$
+	\item $x\cdot (g(x)\cdot a_7) + (g(x)\cdot a_6)$
+	\item $x\cdot (x\cdot (g(x)\cdot a_7) + (g(x)\cdot a_6)) + (g(x)\cdot a_5)$
+	\item[] $\cdots$
+	\item[Final.] $g\cdot a_0 + x(g\cdot a_1 + \cdots + x(g\cdot a_5 + x(g\cdot a_6 + x(g\cdot a_7))))$
+\end{enumerate}
+
+\lstinputlisting[style=C]{../doc/codes/GF256_mul.c}
+
+\newpage
+\lstinputlisting[style=C]{../doc/codes/GF256_MUL.c}
+
+
