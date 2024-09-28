@@ -16,6 +16,9 @@ static inline u64 rdtsc() {
     return ((u64)hi << 32) | lo;
 }
 
+u64 measure_mul_cycle(u8 (*func)(u8, u8), u8 a, u8 b);
+double measure_mul_time(u8 (*func)(u8, u8), u8 a, u8 b);
+
 u64 measure_encryption_cycle(void (*func)(u8*, const u8*, const u8*, const u8), u8* dst, const u8* src, const u8* uKey, const u8 AES_VERSION);
 double measure_encryption_time(void (*func)(u8*, const u8*, const u8*, const u8), u8* dst, const u8* src, const u8* uKey, const u8 AES_VERSION);
 

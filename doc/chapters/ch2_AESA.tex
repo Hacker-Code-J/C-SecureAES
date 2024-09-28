@@ -1,0 +1,183 @@
+\chapter{AES Algorithm}
+
+\section{S-Box ($GF(2^8)$)}
+
+Let $m(x):=x^8+x^4+x^3+x+1$.
+\begin{align*}
+	GF(2^8)&=GF(2)[x]/\langle x^8+x^4+x^3+x+1\rangle \\
+	&=GF(2)[x]/\langle m(x)\rangle \\
+	&=\set{b_0+b_1x+\cdots+b_6x^6+b_7x^7+\langle m(x)\rangle:b_0,b_1,\cdots, b_6,b_7\in GF(2)}\\
+	&=\set{\sum_{i=0}^7b_ix^i+\langle m(x)\rangle:b_i\in\set{0,1}}.
+\end{align*}
+Let $f(x),g(x)\in GF(2^8)$, say, \[
+f(x)=\sum_{i=0}^7a_ix^i+\langle m(x)\rangle,\quad g(x)=\sum_{j=0}^7b_jx^j+\langle m(x)\rangle.
+\] Then
+\[
+f(x)+g(x)=\sum_{i=0}^7(a_i+b_i)x^i+\langle m(x)\rangle=\sum_{i=0}^7(a_i\oplus b_i)x^i+\langle m(x)\rangle.
+\] Here, $\oplus:GF(2)\times GF(2)\to GF(2)$. And \begin{align*}
+	f(x)\cdot g(x)=m(x)\cdot q(x) + r(x).
+\end{align*} Here $\deg r \leq 7$.
+\newpage
+We define \[
+\fullfunction{\texttt{xtime}}{GF(2^8)}{GF(2^8)}{f(x)}{x\cdot f(x)}.
+\]
+Then \begin{enumerate}
+	\item $f(x) = a_0 + a_1x + \cdots + a_6x^6 + a_7x^7$
+	\item \begin{align*}
+		x\cdot f(x) &= a_0x + a_1x^2 + \cdots + a_6x^7 + a_7x^8 \\
+		&= a_0x + a_1x^2 + \cdots + a_6x^7 + a_7(x^4+x^3+x+1)\quad\because x^8\equiv x^4+x^3+x+1\pmod{m(x)} \\
+		&=\begin{cases}
+			\sum_{i=0}^6a_ix^{i+1} + 0 &:a_7=0\\
+			\sum_{i=0}^6a_ix^{i+1} + (x^4+x^3+x+1) &:a_7=1
+		\end{cases} \\
+		&=\begin{cases}
+			(f(x) \ll \texttt{1}) &:a_7=0\\
+			(f(x) \ll \texttt{1}) \oplus \texttt{0x1b} &:a_7=1
+		\end{cases}
+	\end{align*}
+\end{enumerate}
+
+\lstinputlisting[style=C]{../doc/codes/GF256_xtime.c}
+
+\begin{align*}
+	g(x)\cdot f(x) &= \sum_{i=0}^7g(x)a_ix^i \\
+	&= g(x)a_0 + \sum_{i=1}^7g(x)a_ix^i \\
+	&= g(x)a_0 + \textcolor{red}{x}\sum_{i=1}^7g(x)a_ix^{i-1} \\
+	&= g(x)a_0 + \textcolor{red}{x}\left(g(x)a_1 + \sum_{i=2}^7g(x)a_ix^{i-2}\right) \\
+	&= g(x)a_0 + \textcolor{red}{x}\left(g(x)a_1 + \textcolor{red}{x}\left(g(x)a_2 + \sum_{i=3}^7g(x)a_ix^{i-3}\right)\right) \\
+	&= \cdots \\
+	&= g(x)a_0 + \textcolor{red}{x}(g(x)a_1 + \textcolor{red}{x}(g(x)a_2 + \textcolor{red}{x}(g(x)a_3 + \textcolor{red}{x}(g(x)a_4 + \textcolor{red}{x}(g(x)a_5 + \textcolor{red}{x}(g(x)a_6 + \textcolor{red}{x}(g(x)a_7)))))))
+\end{align*}
+
+That is, \begin{align*}
+	&x &\cdot& 0 & + & (g(x)\cdot a_7)\\
+	&x &\cdot& (g(x)\cdot a_7) & + & (g(x)\cdot a_6)\\
+	&x &\cdot& (x\cdot (g(x)\cdot a_7) + (g(x)\cdot a_6)) & + & (g(x)\cdot a_5)\\
+\end{align*}\begin{enumerate}[Step 1.]
+	\item $x\cdot 0 + g(x)\cdot a_7$
+	\item $x\cdot (g(x)\cdot a_7) + (g(x)\cdot a_6)$
+	\item $x\cdot (x\cdot (g(x)\cdot a_7) + (g(x)\cdot a_6)) + (g(x)\cdot a_5)$
+	\item[] $\cdots$
+	\item[Final.] $g\cdot a_0 + x(g\cdot a_1 + \cdots + x(g\cdot a_5 + x(g\cdot a_6 + x(g\cdot a_7))))$
+\end{enumerate}
+
+\lstinputlisting[style=C]{../doc/codes/GF256_mul.c}
+
+\lstinputlisting[style=C]{../doc/codes/GF256_MUL.c}
+
+\newpage
+
+\section{MixColumns ($GF(2^8)[x]/\gen{x^4+1}$)}
+\[
+\fullfunction{\textsf{MixColumns}}{\binaryfield^{128}}{\binaryfield^{128}}{\sum_{i=0}^{127}a_ix^i}{\sum_{j=0}^{127}b_jx^j}
+\]
+
+\begin{center}\setstretch{1.5}\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}\hline
+	\cellcolor{red!20} $X_0$ & \cellcolor{red!20}$X_1$ & \cellcolor{red!20}$X_2$ & \cellcolor{red!20}$X_3$ & \cellcolor{green!20} $X_4$ & \cellcolor{green!20}$X_5$ & \cellcolor{green!20}$X_6$ & \cellcolor{green!20} $X_7$ & \cellcolor{blue!20} $X_8$ & \cellcolor{blue!20} $X_9$ & \cellcolor{blue!20} $X_{10}$ & \cellcolor{blue!20} $X_{11}$ & \cellcolor{yellow!20} $X_{12}$ & \cellcolor{yellow!20} $X_{13}$ & \cellcolor{yellow!20} $X_{14}$ & \cellcolor{yellow!20} $X_{15}$ \\ \hline
+\end{tabular}\\
+$\Downarrow$\\
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}\hline
+	\cellcolor{red!20} $X_0'$ & \cellcolor{red!20}$X_1'$ & \cellcolor{red!20}$X_2'$ & \cellcolor{red!20}$X_3'$ & \cellcolor{green!20} $X_4'$ & \cellcolor{green!20}$X_5'$ & \cellcolor{green!20}$X_6'$ & \cellcolor{green!20} $X_7'$ & \cellcolor{blue!20} $X_8'$ & \cellcolor{blue!20} $X_9'$ & \cellcolor{blue!20} $X_{10}'$ & \cellcolor{blue!20} $X_{11}'$ & \cellcolor{yellow!20} $X_{12}'$ & \cellcolor{yellow!20} $X_{13}'$ & \cellcolor{yellow!20} $X_{14}'$ & \cellcolor{yellow!20} $X_{15}'$ \\ \hline
+\end{tabular}\\
+\end{center}
+
+\begin{center}\setstretch{1.5}
+	\begin{minipage}{.4\textwidth}\centering
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+			\cellcolor{red!20}$X_0$ & \cellcolor{green!20}$X_4$ & \cellcolor{blue!20}$X_8$ & \cellcolor{yellow!20}$X_{12}$ \\ \hline
+			\cellcolor{red!20}$X_1$ & \cellcolor{green!20}$X_5$ & \cellcolor{blue!20}$X_9$ & \cellcolor{yellow!20}$X_{13}$ \\ \hline
+			\cellcolor{red!20}$X_2$ & \cellcolor{green!20}$X_6$ & \cellcolor{blue!20}$X_{10}$ & \cellcolor{yellow!20}$X_{14}$ \\ \hline
+			\cellcolor{red!20}$X_3$ & \cellcolor{green!20}$X_7$ & \cellcolor{blue!20}$X_{11}$ & \cellcolor{yellow!20}$X_{15}$ \\ \hline
+		\end{tabular}
+	\end{minipage}$\implies$\begin{minipage}{.4\textwidth}\centering
+		\begin{tabular}{|c|c|c|c|}
+			\hline
+			\cellcolor{red!20}$X_0'$ & \cellcolor{green!20}$X_4'$ & \cellcolor{blue!20}$X_8'$ & \cellcolor{yellow!20}$X_{12}'$ \\ \hline
+			\cellcolor{red!20}$X_1'$ & \cellcolor{green!20}$X_5'$ & \cellcolor{blue!20}$X_9'$ & \cellcolor{yellow!20}$X_{13}'$ \\ \hline
+			\cellcolor{red!20}$X_2'$ & \cellcolor{green!20}$X_6'$ & \cellcolor{blue!20}$X_{10}'$ & \cellcolor{yellow!20}$X_{14}'$ \\ \hline
+			\cellcolor{red!20}$X_3'$ & \cellcolor{green!20}$X_7'$ & \cellcolor{blue!20}$X_{11}'$ & \cellcolor{yellow!20}$X_{15}'$ \\ \hline
+		\end{tabular}
+	\end{minipage}
+\end{center}
+
+\newpage
+\noindent Consider
+\[
+GF(2^8)[x]/\gen{x^4+1}=\set{a_0+a_1x+a_2x^3+a_3x^3: a_i\in GF(2^8)}.
+\] Note that $x^5=(x^4+1)x+x\equiv x\pmod{\gen{x^4+1}}$.
+We choose \[
+a(x)=(\texttt{0x03})\cdot x^3 + (\texttt{0x01})\cdot x^2 + (\texttt{0x01})\cdot x + (\texttt{0x02})\in GF(2^8)[x]/\gen{x^4+1},
+\] where \begin{align*}
+	\texttt{0x01} &=\texttt{0b\ 0000\ 0001} &= 1,\\
+	\texttt{0x02} &=\texttt{0b\ 0000\ 0010} &= x,\\
+	\texttt{0x03} &=\texttt{0b\ 0000\ 0011} &= x+1.
+\end{align*}
+Let $b(x) = b_0 + b_1x + b_2x^2 + b_3x^3$, $c(x) = c_0 + c_1x + c_2x^2 + c_3x^3,$ and let
+\[
+\begin{pmatrix}
+	b_0 \\ b_1 \\ b_2 \\ b_3
+\end{pmatrix}{\mapsto}
+\begin{pmatrix}
+	c_0 \\ c_1 \\ c_2 \\ c_3
+\end{pmatrix}=
+\begin{pmatrix}
+	a_0\cdot b_0\bmod x^4+1 \\
+	a_1\cdot b_1\bmod x^4+1 \\
+	a_2\cdot b_2\bmod x^4+1 \\
+	a_3\cdot b_3\bmod x^4+1
+\end{pmatrix}.
+\]
+Then \begin{align*}
+	a(x)\cdot b(x) =&\ (a_3\cdot b_3)\mathcolorbox{-red}{x^6} + (a_3\cdot b_2+a_2\cdot b_3)\mathcolorbox{-red}{x^5} \\
+	& +(a_3\cdot b_1 + a_2\cdot b_2 + a_1\cdot b_3)\mathcolorbox{-red}{x^4} \\
+	& +(a_3\cdot b_0 + a_2\cdot b_1 + a_1\cdot b_2 + a_0\cdot b_3)x^3 \\
+	& +(a_2\cdot b_0 + a_1\cdot b_1 + a_0\cdot b_2)x^2 \\
+	& +(a_1\cdot b_0 + a_0\cdot b_1)x \\
+	& +(a_0\cdot b_0) \\
+	\\
+	=&\ (a_3\cdot b_3)\mathcolorbox{-red}{x^2} + (a_3\cdot b_2+a_2\cdot b_3)\mathcolorbox{-red}{x} \\
+	& +(a_3\cdot b_1 + a_2\cdot b_2 + a_1\cdot b_3)\mathcolorbox{-red}{1} \\
+	& +(a_3\cdot b_0 + a_2\cdot b_1 + a_1\cdot b_2 + a_0\cdot b_3)x^3 \\
+	& +(a_2\cdot b_0 + a_1\cdot b_1 + a_0\cdot b_2)x^2 \\
+	& +(a_1\cdot b_0 + a_0\cdot b_1)x \\
+	& +(a_0\cdot b_0)\quad\text{over}\quad GF(2^8)[x]/\gen{x^4+1} \\
+	\\
+	=&\ (a_3\cdot b_0 + a_2\cdot b_1 + a_1\cdot b_2 + a_0\cdot b_3)x^3 \\
+	=&\ (a_2\cdot b_0 + a_1\cdot b_1 + a_0\cdot b_2 + \textcolor{blue}{a_3\cdot b_3})x^2 \\
+	=&\ (a_1\cdot b_0 + a_0\cdot b_1 + \textcolor{blue}{a_3\cdot b_2 + a_2\cdot b_3})x \\
+	=&\ (a_0\cdot b_0 + \textcolor{blue}{a_3\cdot b_1 + a_2\cdot b_2 + a_1\cdot b_3}) \\
+	\\
+	=& c(x).
+\end{align*}
+
+\newpage
+\noindent Thus, we have \[
+\fullfunction{\varphi}{[GF(2^8)]^4}{[GF(2^8)]^4}{\begin{pmatrix}
+	b_0 \\ b_1 \\ b_2 \\ b_3
+\end{pmatrix}}{\begin{pmatrix}
+	c_0 \\ c_1 \\ c_2 \\ c_3
+\end{pmatrix}=\begin{pmatrix}
+a_3 & a_2 & a_1 & a_0 \\
+a_2 & a_1 & a_0 & a_3 \\
+a_1 & a_0 & a_3 & a_2 \\
+a_0 & a_3 & a_2 & a_1
+\end{pmatrix}\begin{pmatrix}
+b_0 \\ b_1 \\ b_2 \\ b_3
+\end{pmatrix},}
+\] where \[
+\begin{pmatrix}
+	a_3 & a_2 & a_1 & a_0 \\
+	a_2 & a_1 & a_0 & a_3 \\
+	a_1 & a_0 & a_3 & a_2 \\
+	a_0 & a_3 & a_2 & a_1
+\end{pmatrix} = \begin{pmatrix}
+\texttt{0x02} & \texttt{0x03} & \texttt{0x01} & \texttt{0x01}\\
+\texttt{0x01} & \texttt{0x02} & \texttt{0x03} & \texttt{0x01}\\
+\texttt{0x01} & \texttt{0x01} & \texttt{0x02} & \texttt{0x03}\\
+\texttt{0x03} & \texttt{0x01} & \texttt{0x01} & \texttt{0x02}
+\end{pmatrix}.
+\]
+
+
+

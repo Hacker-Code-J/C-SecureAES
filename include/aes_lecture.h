@@ -1,9 +1,29 @@
 #include "aes_config.h"
 
-#ifndef _AES_H
-#define _AES_H
+#ifndef _AES_LECTURE_H
+#define _AES_LECTURE_H
 
-static const u8 sbox[256] = {
+void GF256_print_bin(u8 x);
+void GF256_print_poly(u8 a);
+void print_mat(u8* mat, const char* name_string);
+
+u8 GF256_xtime(u8 a);
+u8 GF256_mul(u8 f, u8 g);
+u8 GF256_inv(u8 x);
+
+void MixCol(u8* in, u8* out);
+void InvMixCol(u8* in, u8* out);
+
+void MixCol_Mat_Mul(u8* A, u8* B, u8* C);
+
+void test_MixCol();
+void test_Mat_Mul();
+
+void test_MDS_power();
+
+/* ========================================== */
+
+static const u8 Sbox[256] = {
     0x63U, 0x7cU, 0x77U, 0x7bU, 0xf2U, 0x6bU, 0x6fU, 0xc5U,
     0x30U, 0x01U, 0x67U, 0x2bU, 0xfeU, 0xd7U, 0xabU, 0x76U,
     0xcaU, 0x82U, 0xc9U, 0x7dU, 0xfaU, 0x59U, 0x47U, 0xf0U,
@@ -38,7 +58,7 @@ static const u8 sbox[256] = {
     0x41U, 0x99U, 0x2dU, 0x0fU, 0xb0U, 0x54U, 0xbbU, 0x16U
 };
 
-static const u8 inv_sbox[256] = {
+static const u8 Inv_Sbox[256] = {
     0x52U, 0x09U, 0x6aU, 0xd5U, 0x30U, 0x36U, 0xa5U, 0x38U,
     0xbfU, 0x40U, 0xa3U, 0x9eU, 0x81U, 0xf3U, 0xd7U, 0xfbU,
     0x7cU, 0xe3U, 0x39U, 0x82U, 0x9bU, 0x2fU, 0xffU, 0x87U,
@@ -73,98 +93,19 @@ static const u8 inv_sbox[256] = {
     0xe1U, 0x69U, 0x14U, 0x63U, 0x55U, 0x21U, 0x0cU, 0x7dU
 };
 
-/* key_schedule */
+void AES_SubBytes(u8* state);
+void AES_InvSubBytes(u8* state);
+void AES_ShiftRows(u8* state);
+void AES_InvShiftRows(u8* state);
+void AES_MixColumns(u8* state);
+void AES_InvMixColumns(u8* state);
+void AES_AddRoundKey(u8* state, u8* rk);
 
-static inline u32 ROTWORD(u32 word) {
-    return (word << 0x08) | (word >> 0x18);
-}
+void AES_Round(u8* state, u8* rk);
+void AES_InvRound(u8* state, u8* rk);
 
-static inline u32 SUBWORD(u32 word) {
-    return (u32)sbox[word >> 0x18] << 0x18 | 
-           (u32)sbox[(word >> 0x10) & 0xFF] << 0x10 | 
-           (u32)sbox[(word >> 0x08) & 0xFF] << 0x08 | 
-           (u32)sbox[word & 0xFF];
-}
+void print_AES_state(u8* state, const char* string);
 
-static const u32 rCon[10] = {
-    0x01000000U, 0x02000000U, 0x04000000U, 0x08000000U,
-    0x10000000U, 0x20000000U, 0x40000000U, 0x80000000U,
-    0x1b000000U, 0x36000000U
-};
+void test_AES_round();
 
-// AES128: 8 x 16 -> 32 x 44
-// AES192: 8 x 16 -> 32 x 52
-// AES256: 8 x 16 -> 32 x 60
-void KeySchedule(u32* rKey, const u8* uKey, u8 AES_VERSION);
-
-void reverseKeySchedule(u8* uKey, const u32* rKey, u8 AES_VERSION);
-
-/* aes_core: fuctions in used in AES */
-// u8 res = 0;
-// const u8 MSB_mask = 0x80;
-// u8 MSB;
-// const u8 modulo = 0x1B;
-// u8 temp_a = a;
-// u8 temp_b = b;
-
-// for (int i = 0; i < 8; i++) {
-//     if (temp_b & 1)
-//         res ^= temp_a;
-//     MSB = temp_a & MSB_mask;
-//     temp_a <<= 1;
-//     if (MSB)
-//         temp_a ^= modulo;
-//     temp_b >>= 1;
-// }
-
-// return res;
-static inline u8 MUL_GF256(u8 a, u8 b) {
-    u8 res = 0;
-    for (int i = 0; i < 8; i++) {
-        res ^= (b & 1) * a;  
-        b >>= 1;             // Prepare for the next iteration (b = b / 2).
-
-        u8 MSB = a & 0x80;
-        a <<= 1;             // a = a * 2.
-        a ^= (0 - (MSB >> 7)) & 0x1B;  // Conditional XOR without branching.
-    }
-
-    return res;
-}
-
-// XTIME:{0,1}^8 -> {0,1}^8: XTIME(f(x)) := xf(x) mod m(x) with m(x)=x^8+x^4+x^3+x+1
-// 0x1A * 0x02 = xtime(0x1A)
-// 0x1A * 0x03 = 0x1A*(0x02 + 0x01) = xtime(0x1A) + 0x1A
-// 0x1A * 0x04 = xtime(xtime(0x1A))
-static inline u8 GF256_xtime(u8 f) {
-    return (f << 1) ^ (((f >> 7) & 0x01) * 0x1B);
-}
-
-static inline u8 GF256_mul(u8 f, u8 g) {
-    u8 h, coef;
-    h = 0x00;
-    for (u8 i = 7; i >= 0; i--) {
-        coef = (f >> i) & 0x01;
-        h = GF256_xtime(h);
-        if (coef == 1)
-            h ^= g;
-    }
-    return h;
-}
-
-void AddRoundKey(u8* state, const u32* rKey);
-void Subbytes(u8* state);
-void ShiftRows(u8* state);
-void MixColumns(u8* state);
-
-/* aes_core: encryption and decryption */
-
-void AES_Encrypt(u8* dst, const u8* src, const u8* uKey, const u8 AES_VERSION);
-
-/* TEST */
-void GF_MUL_Test(void);
-void KeyScheduleTest(void);
-void AES128_Test(void);
-void AES128_Opt_Comp(void);
-
-#endif /* _AES_H */
+#endif  // _AES_LECTURE_H

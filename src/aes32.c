@@ -16,8 +16,8 @@ void AES32_Encrypt(u8* dst, const u8* src, const u8* uKey, const u8 AES_VERSION)
     switch (AES_VERSION)
     {
     case AES192:
-        NR = 12;
-        TSRK = 52;
+        NR = 12; // Number of Round
+        TSRK = 52; // Total Size of Round Keys
         break;
     case AES256:
         NR = 14;
