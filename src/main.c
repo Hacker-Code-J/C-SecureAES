@@ -13,9 +13,9 @@ int main() {
     /* ============================= */
 
     // test_MixCol();
-    // test_Mat_Mul();
+    test_Mat_Mul();
     // test_MDS_power();
-    test_AES_round();
+    // test_AES_round();
     
     return 0;
 }
