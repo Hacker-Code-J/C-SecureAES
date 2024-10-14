@@ -6,8 +6,8 @@ Let $m(x):=x^8+x^4+x^3+x+1$.
 \begin{align*}
 	GF(2^8)&=GF(2)[x]/\langle x^8+x^4+x^3+x+1\rangle \\
 	&=GF(2)[x]/\langle m(x)\rangle \\
-	&=\set{b_0+b_1x+\cdots+b_6x^6+b_7x^7+\langle m(x)\rangle:b_0,b_1,\cdots, b_6,b_7\in GF(2)}\\
-	&=\set{\sum_{i=0}^7b_ix^i+\langle m(x)\rangle:b_i\in\set{0,1}}.
+	&=\set{b_0+b_1x+\cdots+b_6x^6+b_7x^7:b_0,b_1,\cdots, b_6,b_7\in GF(2)}\\
+	&=\set{\sum_{i=0}^7b_ix^i:b_i\in\set{0,1}}.
 \end{align*}
 Let $f(x),g(x)\in GF(2^8)$, say, \[
 f(x)=\sum_{i=0}^7a_ix^i+\langle m(x)\rangle,\quad g(x)=\sum_{j=0}^7b_jx^j+\langle m(x)\rangle.
@@ -153,7 +153,7 @@ Then \begin{align*}
 
 \newpage
 \noindent Thus, we have \[
-\fullfunction{\varphi}{[GF(2^8)]^4}{[GF(2^8)]^4}{\begin{pmatrix}
+\fullfunction{T}{[GF(2^8)]^4}{[GF(2^8)]^4}{\begin{pmatrix}
 	b_0 \\ b_1 \\ b_2 \\ b_3
 \end{pmatrix}}{\begin{pmatrix}
 	c_0 \\ c_1 \\ c_2 \\ c_3
@@ -177,7 +177,39 @@ b_0 \\ b_1 \\ b_2 \\ b_3
 \texttt{0x01} & \texttt{0x01} & \texttt{0x02} & \texttt{0x03}\\
 \texttt{0x03} & \texttt{0x01} & \texttt{0x01} & \texttt{0x02}
 \end{pmatrix}.
-\]
+\] Here, $T$ has $\textsf{GF-MUL}\times 16$.\\
+\ \\
+\noindent Let $a\in\binaryfield^8$. Then
+\begin{align*}
+	\texttt{02}\otimes a&=\xtime{a}, \\
+	\texttt{03}\otimes a&=(\texttt{02}\oplus \texttt{01})\otimes a\\
+	&=(\texttt{02}\otimes a)\oplus(\texttt{01}\otimes a) \\
+	&=\xtime{a}\oplus a.
+\end{align*} Thus, \begin{align*}
+c_0&=(\texttt{02}\otimes b_0)\oplus(\texttt{03}\otimes b_1)\oplus b_2\oplus b_3\\
+&=\xtime{b_0}\oplus\xtime{b_1}\oplus b_1\oplus b_2\oplus b_3 \\
+&=\xtime{b_0\oplus b_1}\oplus b_1\oplus b_2\oplus b_3\quad\because ax+ab=x(a+b) \\
+&=\texttt{temp0}\oplus b_1\oplus b_2\oplus b_3.
+\end{align*} and so \begin{align*}
+c_0&=(b_0\oplus b_1\oplus b_2\oplus b_3)\oplus\texttt{temp0}\oplus b_0 &\text{with}\ \textcolor{blue}{\texttt{temp0} = \xtime{b_0\oplus b_1}},\\ \\
+c_1&=(b_0\oplus b_1\oplus b_2\oplus b_3)\oplus\texttt{temp1}\oplus b_1 &\text{with}\ \textcolor{blue}{\texttt{temp1} = \xtime{b_1\oplus b_2}},\\ \\
+c_2&=(b_0\oplus b_1\oplus b_2\oplus b_3)\oplus\texttt{temp2}\oplus b_2 &\text{with}\ \textcolor{blue}{\texttt{temp2} = \xtime{b_2\oplus b_3}},\\ \\
+c_3&=(b_0\oplus b_1\oplus b_2\oplus b_3)\oplus\texttt{temp3}\oplus b_3 &\text{with}\ \textcolor{blue}{\texttt{temp3} = \xtime{b_3\oplus b_0}}.
+\end{align*} That is, \begin{algorithm}
+$\texttt{sum}\gets b_0\oplus b_1\oplus b_2\oplus b_3$; \\
+$c_0\gets\texttt{sum}\oplus\texttt{temp0}\oplus b_0$; \\
+$c_0\gets\texttt{sum}\oplus\texttt{temp1}\oplus b_1$; \\
+$c_0\gets\texttt{sum}\oplus\texttt{temp2}\oplus b_2$; \\
+$c_0\gets\texttt{sum}\oplus\texttt{temp3}\oplus b_3$; \\
+\end{algorithm}\\ It has $\xtime{}\times 4$.
 
-
-
+\newpage
+Consider \begin{align*}
+	[a(x)]^1&=a_3x^3+a_2x^2+a_1x+a_0,\\
+	[a(x)]^2&=(a_3^2+a_1^2)x^2+(a_2^2+a_0^2),\\
+	[a(x)]^4&=a_3^4+a_2^4+a_1^4+a_0^4.
+\end{align*}
+Let $a(x)=(\texttt{03})x^3+x^2+x+(\texttt{02})$. Then \begin{align*}
+	[a(x)]^2&=(\texttt{04})x^2+(\texttt{05}),\\
+	[a(x)]^3&=(\texttt{0b})x^3+(\texttt{0d})x^2+(\texttt{09})x+(\texttt{0e}),
+\end{align*} and so $[a(x)]^{-1}=[a(x)]^3=(\texttt{0b})x^3+(\texttt{0d})x^2+(\texttt{09})x+(\texttt{0e})$.

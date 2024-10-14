@@ -327,8 +327,8 @@ void test_ord() {
 
 int main(int argc, char* argv[]) {
     
-    // test_GF256();
-    test_sbox();
+    test_GF256();
+    // test_sbox();
     // test_ord();
 
     return 0;

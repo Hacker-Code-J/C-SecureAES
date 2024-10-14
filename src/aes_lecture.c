@@ -349,6 +349,7 @@ void print_AES_state(u8* state, const char* string) {
 }
 
 void test_AES_round() {
+
     u8 PT[16] = {
         0x19, 0x3d, 0xe3, 0xbe,
         0xa0, 0xf4, 0xe2, 0x2b,
@@ -373,3 +374,8 @@ void test_AES_round() {
 
     AES_InvRound(state, RK);
 }
+
+
+
+
+
