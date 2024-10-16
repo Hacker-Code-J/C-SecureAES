@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -std=c99 -g -O2 -Iinclude -MMD -MP
+CFLAGS=-Wall -std=c99 -g -O0 -Iinclude -MMD -MP
 LDFLAGS=
 
 OBJDIR=obj
