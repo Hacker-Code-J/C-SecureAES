@@ -1,0 +1,86 @@
+\adjustbox{scale=.75}{\begin{tikzpicture}
+	\def\n{4} % dimension of the matrix
+	\def\xstart{0}
+	\def\ystart{0}
+	\def\xgap{1} % increased gap for readability
+	\def\ygap{1} % increased gap for readability
+	
+	\def\bytesA{{"$a_{0,0}$", "$a_{0,1}$", "$a_{0,2}$", "$a_{0,3}$",
+			"$a_{1,0}$", "$a_{1,1}$", "$a_{1,2}$", "$a_{1,3}$",
+			"$a_{2,0}$", "$a_{2,1}$", "$a_{2,2}$", "$a_{2,3}$",
+			"$a_{3,0}$", "$a_{3,1}$", "$a_{3,2}$", "$a_{3,3}$"}}
+	\def\bytesB{{"$b_{0,0}$", "$b_{0,1}$", "$b_{0,2}$", "$b_{0,3}$",
+			"$b_{1,0}$", "$b_{1,1}$", "$b_{1,2}$", "$b_{1,3}$",
+			"$b_{2,0}$", "$b_{2,1}$", "$b_{2,2}$", "$b_{2,3}$",
+			"$b_{3,0}$", "$b_{3,1}$", "$b_{3,2}$", "$b_{3,3}$"}}	
+	\def\bytesC{{"$c_{0,0}$", "$c_{0,1}$", "$c_{0,2}$", "$c_{0,3}$",
+			"$c_{1,0}$", "$c_{1,1}$", "$c_{1,2}$", "$c_{1,3}$",
+			"$c_{2,0}$", "$c_{2,1}$", "$c_{2,2}$", "$c_{2,3}$",
+			"$c_{3,0}$", "$c_{3,1}$", "$c_{3,2}$", "$c_{3,3}$"}}
+	\def\bytesD{{"$d_{0,0}$", "$d_{0,1}$", "$d_{0,2}$", "$d_{0,3}$",
+			"$d_{1,0}$", "$d_{1,1}$", "$d_{1,2}$", "$d_{1,3}$",
+			"$d_{2,0}$", "$d_{2,1}$", "$d_{2,2}$", "$d_{2,3}$",
+			"$d_{3,0}$", "$d_{3,1}$", "$d_{3,2}$", "$d_{3,3}$"}}
+			
+	\foreach \i in {0,...,3} {
+		\foreach \j in {0,...,3} {
+			% Calculate index for flat list access, 4 * row + col
+			\pgfmathsetmacro{\index}{int(\i*4 + \j)}
+			% Define position based on index
+			\pgfmathsetmacro{\x}{\xstart + \j * \xgap}
+			\pgfmathsetmacro{\y}{\ystart - \i * \ygap}
+			% Condition to check if it is a diagonal element
+			\ifnum \i=\j
+			\node[draw, rectangle, minimum width=1cm, minimum height=1cm, fill=-blue] at (\x, \y) {\pgfmathparse{\bytesA[\index]}\pgfmathresult};
+			\else
+			\node[draw, rectangle, minimum width=1cm, minimum height=1cm] at (\x, \y) {\pgfmathparse{\bytesA[\index]}\pgfmathresult};
+			\fi
+		}
+	}
+	\draw[-Stealth] (4,-1.5) -- (5,-1.5) node[midway, above] {\footnotesize\texttt{SubBytes}};
+	\begin{scope}[xshift=6cm]
+		\foreach \i in {0,...,3} {
+			\foreach \j in {0,...,3} {
+				\pgfmathsetmacro{\index}{int(\i*4 + \j)}
+				\pgfmathsetmacro{\x}{\xstart + \j * \xgap}
+				\pgfmathsetmacro{\y}{\ystart - \i * \ygap}
+				
+				\ifnum \i=\j
+				\node[draw, rectangle, minimum width=1cm, minimum height=1cm, fill=-blue] at (\x, \y) {\pgfmathparse{\bytesB[\index]}\pgfmathresult};
+				\else
+				\node[draw, rectangle, minimum width=1cm, minimum height=1cm] at (\x, \y) {\pgfmathparse{\bytesB[\index]}\pgfmathresult};
+				\fi
+			}
+		}
+	\end{scope}
+	\draw[-Stealth] (10,-1.5) -- (11,-1.5) node[midway, above] {\footnotesize\texttt{ShiftRows}};
+	\begin{scope}[xshift=12cm]
+		\foreach \i in {0,...,3} {
+			\foreach \j in {0,...,3} {
+				\pgfmathsetmacro{\index}{int(\i*4 + \j)}
+				\pgfmathsetmacro{\x}{\xstart + \j * \xgap}
+				\pgfmathsetmacro{\y}{\ystart - \i * \ygap}
+				\ifnum \j=0
+				\node[draw, rectangle, minimum width=1cm, minimum height=1cm, fill=-blue] at (\x, \y) {\pgfmathparse{\bytesC[\index]}\pgfmathresult};
+				\else
+				\node[draw, rectangle, minimum width=1cm, minimum height=1cm] at (\x, \y) {\pgfmathparse{\bytesC[\index]}\pgfmathresult};
+				\fi
+			}
+		}
+	\end{scope}
+	\draw[-Stealth] (16,-1.5) -- (17,-1.5) node[midway, above] {\footnotesize\texttt{MixColumns}};
+	\begin{scope}[xshift=18cm]
+		\foreach \i in {0,...,3} {
+			\foreach \j in {0,...,3} {
+				\pgfmathsetmacro{\index}{int(\i*4 + \j)}
+				\pgfmathsetmacro{\x}{\xstart + \j * \xgap}
+				\pgfmathsetmacro{\y}{\ystart - \i * \ygap}
+				\ifnum \j=0
+				\node[draw, rectangle, minimum width=1cm, minimum height=1cm, fill=-blue] at (\x, \y) {\pgfmathparse{\bytesD[\index]}\pgfmathresult};
+				\else
+				\node[draw, rectangle, minimum width=1cm, minimum height=1cm] at (\x, \y) {\pgfmathparse{\bytesD[\index]}\pgfmathresult};
+				\fi
+			}
+		}
+	\end{scope}
+\end{tikzpicture}}

@@ -1,5 +1,34 @@
 \chapter{AES Algorithm}
 
+\section{Arrays}
+\texttt{u8 a[4] = \{ 0xaa, 0xbb, 0xcc, 0xdd \};}
+\lstinputlisting[style=zsh]{codes/array/1d-array-debug}
+
+\begin{table}[h!]\setstretch{1.5}
+\resizebox{\textwidth}{!}{\begin{tabular}{l|c|c|c|c} \hline
+	\cellcolor{-blue}\textbf{Variables} & \texttt{a[0]} & \texttt{a[1]} & \texttt{a[2]} & \texttt{a[3]} \\ \hline
+	\cellcolor{-blue}\textbf{Data} & \texttt{0xaa} & \texttt{0xbb} & \texttt{0xcc} & \texttt{0xdd} \\ \hline\hline
+	\cellcolor{-blue}\textbf{Real Address} & \texttt{0x7fffffffd294} & \texttt{0x7fffffffd295} & \texttt{0x7fffffffd296} & \texttt{0x7fffffffd297} \\ \hline
+	\cellcolor{-blue}\textbf{Symbolic Address} & \texttt{a} & \texttt{a + 1} & \texttt{a + 2} & \texttt{a + 3} \\ \hline\hline
+	\cellcolor{-blue}\textbf{Variables2} & \texttt{*a} & \texttt{*(a + 1)} & \texttt{*(a + 2)} & \texttt{*(a + 3)} \\ \hline
+	\cellcolor{-blue}\textbf{Address2} & \texttt{{\&}a[0]} & \texttt{{\&}a[1]} & \texttt{{\&}a[2]} & \texttt{{\&}a[3]} \\ \hline
+\end{tabular}}
+\end{table}
+\newpage\noindent
+\texttt{u8 a[2][3] = \{ 0x00, 0x11, 0x22, 0x33, 0x44, 0x55 \};}\\
+\texttt{u8 a[2][3] = \{ \{0x00, 0x11, 0x22\}, \{0x33, 0x44, 0x55\} \};}
+\lstinputlisting[style=zsh]{codes/array/2d-array-debug}
+\begin{table}[h!]\setstretch{1.5}
+\resizebox{\textwidth}{!}{\begin{tabular}{l|c|c|c|c|c|c} \hline
+	\cellcolor{-blue}\textbf{Variables} & \texttt{a[0][0]} & \texttt{a[0][1]} & \texttt{a[0][2]} & \texttt{a[1][0]} & \texttt{a[1][1]} & \texttt{a[1][2]} \\ \hline
+	\cellcolor{-blue}\textbf{Data} & \texttt{0x00} & \texttt{0x11} & \texttt{0x22} & \texttt{0x33} & \texttt{0x44} & \texttt{0x55} \\ \hline\hline
+	\cellcolor{-blue}\textbf{Real Address} & \texttt{0x7fff----d292} & \texttt{0x7fff----d293} & \texttt{0x7fff----d294} & \texttt{0x7fff----d295} & \texttt{0x7fff----d296} & \texttt{0x7fff----d297} \\ \hline
+	\cellcolor{-blue}\textbf{Symbolic Address} & \texttt{*a} & \texttt{*a + 1} & \texttt{*a + 2} & \texttt{*(a + 1)} & \texttt{*(a + 1) + 1} & \texttt{*(a + 1) + 2} \\ \hline\hline
+	\cellcolor{-blue}\textbf{Variables2} & \texttt{*(*(a + 0) + 0)} & \texttt{*(*(a + 0) + 1)} & \texttt{*(*(a + 0) + 2)} & \texttt{*(*(a + 1) + 0)} & \texttt{*(*(a + 1) + 1)} & \texttt{*(*(a + 1) + 2)} \\ \hline
+	\cellcolor{-blue}\textbf{Address2} & \texttt{{\&}a[0][0]} & \texttt{{\&}a[0][1]} & \texttt{{\&}a[0][2]} & \texttt{{\&}a[1][0]} & \texttt{{\&}a[1][1]} & \texttt{{\&}a[1][2]} \\ \hline
+\end{tabular}}
+\end{table}
+\lstinputlisting[style=zsh]{codes/array/2d-array-debug2}
 \section{S-Box ($GF(2^8)$)}
 
 Let $m(x):=x^8+x^4+x^3+x+1$.
@@ -213,3 +242,388 @@ Let $a(x)=(\texttt{03})x^3+x^2+x+(\texttt{02})$. Then \begin{align*}
 	[a(x)]^2&=(\texttt{04})x^2+(\texttt{05}),\\
 	[a(x)]^3&=(\texttt{0b})x^3+(\texttt{0d})x^2+(\texttt{09})x+(\texttt{0e}),
 \end{align*} and so $[a(x)]^{-1}=[a(x)]^3=(\texttt{0b})x^3+(\texttt{0d})x^2+(\texttt{09})x+(\texttt{0e})$.
+
+\newpage
+\section{Little and Big Endian}
+\subsection{Introduction}
+\lstinputlisting[style=C]{codes/little-endian/little-endian.c}
+\lstinputlisting[style=zsh]{codes/little-endian/little-endian-debug}
+\begin{center}\begin{minipage}{.4\textwidth}\centering
+	$[\texttt{u32}\to(\texttt{u8}\times 4)]:$
+	\begin{align*}
+	\texttt{b[0]} &= \texttt{(x\ $\gg$ 0x18)} \\
+	\texttt{b[1]} &= \texttt{(x\ $\gg$ 0x10)\ \textasciicircum\ 0xff} \\
+	\texttt{b[2]} &= \texttt{(x\ $\gg$ 0x08)\ \textasciicircum\ 0xff} \\
+	\texttt{b[3]} &= \texttt{(x\ \ \ \ \ \ \ \ )\ \textasciicircum\ 0xff}
+\end{align*}
+	\end{minipage}
+\begin{minipage}{.4\textwidth}\centering
+	$[(\texttt{u8}\times 4)\to\texttt{u32}]:$
+	\begin{align*}
+		\texttt{x} = &\ \texttt{(b[0] $\ll$ 0x18)}\ \texttt{\textasciicircum}\\
+		&\ \texttt{(b[1] $\ll$ 0x10)}\ \texttt{\textasciicircum}\\
+		&\ \texttt{(b[2] $\ll$ 0x08)}\ \texttt{\textasciicircum}\\
+		&\ \texttt{(b[3] \ \ \ \ \ \ \ )}
+	\end{align*}
+\end{minipage}
+\end{center}
+\vspace{20pt}
+\begin{center}
+	\begin{tikzpicture}
+		\def\n{3} 	   % Number of plaintexts (rows)
+		\def\xstart{0} % Start point for plaintexts on the x-axis
+		\def\ystart{0} % Start point for plaintexts on the y-axis
+		\def\xgap{2} % Horizontal gap between bytes
+		\def\ygap{1.5} % Vertical gap between rows
+		
+		\def\bytesA{{"\texttt{00}", "\texttt{01}", "\texttt{02}", "\texttt{03}"}}
+		
+		\foreach \i/\rowbytes in {1/\bytesA} {
+			\pgfmathsetmacro{\y}{\ystart - \i * \ygap}
+			
+			% Draw each byte in the row inside a box
+			\foreach \j in {1, ..., 4} {
+				\pgfmathsetmacro{\x}{\xstart + (\j-1) * \xgap}
+				\ifnum\j=1
+				\node[draw, rectangle, minimum width=1.5cm, minimum height=1cm] 
+				at (\x, \y) {\pgfmathparse{\rowbytes[\j-1]}\pgfmathresult};
+				\else
+				\node[draw, rectangle, minimum width=1.5cm, minimum height=1cm] 
+				at (\x, \y) {\pgfmathparse{\rowbytes[\j-1]}\pgfmathresult};
+				\fi
+			}
+		}
+		
+		\node[red] at (-1.5,-1.5) {\texttt{pInt}\ $\to$\ };
+		\node[red] at (0,-2.25) {\texttt{*(b+0)}};
+		\node[red] at (2,-2.25) {\texttt{*(b+1)}};
+		\node[red] at (4,-2.25) {\texttt{*(b+2)}};
+		\node[red] at (6,-2.25) {\texttt{*(b+3)}};
+		
+		\node[blue] at (0,-.75) {\texttt{b[0]}};
+		\node[blue] at (2,-.75) {\texttt{b[1]}};
+		\node[blue] at (4,-.75) {\texttt{b[2]}};
+		\node[blue] at (6,-.75) {\texttt{b[3]}};
+	\end{tikzpicture}
+\end{center}
+\[\texttt{b}\iff\texttt{\&(b[0])}\iff\texttt{(u8*){\&}b[0]}\]
+\lstinputlisting[style=C]{codes/little-endian/little-endian2.c}
+\lstinputlisting[style=zsh]{codes/little-endian/little-endian-debug2}
+
+\newpage
+\[
+\texttt{u8 b[4] = \{ 0x00, 0x01, 0x02, 0x03 \}};\implies\begin{cases}
+	\texttt{u32 x = 0x03020100}; \\
+	\texttt{u32 y = 0x00010203};
+\end{cases}
+\] \\
+\lstinputlisting[style=C]{codes/little-endian/little-endian3.c}
+\lstinputlisting[style=zsh]{codes/little-endian/little-endian-debug3}
+
+\subsection{Marco}
+\lstinputlisting[style=C]{codes/little-endian/little-endian4.c}
+\lstinputlisting[style=zsh]{codes/little-endian/little-endian-debug4}
+
+\newpage
+\textbf{Byte to Word}
+\begin{center}
+	\begin{tikzpicture}
+		\def\n{3} 	   % Number of plaintexts (rows)
+		\def\xstart{0} % Start point for plaintexts on the x-axis
+		\def\ystart{0} % Start point for plaintexts on the y-axis
+		\def\xgap{.8} % Horizontal gap between bytes
+		\def\ygap{1.5} % Vertical gap between rows
+		
+		\def\bytesA{{"\texttt{00}", "\texttt{01}", "\texttt{02}", "\texttt{03}",
+					 "\texttt{04}", "\texttt{05}", "\texttt{06}", "\texttt{07}",
+				 	 "\texttt{08}", "\texttt{09}", "\texttt{0A}", "\texttt{0B}",
+			 	 	 "\texttt{0C}", "\texttt{0D}", "\texttt{0E}", "\texttt{0F}"}}
+		
+		\foreach \i/\rowbytes in {1/\bytesA} {
+			\pgfmathsetmacro{\y}{\ystart - \i * \ygap}
+			
+			% Draw each byte in the row inside a box
+			\foreach \j in {1, ..., 16} {
+				\pgfmathsetmacro{\x}{\xstart + (\j-1) * \xgap}
+				\ifnum\j=1
+				\node[draw, rectangle, minimum width=.5cm, minimum height=1cm] 
+				at (\x, \y) {\pgfmathparse{\rowbytes[\j-1]}\pgfmathresult};
+				\else
+				\node[draw, rectangle, minimum width=.5cm, minimum height=1cm] 
+				at (\x, \y) {\pgfmathparse{\rowbytes[\j-1]}\pgfmathresult};
+				\fi
+			}
+		}
+		
+		\node[red] at (-1.5,-1.5) {\texttt{u8 b[16]}};
+		\node[red] at (0,-2.25) {\texttt{b}};
+		\node[red] at (3.2,-2.25) {\texttt{b+4}};
+		\node[red] at (6.4,-2.25) {\texttt{b+8}};
+		\node[red] at (9.6,-2.25) {\texttt{b+12}};
+		
+		\node[blue] at (0,-.75) {\texttt{b[0]}};
+		\node[blue] at (3.2,-.75) {\texttt{b[4]}};
+		\node[blue] at (6.4,-.75) {\texttt{b[8]}};
+		\node[blue] at (9.6,-.75) {\texttt{b[12]}};
+		\begin{scope}[yshift=-2.5cm]
+			\def\n{3} 	   % Number of plaintexts (rows)
+			\def\xstart{0} % Start point for plaintexts on the x-axis
+			\def\ystart{0} % Start point for plaintexts on the y-axis
+			\def\xgap{.8} % Horizontal gap between bytes
+			\def\ygap{1.5} % Vertical gap between rows
+			
+			\def\bytesA{{"\texttt{00}", "\texttt{01}", "\texttt{02}", "\texttt{03}"}}
+			\def\bytesB{{"\texttt{04}", "\texttt{05}", "\texttt{06}", "\texttt{07}"}}
+			\def\bytesC{{"\texttt{08}", "\texttt{09}", "\texttt{0A}", "\texttt{0B}"}}
+			\def\bytesD{{"\texttt{0C}", "\texttt{0D}", "\texttt{0E}", "\texttt{0F}"}}	
+			
+			\foreach \i/\rowbytes in {0/\bytesA, 4.5/\bytesB, 9/\bytesC, 13.5/\bytesD} {
+%				\pgfmathsetmacro{\y}{\ystart - \i * \ygap}
+				
+				% Draw each byte in the row inside a box
+				\foreach \j in {1, ..., 4} {
+					\pgfmathsetmacro{\x}{\xstart + (\j-1) * \xgap}
+					\ifnum\j=1
+					\node[draw, rectangle, minimum width=.5cm, minimum height=1cm] 
+					at (\x + \i * \xgap, \ystart-1.5) {\pgfmathparse{\rowbytes[\j-1]}\pgfmathresult};
+					\else
+					\node[draw, rectangle, minimum width=.5cm, minimum height=1cm] 
+					at (\x + \i * \xgap, \ystart-1.5) {\pgfmathparse{\rowbytes[\j-1]}\pgfmathresult};
+					\fi
+				}
+			}
+			
+			\node[red] at (-1.5,-1.5) {\texttt{u32 x[4]}};
+			\node[red] at (0,-2.25) {\texttt{b}};
+			\node[red] at (3.6,-2.25) {\texttt{b+4}};
+			\node[red] at (7.2,-2.25) {\texttt{b+8}};
+			\node[red] at (10.8,-2.25) {\texttt{b+12}};
+			
+			\node[blue] at (0,-.75) {\texttt{x[0]}};
+			\node[blue] at (3.6,-.75) {\texttt{x[1]}};
+			\node[blue] at (7.2,-.75) {\texttt{x[2]}};
+			\node[blue] at (10.8,-.75) {\texttt{x[3]}};
+		\end{scope}
+	\end{tikzpicture}
+\end{center}
+
+\lstinputlisting[style=C]{codes/little-endian/little-endian5.c}
+\lstinputlisting[style=zsh]{codes/little-endian/little-endian-debug5}
+\vspace{50pt}
+\textbf{Word to Byte}
+\begin{center}
+	\begin{tikzpicture}
+		\def\n{3} 	   % Number of plaintexts (rows)
+		\def\xstart{0} % Start point for plaintexts on the x-axis
+		\def\ystart{0} % Start point for plaintexts on the y-axis
+		\def\xgap{.8} % Horizontal gap between bytes
+		\def\ygap{1.5} % Vertical gap between rows
+		
+		\def\bytesA{{"\texttt{00}", "\texttt{01}", "\texttt{02}", "\texttt{03}",
+				"\texttt{04}", "\texttt{05}", "\texttt{06}", "\texttt{07}",
+				"\texttt{08}", "\texttt{09}", "\texttt{0A}", "\texttt{0B}",
+				"\texttt{0C}", "\texttt{0D}", "\texttt{0E}", "\texttt{0F}"}}
+		
+		\foreach \i/\rowbytes in {1/\bytesA} {
+			\pgfmathsetmacro{\y}{\ystart - \i * \ygap}
+			
+			% Draw each byte in the row inside a box
+			\foreach \j in {1, ..., 16} {
+				\pgfmathsetmacro{\x}{\xstart + (\j-1) * \xgap}
+				\ifnum\j=1
+				\node[draw, rectangle, minimum width=.5cm, minimum height=1cm] 
+				at (\x, \y) {\pgfmathparse{\rowbytes[\j-1]}\pgfmathresult};
+				\else
+				\node[draw, rectangle, minimum width=.5cm, minimum height=1cm] 
+				at (\x, \y) {\pgfmathparse{\rowbytes[\j-1]}\pgfmathresult};
+				\fi
+			}
+		}
+		
+		\node[red] at (-1.5,-1.5) {\texttt{u8 y[16]}};
+		\node[red] at (0,-2.25) {\texttt{y}};
+		\node[red] at (3.2,-2.25) {\texttt{y+4}};
+		\node[red] at (6.4,-2.25) {\texttt{y+8}};
+		\node[red] at (9.6,-2.25) {\texttt{y+12}};
+%		\node[red] at (12,-2.25) {\texttt{y+15}};
+		
+		\node[blue] at (0,-.75) {\texttt{y[0]}};
+		\node[blue] at (3.2,-.75) {\texttt{y[4]}};
+		\node[blue] at (6.4,-.75) {\texttt{y[8]}};
+		\node[blue] at (9.6,-.75) {\texttt{y[12]}};
+%		\node[blue] at (12,-.75) {\texttt{y[15]}};
+		\begin{scope}[yshift=+2.5cm]
+			\def\n{3} 	   % Number of plaintexts (rows)
+			\def\xstart{0} % Start point for plaintexts on the x-axis
+			\def\ystart{0} % Start point for plaintexts on the y-axis
+			\def\xgap{.8} % Horizontal gap between bytes
+			\def\ygap{1.5} % Vertical gap between rows
+			
+			\def\bytesA{{"\texttt{00}", "\texttt{01}", "\texttt{02}", "\texttt{03}"}}
+			\def\bytesB{{"\texttt{04}", "\texttt{05}", "\texttt{06}", "\texttt{07}"}}
+			\def\bytesC{{"\texttt{08}", "\texttt{09}", "\texttt{0A}", "\texttt{0B}"}}
+			\def\bytesD{{"\texttt{0C}", "\texttt{0D}", "\texttt{0E}", "\texttt{0F}"}}	
+			
+			\foreach \i/\rowbytes in {0/\bytesA, 4.5/\bytesB, 9/\bytesC, 13.5/\bytesD} {
+				%				\pgfmathsetmacro{\y}{\ystart - \i * \ygap}
+				
+				% Draw each byte in the row inside a box
+				\foreach \j in {1, ..., 4} {
+					\pgfmathsetmacro{\x}{\xstart + (\j-1) * \xgap}
+					\ifnum\j=1
+					\node[draw, rectangle, minimum width=.5cm, minimum height=1cm] 
+					at (\x + \i * \xgap, \ystart-1.5) {\pgfmathparse{\rowbytes[\j-1]}\pgfmathresult};
+					\else
+					\node[draw, rectangle, minimum width=.5cm, minimum height=1cm] 
+					at (\x + \i * \xgap, \ystart-1.5) {\pgfmathparse{\rowbytes[\j-1]}\pgfmathresult};
+					\fi
+				}
+			}
+			
+			\node[red] at (-1.5,-1.5) {\texttt{u32 x[4]}};
+			\node[red] at (0,-2.25) {\texttt{b}};
+			\node[red] at (3.6,-2.25) {\texttt{b+4}};
+			\node[red] at (7.2,-2.25) {\texttt{b+8}};
+			\node[red] at (10.8,-2.25) {\texttt{b+12}};
+			
+			\node[blue] at (0,-.75) {\texttt{x[0]}};
+			\node[blue] at (3.6,-.75) {\texttt{x[1]}};
+			\node[blue] at (7.2,-.75) {\texttt{x[2]}};
+			\node[blue] at (10.8,-.75) {\texttt{x[3]}};
+		\end{scope}
+	\end{tikzpicture}
+\end{center}
+\newpage
+\lstinputlisting[style=C]{codes/little-endian/little-endian6.c}
+\lstinputlisting[style=zsh]{codes/little-endian/little-endian-debug6}
+
+% Implementatoin of 32-bit AES ============================================
+\section{Implementation of 32-bit AES}
+\begin{center}
+\input{tikz/aes32}
+\end{center}
+
+\begin{align*}
+	\texttt{y} &=\texttt{MixCol(x)}\oplus\texttt{rk} \\
+	&=\texttt{MixCol}(\texttt{x\ $\oplus$ InvMixCol(rk)}) \\
+	&=\texttt{MixCol}(\texttt{x\ $\oplus$ rk'})
+\end{align*}
+
+\begin{table}[h!]\setstretch{1.25}\centering
+{\begin{tabular}{c|cc|cc|c} \toprule[1.2pt]
+	& \multicolumn{2}{c|}{\textbf{Key Length}} & \multicolumn{2}{c|}{\textbf{Block Size}} & {\textbf{Number of Rounds}} \\
+	& $Nk$-word & (bit) & $Nb$-word & (bit) & $Nr$ \\ \hline\hline
+	\textbf{AES-128} & 4-word & (128) & 4-word &(128) & 10 \\ \hline
+	\textbf{AES-192} & 6-word & (192) & 4-word &(128) & 10 \\ \hline
+	\textbf{AES-256} & 4-word & (256) & 4-word &(128) & 10 \\ \bottomrule[1.2pt]
+\end{tabular}}
+\end{table}
+
+\begin{center}
+\resizebox{.9\textwidth}{!}{\input{alg/aes-enc}}
+\end{center}
+\begin{center}
+\resizebox{.9\textwidth}{!}{\input{alg/aes-invenc}}
+\end{center}
+\begin{center}
+\resizebox{.9\textwidth}{!}{\input{alg/aes-eqinvenc}}
+\end{center}
+
+\newpage
+\begin{center}
+\input{tikz/aes32-2}
+\end{center}
+\[\begin{pmatrix}
+	c_{0,0} \\ c_{1,0} \\ c_{2,0} \\ c_{3,0}
+\end{pmatrix} = \begin{pmatrix}
+	b_{0,0} \\ b_{1,1} \\ b_{2,2} \\ b_{3,3}
+\end{pmatrix} = \begin{pmatrix}
+S(a_{0,0}) \\ S(a_{1,1}) \\ S(a_{2,2}) \\ S(a_{3,3})
+\end{pmatrix}\quad\quad\quad\quad\quad
+\begin{pmatrix}
+	d_{0,0} \\ d_{1,0} \\ d_{2,0} \\ d_{3,0}
+\end{pmatrix} = \begin{pmatrix}
+	\texttt{02} & \texttt{03} & \texttt{01} & \texttt{01} \\
+	\texttt{01} & \texttt{02} & \texttt{03} & \texttt{01} \\
+	\texttt{01} & \texttt{01} & \texttt{02} & \texttt{03} \\
+	\texttt{03} & \texttt{01} & \texttt{01} & \texttt{02}
+\end{pmatrix}\begin{pmatrix}
+	c_{0,0} \\ c_{1,0} \\ c_{2,0} \\ c_{3,0}
+\end{pmatrix}
+\]
+\begin{align*}
+\begin{pmatrix}
+	d_{0,0} \\ d_{1,0} \\ d_{2,0} \\ d_{3,0}
+\end{pmatrix} = \begin{pmatrix}
+	\texttt{02} & \texttt{03} & \texttt{01} & \texttt{01} \\
+	\texttt{01} & \texttt{02} & \texttt{03} & \texttt{01} \\
+	\texttt{01} & \texttt{01} & \texttt{02} & \texttt{03} \\
+	\texttt{03} & \texttt{01} & \texttt{01} & \texttt{02}
+\end{pmatrix}\begin{pmatrix}
+	S(a_{0,0}) \\ S(a_{1,1}) \\ S(a_{2,2}) \\ S(a_{3,3})
+\end{pmatrix} &=
+S(a_{0,0})\begin{pmatrix} \texttt{02} \\ \texttt{01} \\ \texttt{01} \\ \texttt{03} \end{pmatrix}\oplus
+S(a_{1,1})\begin{pmatrix} \texttt{03} \\ \texttt{02} \\ \texttt{01} \\ \texttt{01} \end{pmatrix}\oplus
+S(a_{2,2})\begin{pmatrix} \texttt{01} \\ \texttt{03} \\ \texttt{02} \\ \texttt{01} \end{pmatrix}\oplus
+S(a_{3,3})\begin{pmatrix} \texttt{01} \\ \texttt{01} \\ \texttt{03} \\ \texttt{02} \end{pmatrix} \\
+& = Te0(a_{0,0}) \oplus Te1(a_{1,1}) \oplus Te2(a_{2,2}) \oplus Te3(a_{3,3})
+\end{align*}
+
+\noindent Let $Te0: \mathbb{F}_2^8 \to \mathbb{F}_2^{32}$. Then,
+
+\[
+(2^{32})^{2^8} = 2^{32 \times 256} = 2^{8192} = 2^{8 \times 1024} = 1024\text{-byte}.
+\]
+
+\begin{table}[h!]
+	\centering
+	\setstretch{1.25}
+	\begin{tabular}{c|c}
+		\hline
+		$a_{0,0}$ & $S(a_{0,0})\begin{pmatrix} \texttt{02} & \texttt{01} & \texttt{01} & \texttt{03} \end{pmatrix}^T$ \\
+		\hline
+		\texttt{00} & \texttt{---- ---- ---- ---- ---- ---- ---- ----} \\
+		\hline
+		\texttt{01} & \texttt{---- ---- ---- ---- ---- ---- ---- ----} \\
+		\hline
+		\texttt{02} & \texttt{---- ---- ---- ---- ---- ---- ---- ----} \\
+		\hline
+		\vdots & \vdots \\
+		\hline
+		\texttt{FF} & \texttt{---- ---- ---- ---- ---- ---- ---- ----} \\
+		\hline
+	\end{tabular}
+\caption{Transformation $S(a_{0,0})$ Matrix with Corresponding Values}
+\end{table}
+
+Thus, $T0$ has a size of 1 KB (= 1024 bytes).
+
+\newpage
+\begin{center}
+\input{tikz/aes32-3}
+\end{center}
+Here, \begin{align*}
+	\begin{pmatrix} e_{0,0} \\ e_{1,0} \\ e_{2,0} \\ e_{3,0} 
+	\end{pmatrix} = Te0(a_{0,0})\oplus Te1(a_{1,1}) \oplus Te2(a_{2,2}) \oplus Te3(a_{3,3}) \oplus
+	\begin{pmatrix} rk_{0,0} \\ rk_{1,0} \\ rk_{2,0} \\ rk_{3,0}
+	\end{pmatrix},
+\end{align*} where \[
+Te0(x)=\begin{pmatrix}\texttt{02} * S(x) \\ S(x) \\ S(x) \\ \texttt{03} * S(x)
+\end{pmatrix}\quad Te1(x)=\begin{pmatrix}\texttt{03} * S(x) \\ \texttt{02} * S(x) \\ S(x) \\ S(x)
+\end{pmatrix}\quad Te2(x)=\begin{pmatrix}S(x) \\ \texttt{03} * S(x) \\ \texttt{02} * S(x) \\ S(x)
+\end{pmatrix}\quad Te3(x)=\begin{pmatrix}S(x) \\ S(x) \\ \texttt{03} * S(x) \\ \texttt{02} * S(x)
+\end{pmatrix}.
+\]
+
+\section{Key Schedule}
+
+\begin{table}[h!]\setstretch{1.25}\centering
+{\begin{tabular}{c|c|c|c} \toprule[1.2pt]
+	& \textbf{Round Key Length} & \textbf{Number of Round Keys} & \textbf{Size of Round Key} \\ \hline\hline
+	\textbf{AES-128} & 4-word (128-bit) & 11 round & 44-word (176-byte, 1408-bit) \\ \hline
+	\textbf{AES-192} & 4-word (128-bit) & 13 round & 52-word (208-byte, 1664-bit) \\ \hline
+	\textbf{AES-256} & 4-word (128-bit) & 15 round & 60-word (240-byte, 1920-bit) \\ \bottomrule[1.2pt]
+\end{tabular}}
+\end{table}
+
+\input{alg/aes-keyexpansion}

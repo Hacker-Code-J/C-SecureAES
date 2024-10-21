@@ -1,12 +1,5 @@
 #include "aes_config.h"
 
-#ifndef _AES_LECTURE_H
-#define _AES_LECTURE_H
-
-void GF256_print_bin(u8 x);
-void GF256_print_poly(u8 a);
-void print_mat(u8* mat, const char* name_string);
-
 u8 GF256_xtime(u8 a);
 u8 GF256_mul(u8 f, u8 g);
 u8 GF256_inv(u8 x);
@@ -14,14 +7,21 @@ u8 GF256_inv(u8 x);
 void MixCol(u8* in, u8* out);
 void InvMixCol(u8* in, u8* out);
 
-void MixCol_Mat_Mul(u8* A, u8* B, u8* C);
+void print_AES_state(u8* state, const char* string);
 
-void test_MixCol();
-void test_Mat_Mul();
+void AES_SubBytes(u8* state);
+void AES_InvSubBytes(u8* state);
+void AES_ShiftRows(u8* state);
+void AES_InvShiftRows(u8* state);
+void AES_MixColumns(u8* state);
+void AES_InvMixColumns(u8* state);
+void AES_AddRoundKey(u8* state, u8* rk);
 
-void test_MDS_power();
-
-/* ========================================== */
+void AES8_Encrypt(u8 pt[16], u8 rk[11][16], u8 ct[16]);
+void AES8_Decrypt(u8 ct[16], u8 rk[11][16], u8 pt[16]);
+void AES8_EqInvKey(u8 rk[11][16], u8 eqrk[11][16]);
+void AES8_EqDecrypt(u8 ct[16], u8 eqrk[11][16], u8 pt[16]);
+void TEST_AES8();
 
 static const u8 Sbox[256] = {
     0x63U, 0x7cU, 0x77U, 0x7bU, 0xf2U, 0x6bU, 0x6fU, 0xc5U,
@@ -92,20 +92,3 @@ static const u8 Inv_Sbox[256] = {
     0x17U, 0x2bU, 0x04U, 0x7eU, 0xbaU, 0x77U, 0xd6U, 0x26U,
     0xe1U, 0x69U, 0x14U, 0x63U, 0x55U, 0x21U, 0x0cU, 0x7dU
 };
-
-void AES_SubBytes(u8* state);
-void AES_InvSubBytes(u8* state);
-void AES_ShiftRows(u8* state);
-void AES_InvShiftRows(u8* state);
-void AES_MixColumns(u8* state);
-void AES_InvMixColumns(u8* state);
-void AES_AddRoundKey(u8* state, u8* rk);
-
-void AES_Round(u8* state, u8* rk);
-void AES_InvRound(u8* state, u8* rk);
-
-void print_AES_state(u8* state, const char* string);
-
-void test_AES_round();
-
-#endif  // _AES_LECTURE_H

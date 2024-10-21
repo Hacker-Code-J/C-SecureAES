@@ -91,6 +91,21 @@
     "aes32.h": "c",
     "aes_utils.h": "c",
     "stdbool.h": "c",
-    "aesavs.h": "c"
+    "aesavs.h": "c",
+    "aes_32bit_sample.h": "c",
+    "aes_table_sample.h": "c"
+  },
+  "files.exclude": {
+    "**/*.vo": true,
+    "**/*.vok": true,
+    "**/*.vos": true,
+    "**/*.aux": true,
+    "**/*.glob": true,
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true
   }
 }

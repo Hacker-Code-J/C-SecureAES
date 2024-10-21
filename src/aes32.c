@@ -13,8 +13,7 @@ void AddRoundKey32(u32* state, const u32* rKey) {
 
 void AES32_Encrypt(u8* dst, const u8* src, const u8* uKey, const u8 AES_VERSION) {
 	u8 NR, TSRK;
-    switch (AES_VERSION)
-    {
+    switch (AES_VERSION) {
     case AES192:
         NR = 12; // Number of Round
         TSRK = 52; // Total Size of Round Keys

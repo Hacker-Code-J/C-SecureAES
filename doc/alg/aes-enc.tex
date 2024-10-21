@@ -1,0 +1,33 @@
+\begin{algorithm}[H]
+	\DontPrintSemicolon
+	\caption{AES Encryption}
+	
+%	\KwIn{input block $in$, number of rounds $NR$, expanded key schedule $w$}
+%	\KwOut{ciphertext block $out$}
+	
+	\SetKwFunction{AddRoundKey}{AddRoundKey}
+	\SetKwFunction{SubBytes}{{SubBytes}}
+	\SetKwFunction{ShiftRows}{{ShiftRows}}
+	\SetKwFunction{MixColumns}{{MixColumns}}
+	\SetKwFunction{Cipher}{{Cipher}}
+	
+	\Fn{\Cipher(in, Nr, w)}{ 
+%		\Comment{$in$ = input, $Nr$ = Number of Rounds, $w$ = word}
+		$state \gets in$\;
+		$state \gets \AddRoundKey{state, w[0\ ..\ 3]}$\tcp*{w[0..3] = w[0], w[1], w[2], w[3]}
+		
+		\For{$round \gets 1$ \KwTo $Nr-1$}{  % Main rounds
+			$state \gets \SubBytes{state}$\;  % Byte substitution step
+			$state \gets \ShiftRows{state}$\;  % Row shifting step
+			$state \gets \MixColumns{state}$\;  % Column mixing step
+			$state \gets \AddRoundKey{state, w[4*round\ ..\ 4*round + 3]}$\;  % Round key addition
+		}
+		
+		% Final round (no MixColumns)
+		$state \gets \SubBytes{state}$\;
+		$state \gets \ShiftRows{state}$\;
+		$state \gets \AddRoundKey{state, w[4*Nr\ ..\ 4*Nr + 3]}$\;
+		
+		\Return $state$\;
+	}
+\end{algorithm}

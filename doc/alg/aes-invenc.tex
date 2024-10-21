@@ -1,0 +1,30 @@
+\begin{algorithm}[H]
+	\DontPrintSemicolon
+	\caption{AES Inverse Encryption}
+	
+	\SetKwFunction{AddRoundKey}{AddRoundKey}
+	\SetKwFunction{InvSubBytes}{{InvSubBytes}}
+	\SetKwFunction{InvShiftRows}{{InvShiftRows}}
+	\SetKwFunction{InvMixColumns}{{InvMixColumns}}
+	\SetKwFunction{InvCipher}{{InvCipher}}
+	
+	\Fn{\InvCipher(in, Nr, w)}{ 
+%		\Comment{$in$ = input, $Nr$ = Number of Rounds, $w$ = word}
+		$state \gets in$\;
+		$state \gets \AddRoundKey{state, w[4*Nr\ ..\ 4*Nr + 3]}$\;
+		
+		\For{$round \gets Nr-1$ \DownTo $1$}{  % Main rounds
+			$state \gets \InvShiftRows{state}$\;  % Byte substitution step
+			$state \gets \InvSubBytes{state}$\;  % Row shifting step
+			$state \gets \AddRoundKey{state, w[4*round\ ..\ 4*round + 3]}$\;  % Round key addition
+			$state \gets \InvMixColumns{state}$\;  % Column mixing step
+		}
+		
+		% Final round (no MixColumns)
+		$state \gets \InvShiftRows{state}$\;
+		$state \gets \InvSubBytes{state}$\;
+		$state \gets \AddRoundKey{state, w[0\ ..\ 3]}$\;
+		
+		\Return $state$\;
+	}
+\end{algorithm}

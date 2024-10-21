@@ -1,0 +1,37 @@
+\begin{tikzpicture}
+	\def\n{4}
+	\def\xstart{0}
+	\def\ystart{0}
+	\def\xgap{1}
+	\def\ygap{1.25}
+	
+	\def\bytesA{{"\texttt{SubBytes}", "\texttt{ShiftRows}", "\texttt{MixColumns}", "\texttt{AddRoundKey}"}}
+	
+	\foreach \i/\rowbytes in {1/\bytesA} {
+		\foreach \j in {1, ..., 4} {
+			\pgfmathsetmacro{\x}{\xstart}
+			\pgfmathsetmacro{\y}{\ystart - (\j-1) * \ygap}
+			\node[draw, rectangle, minimum width=3cm, minimum height=1cm] 
+			at (\x, \y) {\pgfmathparse{\rowbytes[\j-1]}\pgfmathresult};
+		}
+	}
+	
+	\draw[-Stealth, green!75!black, line width=2.5mm] (-3,0.5) -- (-3, -4) node[below] {Encryption};
+	
+	\begin{scope}[xshift=5cm]
+		\def\bytesA{{"\texttt{ShiftRows}", "\texttt{SubBytes}", "\texttt{AddRoundKey'}", "\texttt{MixColumns}"}}
+		\foreach \i/\rowbytes in {1/\bytesA} {
+			\foreach \j in {1, ..., 4} {
+				\pgfmathsetmacro{\x}{\xstart}
+				\pgfmathsetmacro{\y}{\ystart - (\j-1) * \ygap}
+				\node[draw, rectangle, minimum width=3cm, minimum height=1cm] 
+				at (\x, \y) {\pgfmathparse{\rowbytes[\j-1]}\pgfmathresult};
+			}
+		}
+	\end{scope}
+
+	\draw[-Stealth, red, line width=.5mm] (1.5,0) -- (3.5, -1.25);
+	\draw[-Stealth, red, line width=.5mm] (1.5,-1.25) -- (3.5, 0);
+	\draw[-Stealth, red, line width=.5mm] (1.5,-2.5) -- (3.5, -3.75);
+	\draw[-Stealth, red, line width=.5mm] (1.5,-3.75) -- (3.5, -2.5);
+\end{tikzpicture}
