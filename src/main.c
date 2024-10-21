@@ -17,6 +17,8 @@
 
 int main() {
     TEST_AES8();
+    // AES32_Enc_Table_Generate();
+    AES32_Dec_Table_Generate();
     
     // AES128_Opt_Comp();
     // AES128_Test();
