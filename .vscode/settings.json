@@ -91,7 +91,9 @@
     "aes32.h": "c",
     "aes_utils.h": "c",
     "stdbool.h": "c",
-    "aesavs.h": "c"
+    "aesavs.h": "c",
+    "aes_32bit_sample.h": "c",
+    "aes_table_sample.h": "c"
   },
   "files.exclude": {
     "**/*.vo": true,
