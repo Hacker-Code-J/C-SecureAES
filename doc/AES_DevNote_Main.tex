@@ -1,4 +1,5 @@
 \documentclass[12pt,openany]{book}
+\usepackage[utf8]{inputenc}
 
 % Preamble with packages, custom commands, etc.
 \usepackage{commath, amsmath, amsthm}
@@ -6,6 +7,9 @@
 \usepackage{enumerate}
 \usepackage{soul} % highlight
 \usepackage{lipsum}  % Just for generating text
+\usepackage{etoolbox}
+
+\usepackage{adjustbox}
 
 % Theorem
 \newtheorem{axiom}{Axiom}[chapter]
@@ -92,6 +96,7 @@
 \usepackage{setspace}
 \SetKwComment{Comment}{/* }{ */}
 \SetKwProg{Fn}{Function}{:}{end}
+\SetKwProg{Procedure}{Procedure}{:}{end}
 \SetKw{End}{end}
 \SetKw{DownTo}{downto}
 
@@ -204,10 +209,10 @@
 }
 
 \lstdefinestyle{zsh}{
-	language=bash,                  % Set the language to bash (closest to Zsh)
+%	language=bash,                  % Set the language to bash (closest to Zsh)
 	backgroundcolor=\color{black},
 	commentstyle=\color{commentColor}\ttfamily,
-	keywordstyle=\color{keywordColor}\bfseries,
+	keywordstyle=\color{cyan}\bfseries,
 	stringstyle=\color{stringColor}\ttfamily,
 	showspaces=false,               % Don't show spaces as underscores
 	showstringspaces=false,         % Don't highlight spaces in strings
@@ -217,7 +222,7 @@
 	extendedchars=true,             % Allow extended characters
 	captionpos=b,                   % Caption-position at bottom
 	escapeinside={\%*}{*)},         % Allow LaTeX inside your code
-	morekeywords={echo,ls,cd,pwd,exit,clear,man,unalias,zsh,source}, % Add more keywords
+	morekeywords={echo,ls,pwd,exit,clear,man,unalias,zsh,source}, % Add more keywords
 	upquote=true,                   % Ensure straight quotes are used
 	literate={\$}{{\textcolor{red}{\$}}}1
 	{:}{{\textcolor{red}{:}}}1

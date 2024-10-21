@@ -186,3 +186,100 @@ void AES_AddRoundKey(u8* state, u8* rk) {
         state[i] ^= rk[i];
 }
 
+void AES8_Encrypt(u8 pt[16], u8 rk[11][16], u8 ct[16]) {
+    u8 state[16];
+
+    for (int i = 0; i < 16; i++) state[i] = pt[i];
+
+    AES_AddRoundKey(state, rk[0]);
+
+    for (int r = 1; r < 10; r++) {
+        AES_SubBytes(state);
+        AES_ShiftRows(state);
+        AES_MixColumns(state);
+        AES_AddRoundKey(state, rk[r]);
+    }
+
+    AES_SubBytes(state);
+    AES_ShiftRows(state);
+    AES_AddRoundKey(state, rk[10]);
+
+    for (int i = 0; i < 16; i++) ct[i] = state[i];
+}
+
+void AES8_Decrypt(u8 ct[16], u8 rk[11][16], u8 pt[16]) {
+    u8 state[16];
+
+    for (int i = 0; i < 16; i++) state[i] = ct[i];
+    AES_AddRoundKey(state, rk[10]);
+
+    for (int r = 9; r > 0; r--) {
+        AES_InvShiftRows(state);
+        AES_InvSubBytes(state);
+        AES_AddRoundKey(state, rk[r]);
+        AES_InvMixColumns(state);
+    }
+
+    AES_InvShiftRows(state);
+    AES_InvSubBytes(state);
+    AES_AddRoundKey(state, rk[0]);
+
+    for (int i = 0; i < 16; i++) pt[i] = state[i];
+}
+
+void AES8_EqInvKey(u8 rk[11][16], u8 eqrk[11][16]) {
+    for (int r = 0; r < 11; r++) {
+        for (int i = 0; i < 16; i++) {
+            eqrk[r][i] = rk[r][i];
+        }
+    }
+
+    for (int r = 1; r <= 9; r++)
+        AES_InvMixColumns(eqrk[r]);
+}
+
+void AES8_EqDecrypt(u8 ct[16], u8 eqrk[11][16], u8 pt[16]) {
+    u8 state[16];
+
+    for (int i = 0; i < 16; i++) state[i] = ct[i];
+
+    AES_AddRoundKey(state, eqrk[10]);
+
+    for (int r = 9; r > 0; r--) {
+        AES_InvSubBytes(state);
+        AES_InvShiftRows(state);
+        AES_InvMixColumns(state);
+        AES_AddRoundKey(state, eqrk[r]);
+    }
+
+    AES_InvSubBytes(state);
+    AES_InvShiftRows(state);
+    AES_AddRoundKey(state, eqrk[0]);
+
+    for (int i = 0; i < 16; i++) pt[i] = state[i];
+}
+
+void TEST_AES8() {
+    u8 pt[16] = { 0x00, 0x11, 0x22, 0x33, 
+                  0x44, 0x55, 0x66, 0x77, 
+                  0x88, 0x99, 0xAA, 0xBB, 
+                  0xCC, 0xDD, 0xEE, 0xFF };
+    
+    u8 rk[11][16] = { 0x00, };
+    u8 ct[16] = { 0x00, };
+
+    AES8_Encrypt(pt, rk, ct);
+    print_AES_state(ct, "CT");
+
+    u8 dt[16];
+    AES8_Decrypt(ct, rk, dt);
+    print_AES_state(dt, "DT");
+
+    u8 eqdt[16];
+
+    u8 eqrk[11][16];
+    AES8_EqInvKey(rk, eqrk);
+
+    AES8_EqDecrypt(ct, eqrk, eqdt);
+    print_AES_state(eqdt, "Eq_DT");
+}

@@ -3,6 +3,7 @@
 #include "aesavs.h"
 
 #include "aes_8bit_sample.h"
+#include "aes_32bit_sample.h"
 
 #define GETU32(pt) ((u32)(pt)[0] << 0x18) ^ \
                    ((u32)(pt)[1] << 0x10) ^ \
@@ -15,6 +16,8 @@
                          (ct)[3] = (u8)((st)        ); }
 
 int main() {
+    TEST_AES8();
+    
     // AES128_Opt_Comp();
     // AES128_Test();
     // MOVS_AES_VARTXT_TEST();

@@ -17,15 +17,11 @@ void AES_MixColumns(u8* state);
 void AES_InvMixColumns(u8* state);
 void AES_AddRoundKey(u8* state, u8* rk);
 
-void TEST_AES8() {
-    u8 pt[16] = { 0x00, 0x11, 0x22, 0x33, 
-                  0x44, 0x55, 0x66, 0x77, 
-                  0x88, 0x99, 0xAA, 0xBB, 
-                  0xCC, 0xDD, 0xEE, 0xFF };
-    
-    u8 rk[11][16] = { 0x00, };
-    u8 ct[16] = { 0x00, };
-}
+void AES8_Encrypt(u8 pt[16], u8 rk[11][16], u8 ct[16]);
+void AES8_Decrypt(u8 ct[16], u8 rk[11][16], u8 pt[16]);
+void AES8_EqInvKey(u8 rk[11][16], u8 eqrk[11][16]);
+void AES8_EqDecrypt(u8 ct[16], u8 eqrk[11][16], u8 pt[16]);
+void TEST_AES8();
 
 static const u8 Sbox[256] = {
     0x63U, 0x7cU, 0x77U, 0x7bU, 0xf2U, 0x6bU, 0x6fU, 0xc5U,

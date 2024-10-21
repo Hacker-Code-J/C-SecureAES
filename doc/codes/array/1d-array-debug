@@ -1,0 +1,20 @@
+--- Memory --------------------------------------------------------
+0x00007fffffffd294  aa bb cc dd 00 d1 92 71 77 09 82 87 01 00 00 00
+0x00007fffffffd2a4  00 00 00 00 90 cd d9 f7 ff 7f 00 00 00 00 00 00
+-------------------------------------------------------------------
+>>> x/4xb a
+0x7fffffffd294: 0xaa    0xbb    0xcc    0xdd
+>>> x/4xb a + 1
+0x7fffffffd295: 0xbb    0xcc    0xdd    0x00
+>>> x/4xb a + 2
+0x7fffffffd296: 0xcc    0xdd    0x00    0xed
+>>> x/4xb a + 3
+0x7fffffffd297: 0xdd    0x00    0xed    0x81
+>>> print /x *a
+$1 = 0xaa
+>>> print /x *(a + 1)
+$2 = 0xbb
+>>> print /x *(a + 2)
+$3 = 0xcc
+>>> print /x *(a + 3)
+$4 = 0xdd

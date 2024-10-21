@@ -1,0 +1,35 @@
+\begin{algorithm}[H]
+	\DontPrintSemicolon
+	\caption{AES Inverse Encryption 2}
+	
+	\SetKwFunction{AddRoundKey}{AddRoundKey}
+	\SetKwFunction{InvSubBytes}{{InvSubBytes}}
+	\SetKwFunction{InvShiftRows}{{InvShiftRows}}
+	\SetKwFunction{InvMixColumns}{{InvMixColumns}}
+	\SetKwFunction{EqInvCipher}{{EqInvCipher}}
+	
+	\Fn{\EqInvCipher(in, Nr, w)}{ 
+%		\Comment{$in$ = input, $Nr$ = Number of Rounds, $w$ = word}
+		$state \gets in$\;
+		$state \gets \AddRoundKey{state, w[4*Nr\ ..\ 4*Nr + 3]}$\;
+		
+		\For{$round \gets Nr-1$ \DownTo $1$}{  % Main rounds
+			$state \gets \InvSubBytes{state}$\;  % Row shifting step
+			$state \gets \InvShiftRows{state}$\;  % Byte substitution step
+			$state \gets \InvMixColumns{state}$\;  % Column mixing step
+			$state \gets \AddRoundKey{state, dw[4*round\ ..\ 4*round + 3]}$\;  % Round key addition
+			\Comment{\texttt{y = MixCol(x\ $\oplus$ rk')$\implies$ rk' = x\ $\oplus$ InvMixCol(y)}}
+			\Comment{\For{$round\gets 1$ \KwTo $Nr-1$}{
+				$i\gets 4*round$\;
+				$dw[i\ ..\ i + 3]\gets\InvMixColumns(dw[i\ ..\ i + 3])$\;
+			}}
+		}
+		
+		% Final round (no MixColumns)
+		$state \gets \InvSubBytes{state}$\;
+		$state \gets \InvShiftRows{state}$\;
+		$state \gets \AddRoundKey{state, w[0\ ..\ 3]}$\;
+		
+		\Return $state$\;
+	}
+\end{algorithm}
