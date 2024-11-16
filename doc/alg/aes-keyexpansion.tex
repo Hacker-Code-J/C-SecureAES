@@ -17,7 +17,7 @@
 			$temp\gets w[i-1]$\;
 			\If{$(i\bmod Nk) = 0$}{
 				\Comment{$\RotWord([a_0,a_1,a_2,a_3])=[a_1,a_2,a_3,a_0]$}
-				\Comment{$\SubWord([a_0,a_1,a_2,_a3])=[S(a_0),S(a_1),S(a_2),S(a_3)]$}
+				\Comment{$\SubWord([a_0,a_1,a_2,a_3])=[S(a_0),S(a_1),S(a_2),S(a_3)]$}
 				$temp\gets\SubWord(\RotWord(temp))\oplus\Rcon[i/Nk]$\;
 			}\ElseIf{$Nk>6$ and $(i\bmod Nk) = 4$}{
 				$temp\gets\SubWord(temp)$\;

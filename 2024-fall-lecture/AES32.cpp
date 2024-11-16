@@ -4,17 +4,6 @@
 typedef unsigned char byte;
 typedef unsigned int u32;
 
-// 바이트 배열 b[4] --> u32 정수로
-#define GETU32(b) ((u32)(b)[0] << 24) ^ ((u32)(b)[1] << 16) \
-            ^ ((u32)(b)[2] << 8) ^ ((u32)(b)[3]);
-// u32 정수 --> 바이트 배열 b[4]
-#define PUTU32(b, x) { \
-    (b)[0] = (byte) ((x)>>24); \
-    (b)[1] = (byte)((x) >> 16); \
-    (b)[2] = (byte) ((x)>>8); \
-    (b)[3] = (byte) (x); \
-}
-
 //생성한 테이블
 //== AES32 Encryption Table ==
 u32 Te0[256] = {
@@ -700,6 +689,17 @@ byte Sbox[256] = {
 };
 
 
+// 바이트 배열 b[4] --> u32 정수로
+#define GETU32(b) ((u32)(b)[0] << 24) ^ ((u32)(b)[1] << 16) \
+            ^ ((u32)(b)[2] << 8) ^ ((u32)(b)[3]);
+// u32 정수 --> 바이트 배열 b[4]
+#define PUTU32(b, x) { \
+    (b)[0] = (byte) ((x)>>24); \
+    (b)[1] = (byte)((x) >> 16); \
+    (b)[2] = (byte) ((x)>>8); \
+    (b)[3] = (byte) (x); \
+}
+
 void print_AES_state(byte state[16], const char* pTitle = NULL) {
 	if (pTitle != NULL) {
 		printf("%s = ", pTitle);
@@ -758,14 +758,34 @@ void AES32_Dec_KeySchedule(byte k[16], u32 rk[11][4]) {
 	// Tdi[] : InvMixColumns(InvSubBytes( SubBytes() ))
 	// 코드 이해하고, 간단히 만들어 보기 !!!!!
 	for (int i = 1; i <= 9; i++) {
-		rk[i][0] = Td0[Te4[(rk[i][0] >> 24)] & 0xff] ^ Td1[Te4[(rk[i][0] >> 16) & 0xff] & 0xff]
-			^ Td2[Te4[(rk[i][0] >> 8) & 0xff] & 0xff] ^ Td3[Te4[(rk[i][0]) & 0xff] & 0xff];
-		rk[i][1] = Td0[Te4[(rk[i][1] >> 24)] & 0xff] ^ Td1[Te4[(rk[i][1] >> 16) & 0xff] & 0xff]
-			^ Td2[Te4[(rk[i][1] >> 8) & 0xff] & 0xff] ^ Td3[Te4[(rk[i][1]) & 0xff] & 0xff];
-		rk[i][2] = Td0[Te4[(rk[i][2] >> 24)] & 0xff] ^ Td1[Te4[(rk[i][2] >> 16) & 0xff] & 0xff]
-			^ Td2[Te4[(rk[i][2] >> 8) & 0xff] & 0xff] ^ Td3[Te4[(rk[i][2]) & 0xff] & 0xff];
-		rk[i][3] = Td0[Te4[(rk[i][3] >> 24)] & 0xff] ^ Td1[Te4[(rk[i][3] >> 16) & 0xff] & 0xff]
-			^ Td2[Te4[(rk[i][3] >> 8) & 0xff] & 0xff] ^ Td3[Te4[(rk[i][3]) & 0xff] & 0xff];
+		rk[i][0] = Td0[Sbox[(rk[i][0] >> 24) & 0xff]	   ] ^ 
+				   Td1[Sbox[(rk[i][0] >> 16) & 0xff] & 0xff] ^ 
+				   Td2[Sbox[(rk[i][0] >>  8) & 0xff] & 0xff] ^ 
+				   Td3[Sbox[(rk[i][0]	   ) & 0xff] & 0xff];
+		rk[i][1] = Td0[Sbox[(rk[i][1] >> 24) & 0xff]	   ] ^ 
+				   Td1[Sbox[(rk[i][1] >> 16) & 0xff] & 0xff] ^ 
+				   Td2[Sbox[(rk[i][1] >>  8) & 0xff] & 0xff] ^ 
+				   Td3[Sbox[(rk[i][1]	   ) & 0xff] & 0xff];
+		rk[i][2] = Td0[Sbox[(rk[i][2] >> 24) & 0xff]	   ] ^ 
+				   Td1[Sbox[(rk[i][2] >> 16) & 0xff] & 0xff] ^ 
+				   Td2[Sbox[(rk[i][2] >>  8) & 0xff] & 0xff] ^ 
+				   Td3[Sbox[(rk[i][2]	   ) & 0xff] & 0xff];
+		rk[i][3] = Td0[Sbox[(rk[i][3] >> 24) & 0xff]	   ] ^ 
+				   Td1[Sbox[(rk[i][3] >> 16) & 0xff] & 0xff] ^ 
+				   Td2[Sbox[(rk[i][3] >>  8) & 0xff] & 0xff] ^ 
+				   Td3[Sbox[(rk[i][3]	   ) & 0xff] & 0xff];
+		// rk[i][2] = Td0[Te4[(rk[i][2] >> 24)] & 0xff] ^ Td1[Te4[(rk[i][2] >> 16) & 0xff] & 0xff]
+		// 	^ Td2[Te4[(rk[i][2] >> 8) & 0xff] & 0xff] ^ Td3[Te4[(rk[i][2]) & 0xff] & 0xff];
+		// rk[i][3] = Td0[Te4[(rk[i][3] >> 24)] & 0xff] ^ Td1[Te4[(rk[i][3] >> 16) & 0xff] & 0xff]
+		// 	^ Td2[Te4[(rk[i][3] >> 8) & 0xff] & 0xff] ^ Td3[Te4[(rk[i][3]) & 0xff] & 0xff];
+		// rk[i][0] = Td0[Te4[(rk[i][0] >> 24)] & 0xff] ^ Td1[Te4[(rk[i][0] >> 16) & 0xff] & 0xff]
+		// 	^ Td2[Te4[(rk[i][0] >> 8) & 0xff] & 0xff] ^ Td3[Te4[(rk[i][0]) & 0xff] & 0xff];
+		// rk[i][1] = Td0[Te4[(rk[i][1] >> 24)] & 0xff] ^ Td1[Te4[(rk[i][1] >> 16) & 0xff] & 0xff]
+		// 	^ Td2[Te4[(rk[i][1] >> 8) & 0xff] & 0xff] ^ Td3[Te4[(rk[i][1]) & 0xff] & 0xff];
+		// rk[i][2] = Td0[Te4[(rk[i][2] >> 24)] & 0xff] ^ Td1[Te4[(rk[i][2] >> 16) & 0xff] & 0xff]
+		// 	^ Td2[Te4[(rk[i][2] >> 8) & 0xff] & 0xff] ^ Td3[Te4[(rk[i][2]) & 0xff] & 0xff];
+		// rk[i][3] = Td0[Te4[(rk[i][3] >> 24)] & 0xff] ^ Td1[Te4[(rk[i][3] >> 16) & 0xff] & 0xff]
+		// 	^ Td2[Te4[(rk[i][3] >> 8) & 0xff] & 0xff] ^ Td3[Te4[(rk[i][3]) & 0xff] & 0xff];
 	}
 }
 //=========
