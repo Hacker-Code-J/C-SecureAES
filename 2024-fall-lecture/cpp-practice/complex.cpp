@@ -12,6 +12,7 @@ Complex Complex::Mul(Complex z) {
 
 Complex Complex::Add(Complex z) {
     Complex w;
+    printf("(Complex::Add)\n");
     w.real = z.real + real;
     // w.imag = z.imag + imag;
     w.SetIm(z.GetIm() + GetIm());
@@ -27,6 +28,7 @@ Complex Complex::GetConjugate() {
 }
 
 void Complex::print() { // member function or method
+    IncPrintCounter();
     if (imag >= 0)
         printf("(%.2f) + (%.2f) * i\n", real, imag);
     else
