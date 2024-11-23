@@ -48,9 +48,19 @@ public: // Member function or method
     // Conjugate: z = x + yi -> x - yi
     Complex GetConjugate();
     void print();
+    
+    // Method
     Complex Add(Complex z);
     Complex Mul(Complex z);
+    // Static Method (Overloading)
+    static Complex Add(Complex z1, Complex z2);
+    static Complex Mul(Complex z1, Complex z2);
 
+    // Overloading Operations
+    Complex operator+(const Complex& z);
+    Complex operator*(const Complex& z);
+
+    // Counter
     static void ResetComplexCounter(int cnt = 0) { complex_counter = cnt; }
     static void ResetPrintCounter(int cnt = 0) { print_counter = cnt; }
     static int GetComplexCounter() { return complex_counter; }

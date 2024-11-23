@@ -11,13 +11,18 @@ void test_static_var() {
     z2.SetRe(2.0); z2.SetIm(2.0);
     z3.SetRe(3.0); z3.SetIm(3.0);
 
-    Complex z4;
-    z4 = z1.Add(z2);
+    Complex z4, z5;
+    // z4 = z1.Add(z2);
+    // z4 = Complex::Add(z1, z2);
+    z4 = z1 + z2; // z4 = z1.operator+(z2), z4 = z1.Add(z2)
+    // z5 = Complex::Mul(z1, z2);
+    z5 = z1 * z2;
 
     z1.print();
     z2.print();
     z3.print();
     z4.print();
+    z5.print();
 
     printf("print_counter = %d\n", Complex::GetPrintCounter());
 }
