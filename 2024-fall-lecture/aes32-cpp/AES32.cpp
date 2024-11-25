@@ -1,10 +1,6 @@
-﻿// AES32.cpp : 이 파일에는 'main' 함수가 포함됩니다. 거기서 프로그램 실행이 시작되고 종료됩니다.
-//
 #include <stdio.h>
-typedef unsigned char byte;
-typedef unsigned int u32;
+#include "AES32.h"
 
-//생성한 테이블
 //== AES32 Encryption Table ==
 u32 Te0[256] = {
 0xc66363a5, 0xf87c7c84, 0xee777799, 0xf67b7b8d,
@@ -688,19 +684,7 @@ byte Sbox[256] = {
  0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
 };
 
-
-// 바이트 배열 b[4] --> u32 정수로
-#define GETU32(b) ((u32)(b)[0] << 24) ^ ((u32)(b)[1] << 16) \
-            ^ ((u32)(b)[2] << 8) ^ ((u32)(b)[3]);
-// u32 정수 --> 바이트 배열 b[4]
-#define PUTU32(b, x) { \
-    (b)[0] = (byte) ((x)>>24); \
-    (b)[1] = (byte)((x) >> 16); \
-    (b)[2] = (byte) ((x)>>8); \
-    (b)[3] = (byte) (x); \
-}
-
-void print_AES_state(byte state[16], const char* pTitle = NULL) {
+void print_AES_state(byte state[16], const char* pTitle) {
 	if (pTitle != NULL) {
 		printf("%s = ", pTitle);
 	}
@@ -712,21 +696,21 @@ void print_AES_state(byte state[16], const char* pTitle = NULL) {
 }
 
 //=========
-// 키스케줄 
+// Ű������ 
 static u32 Rcon[10] = { 0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000,
-                        0x20000000, 0x40000000, 0x80000000, 0x1b000000, 0x36000000 };
+						0x20000000, 0x40000000, 0x80000000, 0x1b000000, 0x36000000 };
 
-// 키스케줄용: (x0, x1, x2, x3) --> (x1, x2, x3, x0)
+// Ű�����ٿ�: (x0, x1, x2, x3) --> (x1, x2, x3, x0)
 u32 RotWord(u32 w32) {
-    return (w32 << 8) | (w32 >> 24);
+	return (w32 << 8) | (w32 >> 24);
 }
 
-// 키스케줄용: (x0, x1, x2, x3) --> (S[x0], S[x1], S[x2], S[x3])
+// Ű�����ٿ�: (x0, x1, x2, x3) --> (S[x0], S[x1], S[x2], S[x3])
 u32 SubWord(u32 w32) {
-    return (Sbox[w32 >> 24] << 24) ^ (Sbox[(w32 >> 16) & 0xff] << 16) ^ (Sbox[(w32 >> 8) & 0xff] << 8) ^ Sbox[w32 & 0xff];
+	return (Sbox[w32 >> 24] << 24) ^ (Sbox[(w32 >> 16) & 0xff] << 16) ^ (Sbox[(w32 >> 8) & 0xff] << 8) ^ Sbox[w32 & 0xff];
 }
 
-// AES32 암호화 키스케줄
+// AES32 ��ȣȭ Ű������
 void AES32_Enc_KeySchedule(byte k[16], u32 rk[11][4]) {
 	u32 tmp;
 	int rcon_counter;
@@ -748,50 +732,30 @@ void AES32_Enc_KeySchedule(byte k[16], u32 rk[11][4]) {
 	}
 }
 
-// AES32 복호화 키스케줄
+// AES32 ��ȣȭ Ű������
 void AES32_Dec_KeySchedule(byte k[16], u32 rk[11][4]) {
 
 	AES32_Enc_KeySchedule(k, rk);
-	//1라운드 ~ 9라운드에 InvMixCol을 적용한다 !!!!! 
-	// rk[1][],..., rk[9][] (rk[0][], rk[10][]은 그대로 둔다)
+	//1���� ~ 9���忡 InvMixCol�� �����Ѵ� !!!!! 
+	// rk[1][],..., rk[9][] (rk[0][], rk[10][]�� �״�� �д�)
 	// Te4[x] = [ S[x], S[x], S[x], S[x] ]
 	// Tdi[] : InvMixColumns(InvSubBytes( SubBytes() ))
-	// 코드 이해하고, 간단히 만들어 보기 !!!!!
+	// �ڵ� �����ϰ�, ������ ����� ���� !!!!!
 	for (int i = 1; i <= 9; i++) {
-		rk[i][0] = Td0[Sbox[(rk[i][0] >> 24) & 0xff]	   ] ^ 
-				   Td1[Sbox[(rk[i][0] >> 16) & 0xff] & 0xff] ^ 
-				   Td2[Sbox[(rk[i][0] >>  8) & 0xff] & 0xff] ^ 
-				   Td3[Sbox[(rk[i][0]	   ) & 0xff] & 0xff];
-		rk[i][1] = Td0[Sbox[(rk[i][1] >> 24) & 0xff]	   ] ^ 
-				   Td1[Sbox[(rk[i][1] >> 16) & 0xff] & 0xff] ^ 
-				   Td2[Sbox[(rk[i][1] >>  8) & 0xff] & 0xff] ^ 
-				   Td3[Sbox[(rk[i][1]	   ) & 0xff] & 0xff];
-		rk[i][2] = Td0[Sbox[(rk[i][2] >> 24) & 0xff]	   ] ^ 
-				   Td1[Sbox[(rk[i][2] >> 16) & 0xff] & 0xff] ^ 
-				   Td2[Sbox[(rk[i][2] >>  8) & 0xff] & 0xff] ^ 
-				   Td3[Sbox[(rk[i][2]	   ) & 0xff] & 0xff];
-		rk[i][3] = Td0[Sbox[(rk[i][3] >> 24) & 0xff]	   ] ^ 
-				   Td1[Sbox[(rk[i][3] >> 16) & 0xff] & 0xff] ^ 
-				   Td2[Sbox[(rk[i][3] >>  8) & 0xff] & 0xff] ^ 
-				   Td3[Sbox[(rk[i][3]	   ) & 0xff] & 0xff];
-		// rk[i][2] = Td0[Te4[(rk[i][2] >> 24)] & 0xff] ^ Td1[Te4[(rk[i][2] >> 16) & 0xff] & 0xff]
-		// 	^ Td2[Te4[(rk[i][2] >> 8) & 0xff] & 0xff] ^ Td3[Te4[(rk[i][2]) & 0xff] & 0xff];
-		// rk[i][3] = Td0[Te4[(rk[i][3] >> 24)] & 0xff] ^ Td1[Te4[(rk[i][3] >> 16) & 0xff] & 0xff]
-		// 	^ Td2[Te4[(rk[i][3] >> 8) & 0xff] & 0xff] ^ Td3[Te4[(rk[i][3]) & 0xff] & 0xff];
-		// rk[i][0] = Td0[Te4[(rk[i][0] >> 24)] & 0xff] ^ Td1[Te4[(rk[i][0] >> 16) & 0xff] & 0xff]
-		// 	^ Td2[Te4[(rk[i][0] >> 8) & 0xff] & 0xff] ^ Td3[Te4[(rk[i][0]) & 0xff] & 0xff];
-		// rk[i][1] = Td0[Te4[(rk[i][1] >> 24)] & 0xff] ^ Td1[Te4[(rk[i][1] >> 16) & 0xff] & 0xff]
-		// 	^ Td2[Te4[(rk[i][1] >> 8) & 0xff] & 0xff] ^ Td3[Te4[(rk[i][1]) & 0xff] & 0xff];
-		// rk[i][2] = Td0[Te4[(rk[i][2] >> 24)] & 0xff] ^ Td1[Te4[(rk[i][2] >> 16) & 0xff] & 0xff]
-		// 	^ Td2[Te4[(rk[i][2] >> 8) & 0xff] & 0xff] ^ Td3[Te4[(rk[i][2]) & 0xff] & 0xff];
-		// rk[i][3] = Td0[Te4[(rk[i][3] >> 24)] & 0xff] ^ Td1[Te4[(rk[i][3] >> 16) & 0xff] & 0xff]
-		// 	^ Td2[Te4[(rk[i][3] >> 8) & 0xff] & 0xff] ^ Td3[Te4[(rk[i][3]) & 0xff] & 0xff];
+		rk[i][0] = Td0[Te4[(rk[i][0] >> 24)] & 0xff] ^ Td1[Te4[(rk[i][0] >> 16) & 0xff] & 0xff]
+			^ Td2[Te4[(rk[i][0] >> 8) & 0xff] & 0xff] ^ Td3[Te4[(rk[i][0]) & 0xff] & 0xff];
+		rk[i][1] = Td0[Te4[(rk[i][1] >> 24)] & 0xff] ^ Td1[Te4[(rk[i][1] >> 16) & 0xff] & 0xff]
+			^ Td2[Te4[(rk[i][1] >> 8) & 0xff] & 0xff] ^ Td3[Te4[(rk[i][1]) & 0xff] & 0xff];
+		rk[i][2] = Td0[Te4[(rk[i][2] >> 24)] & 0xff] ^ Td1[Te4[(rk[i][2] >> 16) & 0xff] & 0xff]
+			^ Td2[Te4[(rk[i][2] >> 8) & 0xff] & 0xff] ^ Td3[Te4[(rk[i][2]) & 0xff] & 0xff];
+		rk[i][3] = Td0[Te4[(rk[i][3] >> 24)] & 0xff] ^ Td1[Te4[(rk[i][3] >> 16) & 0xff] & 0xff]
+			^ Td2[Te4[(rk[i][3] >> 8) & 0xff] & 0xff] ^ Td3[Te4[(rk[i][3]) & 0xff] & 0xff];
 	}
 }
 //=========
 
 //=====
-// 데이터 변환: 바이트 b[16] <--> 워드 state[4]
+// ������ ��ȯ: ����Ʈ b[16] <--> ���� state[4]
 void byte2state(byte b[16], u32 st[4]) {
 	st[0] = GETU32(b);
 	st[1] = GETU32(b + 4);
@@ -806,7 +770,7 @@ void state2byte(u32 st[4], byte b[16]) {
 	PUTU32(b + 12, st[3]);
 }
 
-// AES8 용 키스케줄
+// AES8 �� Ű������
 void AES8_KeySchedule(byte k[16], byte rk[11][16]) {
 	u32 rk32[11][4];
 
@@ -832,7 +796,7 @@ void AES32_EncRound(u32 st[4], u32 rk[4]) {
 void AES32_EqDecRound(u32 st[4], u32 rk[4]) {
 	u32 tmp[4];
 
-	// InvShiftRows를 적용하여 바이트를 선택
+	// InvShiftRows�� �����Ͽ� ����Ʈ�� ����
 	tmp[0] = Td0[st[0] >> 24] ^ Td1[(st[3] >> 16) & 0xff] ^ Td2[(st[2] >> 8) & 0xff] ^ Td3[st[1] & 0xff] ^ rk[0];
 	tmp[1] = Td0[st[1] >> 24] ^ Td1[(st[0] >> 16) & 0xff] ^ Td2[(st[3] >> 8) & 0xff] ^ Td3[st[2] & 0xff] ^ rk[1];
 	tmp[2] = Td0[st[2] >> 24] ^ Td1[(st[1] >> 16) & 0xff] ^ Td2[(st[0] >> 8) & 0xff] ^ Td3[st[3] & 0xff] ^ rk[2];
@@ -848,16 +812,16 @@ void AES32_Encrypt(byte pt[16], u32 rk[11][4], byte ct[16]) {
 	byte2state(pt, st);
 	for (int k = 0; k < 4; k++) st[k] ^= rk[0][k];
 	for (int r = 1; r <= 9; r++) AES32_EncRound(st, rk[r]);
-	// 10라운드 
-	tmp[0] = (Te4[st[0] >> 24]&0xff000000) ^ (Te4[(st[1] >> 16) & 0xff]&0x00ff0000)
-		^ (Te4[(st[2] >> 8) & 0xff]&0x0000ff00) ^ (Te4[st[3] & 0xff]&0x000000ff) ^ rk[10][0];
-	tmp[1] = (Te4[st[1] >> 24]&0xff000000) ^ (Te4[(st[2] >> 16) & 0xff]&0x00ff0000)
-		^ (Te4[(st[3] >> 8) & 0xff]&0x0000ff00) ^ (Te4[st[0] & 0xff]&0x000000ff) ^ rk[10][1];
-	tmp[2] = (Te4[st[2] >> 24]&0xff000000) ^ (Te4[(st[3] >> 16) & 0xff]&0x00ff0000) 
-		^ (Te4[(st[0] >> 8) & 0xff]&0x0000ff00) ^ (Te4[st[1] & 0xff]&0x000000ff) ^ rk[10][2];
-	tmp[3] = (Te4[st[3] >> 24]&0xff000000) ^ (Te4[(st[0] >> 16) & 0xff]&0x00ff0000) 
-		^ (Te4[(st[1] >> 8) & 0xff]&0x0000ff00) ^ (Te4[st[2] & 0xff]&0x000000ff) ^ rk[10][3];
-	
+	// 10���� 
+	tmp[0] = (Te4[st[0] >> 24] & 0xff000000) ^ (Te4[(st[1] >> 16) & 0xff] & 0x00ff0000)
+		^ (Te4[(st[2] >> 8) & 0xff] & 0x0000ff00) ^ (Te4[st[3] & 0xff] & 0x000000ff) ^ rk[10][0];
+	tmp[1] = (Te4[st[1] >> 24] & 0xff000000) ^ (Te4[(st[2] >> 16) & 0xff] & 0x00ff0000)
+		^ (Te4[(st[3] >> 8) & 0xff] & 0x0000ff00) ^ (Te4[st[0] & 0xff] & 0x000000ff) ^ rk[10][1];
+	tmp[2] = (Te4[st[2] >> 24] & 0xff000000) ^ (Te4[(st[3] >> 16) & 0xff] & 0x00ff0000)
+		^ (Te4[(st[0] >> 8) & 0xff] & 0x0000ff00) ^ (Te4[st[1] & 0xff] & 0x000000ff) ^ rk[10][2];
+	tmp[3] = (Te4[st[3] >> 24] & 0xff000000) ^ (Te4[(st[0] >> 16) & 0xff] & 0x00ff0000)
+		^ (Te4[(st[1] >> 8) & 0xff] & 0x0000ff00) ^ (Te4[st[2] & 0xff] & 0x000000ff) ^ rk[10][3];
+
 	state2byte(tmp, ct);
 
 }
@@ -868,7 +832,7 @@ void AES32_EqDecrypt(byte ct[16], u32 rk[11][4], byte pt[16]) {
 	byte2state(ct, st);
 	for (int k = 0; k < 4; k++) st[k] ^= rk[10][k];
 	for (int r = 9; r >= 1; r--) AES32_EqDecRound(st, rk[r]);
-	// 10라운드 
+	// 10���� 
 	tmp[0] = (Td4[st[0] >> 24] & 0xff000000) ^ (Td4[(st[3] >> 16) & 0xff] & 0x00ff0000)
 		^ (Td4[(st[2] >> 8) & 0xff] & 0x0000ff00) ^ (Td4[st[1] & 0xff] & 0x000000ff) ^ rk[0][0];
 	tmp[1] = (Td4[st[1] >> 24] & 0xff000000) ^ (Td4[(st[0] >> 16) & 0xff] & 0x00ff0000)
@@ -880,38 +844,4 @@ void AES32_EqDecrypt(byte ct[16], u32 rk[11][4], byte pt[16]) {
 
 	state2byte(tmp, pt);
 
-}
-void test_AES32() {
-	byte pt[16] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-						0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff };
-
-	byte key[16] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-						 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
-
-	byte correct_ct[16] = { 0x69, 0xc4, 0xe0, 0xd8, 0x6a, 0x7b, 0x04, 0x30,
-							0xd8, 0xcd, 0xb7, 0x80, 0x70, 0xb4, 0xc5, 0x5a };
-
-	u32 rk32[11][4];
-	byte ct[16];
-
-	AES32_Enc_KeySchedule(key, rk32);
-	AES32_Encrypt(pt, rk32, ct);
-
-	print_AES_state(pt, "PT");
-	print_AES_state(ct, "CT");
-	print_AES_state(correct_ct, "correct_CT");
-
-	u32 eqrk[11][4];
-	byte eqpt[16];
-
-	AES32_Dec_KeySchedule(key, eqrk);
-	AES32_EqDecrypt(ct, eqrk, eqpt);
-	print_AES_state(eqpt, "eqPT");
-
-}
-
-
-int main()
-{
-	test_AES32();
 }

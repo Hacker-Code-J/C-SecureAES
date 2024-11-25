@@ -1,5 +1,66 @@
 \chapter{AES Algorithm}
 
+\section{Number Theory}
+\subsection{Euclidean Algorithm}
+Let $a,b\in\mathbb{N}$. Then $\exists!q,r\in\mathbb{N}$ s.t. 
+$a=bq+r\quad(0\leq r<b).$ Then 
+$$\gcd(a,b)=\gcd(b,a\bmod b)=\gcd(b,r).$$
+
+\begin{example}
+	Find $\gcd(90,63)$.
+	\begin{proof}[\sol]
+		\begin{align*}
+			a &= b\cdot q+ r \\
+			90 &= 63\cdot 1 + 27 &\gcd(90,63)=\gcd(63,27) \\
+			63 &= 27\cdot 2 + 9 &\gcd(63,27)=\gcd(27,9) \\
+			27 &= 9\cdot 3 + 0 &\gcd(27,9)=9.
+		\end{align*}
+	\end{proof}
+\end{example}
+%\begin{algorithm}
+%	\caption{Euclidean Algorithm}
+%	\KwIn{$a,b\in\mathbb{N}$}
+%	\KwOut{$d=\gcd(a,b)$}
+%	\While{$b \neq 0$}{
+%		$r \gets a \mod b$\;
+%		$a \gets b$\;
+%		$b \gets r$\;
+%	}
+%	\Return $a$ \tcp*{The GCD is stored in \(a\)}
+%\end{algorithm}
+\lstinputlisting[style=C]{codes/gcd/ea.c}
+
+
+\newpage
+\subsection{Extended Euclidean Algorithm (EEA)}
+There exists $x,y\in\mathbb{Z}$ such that
+$ax+by=\gcd(x,y).$
+\begin{table}[h!]\centering\setstretch{1.1}
+	\begin{tabular}{c||c|c}\toprule[1.2pt]
+		$a=bq+r$ & $a$ & $b$ \\ \hline
+		$90=63\cdot 1 + 27$ & $90=1\cdot 90+0\cdot 63$ & $63=0\cdot 90+1\cdot 63$ \\
+		$63=27\cdot 2 + 9$ & $63=0\cdot 90+1\cdot 63$ & $27 = 90 - 63 = 1\cdot 90 + (-1)\cdot 63$ \\
+		$27=9\cdot 3 + 0$ & $27 = 1\cdot 90 + (-1)\cdot 63$ & $9=63-27\cdot 2$ \\ \bottomrule[1.2pt]
+	\end{tabular}
+\end{table}\\ Here, \begin{align*}
+9 = 63 - 27\cdot 2
+&= 63 - (90+(-1)\cdot 63)\cdot 2 \\
+&= (1+2)\cdot 63 + (-2)\cdot 90 \\
+&= (3)\cdot 63 + (-2)\cdot 90.
+\end{align*}
+Let $\gcd(a,b)=xa+yb$ with $a=u_a\cdot a+v_a\cdot b$ and $b=u_b\cdot a+v_b\cdot b$. Consider \begin{align*}
+	a&=b\cdot q+r,\\ a'&=b'\cdot q'+r'
+\end{align*} with $\gcd(a,b)=\gcd(b,r)=\gcd(a',b')$. Then \begin{align*}
+a' &=b=u_b\cdot a+v_b\cdot b = u_a'\cdot a+v_a'\cdot b,\\
+b'&=r=a-bq=(u_a\cdot a+v_a\cdot b)-(u_b\cdot a+v_b\cdot b)\cdot q\\
+&=(u_a-u_b\cdot q)a+(v_a-v_b\cdot q)b\\
+&=u_b\cdot 'a+v_b\cdot 'b.
+\end{align*} Thus, \begin{align*}
+u_a'&=u_b, &v_a'&=v_b \\
+u_b'&=u_a-u_bq, &v_b'&=v_a-v_b\cdot q.
+\end{align*}
+
+\lstinputlisting[style=C]{codes/gcd/eea.c}
 \section{Arrays}
 \texttt{u8 a[4] = \{ 0xaa, 0xbb, 0xcc, 0xdd \};}
 \lstinputlisting[style=zsh]{codes/array/1d-array-debug}
@@ -46,7 +107,8 @@ f(x)+g(x)=\sum_{i=0}^7(a_i+b_i)x^i+\langle m(x)\rangle=\sum_{i=0}^7(a_i\oplus b_
 \] Here, $\oplus:GF(2)\times GF(2)\to GF(2)$. And \begin{align*}
 	f(x)\cdot g(x)=m(x)\cdot q(x) + r(x).
 \end{align*} Here $\deg r \leq 7$.
-\newpage
+\vfill
+\noindent
 We define \[
 \fullfunction{\texttt{xtime}}{GF(2^8)}{GF(2^8)}{f(x)}{x\cdot f(x)}.
 \]
@@ -92,7 +154,7 @@ That is, \begin{align*}
 
 \lstinputlisting[style=C]{../doc/codes/GF256_mul.c}
 
-\lstinputlisting[style=C]{../doc/codes/GF256_MUL.c}
+%\lstinputlisting[style=C]{../doc/codes/GF256_MUL.c}
 
 \newpage
 
@@ -129,9 +191,7 @@ $\Downarrow$\\
 		\end{tabular}
 	\end{minipage}
 \end{center}
-
-\newpage
-\noindent Consider
+Consider
 \[
 GF(2^8)[x]/\gen{x^4+1}=\set{a_0+a_1x+a_2x^3+a_3x^3: a_i\in GF(2^8)}.
 \] Note that $x^5=(x^4+1)x+x\equiv x\pmod{\gen{x^4+1}}$.
@@ -180,7 +240,6 @@ Then \begin{align*}
 	=& c(x).
 \end{align*}
 
-\newpage
 \noindent Thus, we have \[
 \fullfunction{T}{[GF(2^8)]^4}{[GF(2^8)]^4}{\begin{pmatrix}
 	b_0 \\ b_1 \\ b_2 \\ b_3
@@ -231,8 +290,6 @@ $c_0\gets\texttt{sum}\oplus\texttt{temp1}\oplus b_1$; \\
 $c_0\gets\texttt{sum}\oplus\texttt{temp2}\oplus b_2$; \\
 $c_0\gets\texttt{sum}\oplus\texttt{temp3}\oplus b_3$; \\
 \end{algorithm}\\ It has $\xtime{}\times 4$.
-
-\newpage
 Consider \begin{align*}
 	[a(x)]^1&=a_3x^3+a_2x^2+a_1x+a_0,\\
 	[a(x)]^2&=(a_3^2+a_1^2)x^2+(a_2^2+a_0^2),\\
@@ -615,6 +672,7 @@ Te0(x)=\begin{pmatrix}\texttt{02} * S(x) \\ S(x) \\ S(x) \\ \texttt{03} * S(x)
 \end{pmatrix}.
 \]
 
+\newpage
 \section{Key Schedule}
 
 \begin{table}[h!]\setstretch{1.25}\centering

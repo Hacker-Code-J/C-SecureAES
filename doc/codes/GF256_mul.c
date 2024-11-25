@@ -7,6 +7,5 @@ u8 GF256_mul(u8 f, u8 g) {
         h = GF256_xtime(h);     // Multiply h by x
         if (coef == 1) h ^= g;  // If f_i = 1, add g(x) to h(x)
     }
-
 	return h;
 }
