@@ -6,7 +6,7 @@
 
 // typedef unsigned char u8;
 typedef uint8_t u8;
-typedef unsigned int u32;
+typedef uint32_t u32;
 
 #define GETU32(b) ((u32)(b)[0] << 24) ^ ((u32)(b)[1] << 16) \
             ^ ((u32)(b)[2] << 8) ^ ((u32)(b)[3]);

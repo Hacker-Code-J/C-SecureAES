@@ -1,51 +1,25 @@
-// g++ -g -Wall -Wextra main.cpp AES-ECB.cpp -o aes-ecb
+// g++ -g -Wall -Wextra AES-CBC.cpp AES32.cpp -o aes-cbc
 
 #include "AES32.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <iostream>
 #include <fstream>
 using namespace std;
 
-void padding(uint8_t in[], int in_len, uint8_t out[16]);
-int pt_len(uint8_t padded[16]);
-void AES_ENC_ECB(const char* filePT, uint8_t key[16], const char* fileCT);
-void AES_DEC_ECB(const char* fileCT, uint8_t key[16], const char* filePT);
-void FILE_ECB_TEST();
+void AES_ENC_CBC(const char* filePT, uint8_t key[16], const char* fileCT);
+void AES_DEC_CBC(const char* fileCT, uint8_t key[16], const char* filePT);
+void FILE_CBC_TEST();
 
 int main() {
-    FILE_ECB_TEST();
+    FILE_CBC_TEST();
     return 0;
 }
 
-void padding(uint8_t in[], int in_len, uint8_t out[16]) {
-    uint8_t pad_header = 0x80;
-    for (int i = 0; i < in_len; i++)
-        out[i] = in[i];
-
-    out[in_len] = pad_header;
-    for (int i = in_len + 1; i < 16; i++)
-        out[i] = 0x00;
-}
-
-int pt_len(uint8_t padded[16]) {
-    int position80;
-    position80 = 15;
-    for (int i = 15; i > 0; i--) {
-        if (padded[i] != 0x00) break;
-        position80--;
-    }
-
-    if (padded[position80] != 0x80) {
-        cerr << "Padding error: 0x80 not found." << endl;
-        return -1;
-    } else {
-        return position80;
-    }
-}
-
-void AES_ENC_ECB(const char* filePT, uint8_t key[16], const char* fileCT) {
+void AES_ENC_CBC(const char* filePT, uint8_t key[16], const char* fileCT) {
     ifstream fin;
     ofstream fout;
-    char ch;
 
     fin.open(filePT, ios::binary);
     if (fin.fail()) {
@@ -65,12 +39,6 @@ void AES_ENC_ECB(const char* filePT, uint8_t key[16], const char* fileCT) {
         return;
     }
 
-    int num_blk, remain;
-    num_blk = file_len / 16 + 1;
-    remain = file_len - 16 * (num_blk - 1);
-
-    cout << "file size (ciphertext) = " << num_blk * 16 << " bytes" << endl;
-
     u32 rk[11][4];
     
     AES32_Enc_KeySchedule(key, rk);
@@ -78,28 +46,35 @@ void AES_ENC_ECB(const char* filePT, uint8_t key[16], const char* fileCT) {
     u8 buffer[16];
     u8 ct[16];
 
-    for (int i = 0; i < num_blk - 1; i++) {
+    // First IV
+    u8 currentIV[16] = {
+        0xaa, 0xd1, 0x58, 0x3c, 0xd9, 0x13, 0x65, 0xe3,
+        0xbb, 0x2f, 0x0c, 0x34, 0x30, 0xd0, 0x65, 0xbb
+    };
+
+    int num_blk = file_len / 16;
+    cout << "file size (ciphertext) = " << num_blk * 16 << " bytes" << endl;
+
+    for (int i = 0; i < num_blk; i++) {
         fin.read((char*)buffer, 16);
+
+        // XOR with IV or previous ciphertext block
+        for (int i = 0; i < 16; i++)
+            buffer[i] ^= currentIV[i]; 
+
+        // Encrypt the Block
         AES32_Encrypt(buffer, rk, ct);
         fout.write((char*)ct, 16);
+        
+        // Update IV (current CT block become next IV)
+        memcpy(currentIV, ct, 16 * sizeof(u8));
     }
-
-    u8 last_in[16];
-    u8 last_blk[16];
-    for (int i = 0; i < remain; i++) {
-        fin.read((char*)&ch, 1);
-        last_in[i] = ch;
-    }
-
-    padding(last_in, remain, last_blk);
-    AES32_Encrypt(last_blk, rk, ct);
-    fout.write((char*)ct, 16);
     
     fin.close();
     fout.close();
 }
 
-void AES_DEC_ECB(const char* fileCT, uint8_t key[16], const char* filePT) {
+void AES_DEC_CBC(const char* fileCT, uint8_t key[16], const char* filePT) {
     ifstream fin;
     ofstream fout;
 
@@ -109,66 +84,64 @@ void AES_DEC_ECB(const char* fileCT, uint8_t key[16], const char* filePT) {
         return;
     }
 
-    fout.open(filePT, ios::binary);
-    if (fout.fail()) {
-        cout << "Plaintext File Open Error!" << endl;
-        return;
-    }
-
     int file_len;
     fin.seekg(0, fin.end);
     file_len = fin.tellg();
     cout << "file size (ciphertext) = " << file_len << " bytes" << endl;
     fin.seekg(0, fin.beg);
 
+    fout.open(filePT, ios::binary);
+    if (fout.fail()) {
+        cout << "Plaintext File Open Error!" << endl;
+        return;
+    }
     
-    int num_blk;
-    num_blk = file_len / 16;
-
-    // cout << "file size (Ciphertext) = " << num_blk * 16 << " bytes" << endl;
-
     u32 rk[11][4];
     AES32_Dec_KeySchedule(key, rk);
     
     u8 buffer[16];
     u8 pt[16];
 
-    for (int i = 0; i < num_blk - 1; i++) {
+    // First IV
+    u8 currentIV[16] = {
+        0xaa, 0xd1, 0x58, 0x3c, 0xd9, 0x13, 0x65, 0xe3,
+        0xbb, 0x2f, 0x0c, 0x34, 0x30, 0xd0, 0x65, 0xbb
+    };
+
+    int num_blk = file_len / 16;
+    cout << "file size (plaintext) = " << num_blk * 16 << " bytes" << endl;
+    for (int i = 0; i < num_blk; i++) {
         fin.read((char*)buffer, 16);
+
+        // Decrypt the Block
         AES32_EqDecrypt(buffer, rk, pt);
+
+        // XOR with IV or previous ciphertext block
+        for (int i = 0; i < 16; i++)
+            pt[i] ^= currentIV[i]; 
         fout.write((char*)pt, 16);
+
+        // Update IV (current CT block become next IV)
+        memcpy(currentIV, buffer, 16 * sizeof(u8));
     }
 
-    fin.read((char*)buffer, 16);
-    AES32_EqDecrypt(buffer, rk, pt);
-
-    u8 last_pt_len = pt_len(pt);
-    if (last_pt_len < 0) {
-        cerr << "Padding error!" << endl;
-        return;
-    }
-
-    fout.write((char*)pt, last_pt_len);
-
-    cout << "file size (plaintext) = " << (num_blk - 1) * 16 + last_pt_len << " bytes" << endl;
-    
     fin.close();
     fout.close();
 }
 
-void FILE_ECB_TEST() {
-    const char* pPT = "PT.bin";
-    const char* pCT = "CT.bin";
-    const char* pDT = "DT.bin";
+void FILE_CBC_TEST() {
+    const char* pPT = "PT-CBC.bin";
+    const char* pCT = "CT-CBC.bin";
+    const char* pDT = "DT-CBC.bin";
 
-    u8 key[16];
-    // u8 IV[16];
-    for (int i = 0; i < 16; i++)
-        key[i] = i;
+    u8 key[16] = {
+        0x07, 0x00, 0xd6, 0x03, 0xa1, 0xc5, 0x14, 0xe4,
+        0x6b, 0x61, 0x91, 0xba, 0x43, 0x0a, 0x3a, 0x0c
+    };
+    
+    cout << "AES CBC Encrypt ..." << endl;
+    AES_ENC_CBC(pPT, key, pCT);
 
-    cout << "AES ECB Encrypt ..." << endl;
-    AES_ENC_ECB(pPT, key, pCT);
-
-    cout << "AES ECB Decrypt ..." << endl;
-    AES_DEC_ECB(pCT, key, pDT);
+    // cout << "AES CBC Decrypt ..." << endl;
+    AES_DEC_CBC(pCT, key, pDT);
 }
