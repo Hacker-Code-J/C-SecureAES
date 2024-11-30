@@ -30,7 +30,7 @@ void AES_ENC_ECB(const char* filePT, uint8_t key[16], const char* fileCT) {
     int file_len;
     fin.seekg(0, fin.end);
     file_len = fin.tellg();
-    cout << "file size (plaintext) = " << file_len << " bytes" << endl;
+    // cout << "file size (plaintext) = " << file_len << " bytes" << endl;
     fin.seekg(0, fin.beg);
 
     fout.open(fileCT, ios::binary);
@@ -47,7 +47,7 @@ void AES_ENC_ECB(const char* filePT, uint8_t key[16], const char* fileCT) {
     u8 ct[16];
 
     int num_blk = file_len / 16;
-    cout << "file size (ciphertext) = " << num_blk * 16 << " bytes" << endl;
+    // cout << "file size (ciphertext) = " << num_blk * 16 << " bytes" << endl;
 
     for (int i = 0; i < num_blk; i++) {
         fin.read((char*)buffer, 16);
@@ -102,7 +102,7 @@ void AES_DEC_ECB(const char* fileCT, uint8_t key[16], const char* filePT) {
 void FILE_ECB_TEST() {
     const char* pPT = "PT-ECB.bin";
     const char* pCT = "CT-ECB.bin";
-    const char* pDT = "DT-ECB.bin";
+    // const char* pDT = "DT-ECB.bin";
 
     u8 key[16] = {
         0x77, 0x23, 0xd8, 0x7d, 0x77, 0x3a, 0x8b, 0xbf,
@@ -113,6 +113,6 @@ void FILE_ECB_TEST() {
     cout << "AES ECB Encrypt ..." << endl;
     AES_ENC_ECB(pPT, key, pCT);
 
-    cout << "AES ECB Decrypt ..." << endl;
-    AES_DEC_ECB(pCT, key, pDT);
+    // cout << "AES ECB Decrypt ..." << endl;
+    // AES_DEC_ECB(pCT, key, pDT);
 }

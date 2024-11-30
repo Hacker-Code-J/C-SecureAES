@@ -17,10 +17,9 @@ public: // public, private(기본값), protected
 	void ScalarMul(double alpha); // 자기자신을 상수배
 	CVector Add(CVector x); // 자신(벡터) + x(벡터) ==> 리턴(벡터)
 
-	// HW2 - 1
+	// HW2 - 1 - (a)
 	static CVector Add(CVector x_vec, CVector y_vec);
     CVector operator+(CVector& vec);
-	// CVector& operator=(const CVector& vec);
 };
 
 // 벡터 덧셈 멤버 함수

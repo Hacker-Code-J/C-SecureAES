@@ -30,7 +30,7 @@ void AES_ENC_CBC(const char* filePT, uint8_t key[16], const char* fileCT) {
     int file_len;
     fin.seekg(0, fin.end);
     file_len = fin.tellg();
-    cout << "file size (plaintext) = " << file_len << " bytes" << endl;
+    // cout << "file size (plaintext) = " << file_len << " bytes" << endl;
     fin.seekg(0, fin.beg);
 
     fout.open(fileCT, ios::binary);
@@ -53,7 +53,7 @@ void AES_ENC_CBC(const char* filePT, uint8_t key[16], const char* fileCT) {
     };
 
     int num_blk = file_len / 16;
-    cout << "file size (ciphertext) = " << num_blk * 16 << " bytes" << endl;
+    // cout << "file size (ciphertext) = " << num_blk * 16 << " bytes" << endl;
 
     for (int i = 0; i < num_blk; i++) {
         fin.read((char*)buffer, 16);
@@ -132,7 +132,7 @@ void AES_DEC_CBC(const char* fileCT, uint8_t key[16], const char* filePT) {
 void FILE_CBC_TEST() {
     const char* pPT = "PT-CBC.bin";
     const char* pCT = "CT-CBC.bin";
-    const char* pDT = "DT-CBC.bin";
+    // const char* pDT = "DT-CBC.bin";
 
     u8 key[16] = {
         0x07, 0x00, 0xd6, 0x03, 0xa1, 0xc5, 0x14, 0xe4,
@@ -143,5 +143,5 @@ void FILE_CBC_TEST() {
     AES_ENC_CBC(pPT, key, pCT);
 
     // cout << "AES CBC Decrypt ..." << endl;
-    AES_DEC_CBC(pCT, key, pDT);
+    // AES_DEC_CBC(pCT, key, pDT);
 }
