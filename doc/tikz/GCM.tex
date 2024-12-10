@@ -1,0 +1,91 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\usepackage{tikz-cd}
+\usepackage{tikz-3dplot}
+\usepackage{pgfplots}
+\usepackage{pgffor} % For \foreach loop
+\pgfplotsset{compat=newest} % Adjust to your version of pgfplots
+\def\Circlearrowleft{\ensuremath{%
+		\rotatebox[origin=c]{180}{$\circlearrowleft$}}}
+\def\Circlearrowright{\ensuremath{%
+		\rotatebox[origin=c]{180}{$\circlearrowright$}}}
+\def\CircleArrowleft{\ensuremath{%
+		\reflectbox{\rotatebox[origin=c]{180}{$\circlearrowleft$}}}}
+\def\CircleArrowright{\ensuremath{%
+		\reflectbox{\rotatebox[origin=c]{180}{$\circlearrowright$}}}}
+\usetikzlibrary{
+	3d, % For 3D drawing
+	angles,
+	arrows,
+	arrows.meta,
+	backgrounds,
+	bending,
+	calc,
+	decorations.pathmorphing,
+	decorations.pathreplacing,
+	decorations.markings,
+	fit,
+	matrix,
+	patterns,
+	patterns.meta,
+	positioning,
+	quotes,
+	shadows,
+	shapes,
+	shapes.geometric
+}
+
+\begin{document}
+	\begin{tikzpicture}[>=Stealth]
+%		\def \x{12}
+%		\def \y{8}
+%		\draw[very thin,color=gray!10,step=.5] (-\x,-\y) grid (\x,\y);
+%		
+%		\foreach \i in {-\x,...,-2,-1,1,2,...,\x}
+%		\draw[gray] (\i,.1)--(\i,-.1) node[below] {$\i$};%x-axis
+%		\foreach \i in {-\y,...,-2,-1,1,1,2,...,\y}
+%		\draw[gray] (.1,\i)--(-.1,\i) node[left] {$\i$};%y-axis
+		
+		% Middle
+		\node[draw, rectangle, minimum width=6cm, minimum height=1cm, line width=.5mm] (pt) at (0,6) {$P$};
+		\node[draw, rectangle, rounded corners=5pt, minimum width=2cm, minimum height=1cm] (gctr) at (0,4) {$\textnormal{GCTR}_K$};
+		\node[draw, rectangle, minimum width=7cm, minimum height=1cm] (ct) at (0,2) {$C\parallel 0^u$};
+		\node[draw, rectangle, rounded corners=5pt, minimum width=2cm, minimum height=1cm] (ghash) at (0,-1) {$\textnormal{GHASH}_H$};
+		\node[draw, rectangle, rounded corners=5pt, minimum width=2cm, minimum height=1cm] (gctr2) at (0,-3) {$\textnormal{GCTR}_K$};
+		\node[draw, rectangle, rounded corners=5pt, minimum width=2cm, minimum height=1cm] (msb) at (0,-5) {$\textnormal{MSB}_t$};
+		\node[draw, rectangle, rounded corners=5pt, minimum width=1cm, minimum height=1cm] (tag) at (0,-7) {$T$};
+		
+		% Right
+		\node[draw, rectangle, minimum width=2cm, minimum height=1cm] (lenA) at (5,2) {$[\textnormal{len}(A)]_{64}$};
+		\node[draw, rectangle, minimum width=2cm, minimum height=1cm] (lenC) at (7.5,2) {$[\textnormal{len}(A)]_{64}$};
+		
+		\node[draw, rectangle, minimum width=1.25cm, minimum height=1cm] (zero) at (6.25,-1) {$0^{128}$};
+		\node[draw, rectangle, rounded corners=5pt, minimum width=2.5cm, minimum height=1cm] (ciph) at (6.25,-3) {$\textnormal{CIPH}$};
+		\node[draw, rectangle, minimum width=1.25cm, minimum height=1cm] (H) at (6.25,-5) {$H$};
+		
+		% Left
+		\node[draw, rectangle, minimum width=7cm, minimum height=1cm, line width=.5mm] (A) at (-8,2) {$A\parallel 0^u$};
+		\node[draw, rectangle, minimum width=1cm, minimum height=1cm, line width=.5mm] (IV) at (-8,6) {$IV$};
+		\node[draw, rectangle, minimum width=1cm, minimum height=1cm] (J) at (-8,4) {$J_0$};
+		\node[draw, rectangle, minimum width=1cm, minimum height=1cm] (inc) at (-4,4) {$\textnormal{inc}_{32}$};
+		
+		% Arrows
+		\draw[->] (pt) -- (gctr);
+		\draw[->] (gctr) -- (ct);
+		\draw[->] (ghash) -- (gctr2);
+		\draw[->] (gctr2) -- (msb);
+		\draw[->] (msb) -- (tag);
+		\draw[->] (zero) -- (ciph);
+		\draw[->] (ciph) -- (H) node[midway, right] {$K$};
+		\draw[->] (H) -- ++(-3,0) -- ++(0,4) -- (ghash);
+		
+		\draw[dotted, ->] (IV) -- (J);
+		\draw[->] (J) -- (inc);
+		\draw[->] (inc) -- (gctr);
+		\draw[->] (J) -- ++(-4.5,0) -- ++(0,-7) -- (gctr2);
+		
+		\draw[dashed] (-12, 1) rectangle (9, 3);
+		\draw[->] (0,1) -- (0,-.5);
+		
+	\end{tikzpicture}
+\end{document}

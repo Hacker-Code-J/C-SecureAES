@@ -1,0 +1,217 @@
+\chapter{AES-GCM}
+\section{Multiplication in $\text{GF}(2^{128})$}
+\subsection{Basic Multiplication}
+Let $m(x):=1+x+x^2+x^7+x^{128}$.
+\begin{align*}
+	GF(2^{128})&=GF(2)[x]/\langle m(x)\rangle \\
+	&=GF(2)[x]/\langle 1+x+x^2+x^7+x^{128}\rangle \\
+	&=\set{\sum_{i=0}^{127}b_i:b_i\in\text{GF}(2)\ \text{for}\ i=1,2,\dots,127}.
+\end{align*}
+\begin{align*}
+	B&=B[0]\parallel B[1]\parallel\cdots\parallel B[15]&B[i]\in\GF(2^{8})\\
+	&=b_0b_1\cdots b_7\parallel b_8\cdots b_{15}\parallel \cdots\parallel b_{120}\cdots b_{127}&b_i\in\GF(2)
+\end{align*} \\
+%\vfill\noindent
+\vspace{50pt}\\
+Let $f(x),g(x)\in GF(2^{128})$, say, \begin{align*}
+	p(x)&=p_0+p_1x+p_2x^2+\cdots+p_{127}x^{127}\\
+	q(x)&=q_0+q_1x+q_2x^2+\cdots+q_{127}x^{127}.
+\end{align*}
+Then \begin{align*}
+	p(x)\cdot q(x)&=p(x)\cdot\left(q_0+q_1x+q_2x^2+\cdots+q_{127}x^{127}\right)\\
+	&=q_0\cdot p(x)+q_1\cdot xp(x)+q_2\cdot x^2p(x)+\cdots +q_{127}\cdot x^{127}p(x).
+\end{align*}
+\newpage\noindent
+The function $\texttt{xtime}():\GF(2^{128})\to\GF(2^{128})$ is define by \begin{align*}
+	\texttt{xtime}(p(x))&=xp(x)\\
+	&=x(p_0+p_1x+p_2x^2+\cdots p_{127}x^{127}) \\
+	&=p_0x+p_1x^2+p_2x^3+\cdots +p_{126}x^{127}+p_{127}\color{red}x^{128}\\
+	&=p_0x+p_1x^2+p_2x^3+\cdots +p_{126}x^{127}+p_{127}\color{red}(1+x+x^2+x^7)
+\end{align*} for $p(x)\in\GF(2^{128})$.
+\begin{align*}
+	p(x)&=P[0]\parallel P[1]\parallel\cdots P[15]\\
+	&=p_0p_1\cdots p_7\parallel p_8\cdots p_{15}\parallel \cdots\parallel p_{120}\cdots p_{127}\\ \\
+	xp(x) &=\left((0p_0\cdots p_6)\oplus \begin{cases}
+		\texttt{0000:0000}=\texttt{0x00} &: p_{127}=0\\
+		\texttt{1110:0001}=\texttt{0xE1} &: p_{127}=1
+	\end{cases}\right)\parallel (p_7\cdots p_{14})\parallel \cdots\parallel (p_{119}\cdots p_{126}).
+\end{align*}\\
+\begin{lstlisting}[style=c]
+// p(x) <- x*p(x)
+void GF128_xtime(u8 p[16]) {
+	u8 msb = (u8)(p[15] & 0x01);  // p[15] = p120 p121 ... p127
+	for (int i = 15; i > 0; i--) {
+		p[i] = (p[i] >> 1) | ((p[i-1] & 0x01) << 7);
+	} p[0] >>= 1;
+	if (msb) p[0] ^= 0xE1;
+}
+\end{lstlisting}
+\vfill
+Recall that \begin{align*}
+	p(x)\cdot q(x)&=p(x)\cdot\left(q_0+q_1x+q_2x^2+\cdots+q_{127}x^{127}\right)\\
+	&=q_0\cdot p(x)+q_1\cdot xp(x)+q_2\cdot x^2p(x)+\cdots +q_{127}\cdot x^{127}p(x).
+\end{align*} for $p(x),q(x)\in\GF(2^{128})$.\\
+
+\begin{lstlisting}[style=c]
+// p(x) <- p(x)*q(x)
+void GF128_mul(u8 p[16], u8 q[16]) {
+	u8 buffer[16] = { 0x00, };
+	u8 qi; 	// q0, q1, ..., q127
+	for (int i = 0; i < 16; i++) { 		// Q[0], Q[1], ..., Q[15]
+		for (int j = 0; j < 8; j++) { 	// q0, q1, ..., q127
+			qi = q[i] & (1 << (7-j)); 	// Q[0] = q0q1...q7
+			if (qi) {
+				for (int k = 0; k < 16; k++) buffer[k] ^= p[k];
+			}
+			GF128_xtime(p); 	// xp(x), x^2p(x), ..., x^127p(x)
+		}
+	}
+	for (int i = 0; i < 16; i++) p[i] = buffer[i];
+}
+\end{lstlisting}
+
+\newpage
+\subsection{GHASH and Efficient Multiplication}
+\begin{lstlisting}[style=C]
+void GHASH_v1(u8 msg[],
+			  int msg_blks,
+			  u8 H[16],
+			  u8 tag[16]) {
+	u8 x[16];
+	u8 out[16] = { 0x00, };
+	
+	for (int i = 0; i < msg_blks, i++) {
+		for (int j = 0; j < 16; j++)
+			x[j] = msg[i * 16 + j];
+		xor_b_array(out, 16, x) 	// out <- out ^ x
+		GF128_mul(out, H); 			// out <- out * H
+	}
+	for (int i = 0; i < 16; i++)
+		tag[i] = out[i];
+}
+\end{lstlisting}
+\vspace{40pt}\ \\
+%\subsection{Efficient Multiplication}
+Consider $q(x)\in\GF(2^{128})$, where \begin{align*}
+	q(x) &= \boxed{(q_0+q_1x+\cdots+q_7x^7)}+\boxed{(q_8x^8+\cdots+q_{15}x^{15})}+\cdots+\boxed{(q_{120}x^{120}+\cdots+q_{127}x^{127})} \\
+	&= \boxed{(q_0+q_1x+\cdots+q_7x^7)}+\boxed{(q_8+\cdots+q_{15}x^{7})}\textcolor{blue}{x^8}+\cdots+\boxed{(q_{120}+\cdots+q_{127}x^{7})}\textcolor{blue}{x^{120}} \\
+	&= \boxed{B_0(x)}+\boxed{B_1(x)}\textcolor{blue}{x^8}+\cdots+\boxed{B_{15}(x)}\textcolor{blue}{x^{120}}\quad\text{with}\quad B_i(x)\in\GF(2^8).
+\end{align*}
+Then \begin{align*}
+	H(x)\cdot q(x) &= H(x)\cdot\set{B_0(x)+B_1(x)x^8+\cdots+B_{15}(x)x^{120}}\\
+	&= H(x)B_0(x)+H(x)B_1(x)x^8+\cdots+H(x)B_{15}(x)x^{120}.
+\end{align*} 
+
+\newpage
+Since $B_i(x)\in\GF(2^8)$, we have \[
+256\ \text{times} \begin{cases}
+	H(x) \cdot (\texttt{0000:0000}) & \dashrightarrow\quad\texttt{HT}[0]=\texttt{HT}[0][0]\parallel\texttt{HT}[0][1]\parallel\cdots\parallel\texttt{HT}[0][15] \\
+	H(x) \cdot (\texttt{1000:0000}) & \dashrightarrow\quad\texttt{HT}[1]=\texttt{HT}[1][0]\parallel\texttt{HT}[1][1]\parallel\cdots\parallel\texttt{HT}[1][15] \\
+	H(x) \cdot (\texttt{0100:0000}) & \dashrightarrow\quad\texttt{HT}[2]=\texttt{HT}[2][0]\parallel\texttt{HT}[2][1]\parallel\cdots\parallel\texttt{HT}[2][15] \\
+	\hspace{2cm}\vdots & \dashrightarrow\quad \hspace{1cm}\vdots \\
+	H(x) \cdot (\texttt{1111:1111}) & \dashrightarrow\quad\texttt{HT}[255]=\texttt{HT}[255][0]\parallel\texttt{HT}[255][1]\parallel\cdots\parallel\texttt{HT}[255][15] \\
+\end{cases}
+\] We use $256\times 16$ bytes (equivalent to 4 KB) of memory to store the fixed function 
+$H(x)$, ensuring efficient handling of precomputed values.
+\vfill
+\begin{lstlisting}[style=C]
+// HT[q(x)][] <- H(x)*q(x) 
+void Make_GHASH_H_table(u8 H[16], u8 HT[256][16]) {
+	u8 buf[16];
+	u8 H_mul[16]; 	// H(x), H(x)*x, H(x)*x^2, ... , H(x)*x^7
+	u8 qj; 			// q0, q1, ... , q7
+	for (int i = 0; i < 256; i++) { 	// 0x00 - 0xFF
+		// H(x)*[0x00 - 0xFF] ==> HT[i][0]...HT[i][16]
+		for (int j = 0; j < 16; j++) { // Initialize buffer
+			buf[j] = 0x00;
+			H_mul[j] = H[j];  // Initialize as H(x)
+		}
+		for (int j = 0; j < 8; j++) { 	// q0, q1, ... , q7
+			// [i polynomial] =  [q0 q1 q2 ... q7] (8-bit)
+			qj = (u8)((i >> (7 - j)) & 0x01);
+			if (qj == 1) {
+				// buf <- buf + qj*H(x)*x^j
+				xor_b_array(buf, 16, H_mul); 
+			} GF128_xtime(H_mul); // Hmul <-- H_mul * x 
+		} copy_b_array(buf, 16, HT[i]); // buf[] --> HT[i][]
+	}
+}
+\end{lstlisting}
+\vfill
+The function $\texttt{x$^8$time}():\GF(2^{128})\to\GF(2^{128})$ is define by \begin{align*}
+	\texttt{x$^8$time}(p(x))&=x^8p(x)\\
+	&=x^8(p_0+p_1x+p_2x^2+\cdots p_{127}x^{127}) \\
+	&=(p_0x^8+p_1x^9+p_2x^{10}+\cdots p_{119}x^{127})\color{red}+(p_{120}x^{128}+\cdots+p_{127}x^{135})\\
+	&=0+P_0(x)x^8+P_1(x)x^{16}+\cdots+P_{14}x^{12}\color{red}+P_{15}(x)x^{128}\\
+	&=(\texttt{0}^8\parallel{P_1(x)}\parallel\cdots\parallel{P_{14}(x)}) \color{red}\oplus P_{15}(x)(1+x+x^2+x^7).
+\end{align*} for $p(x)\in\GF(2^{128})$. We use $256\times 2$ bytes (equivalent to 0.5 KB) of memory to store the $P_{15}(x) x^{128}$:
+\newpage
+\begin{align*}
+	&P_{15}(x)x^{128}\\
+	&=(p_{120}+p_{121}x+\cdots+p_{127}x^{7})(1+x+x^2+x^7)\\
+	&=p_{120}+p_{121}x+p_{122}x^2+p_{123}x^3+\cdots+p_{127}x^{7}\\
+	&\hspace{1.225cm}+p_{120}x+p_{121}x^2+p_{122}x^3+\cdots+p_{126}x^7+p_{127}x^{8}\\
+	&\hspace{2.625cm}+p_{120}x^2+p_{121}x^3+\cdots+p_{125}x^7+p_{126}x^8+p_{127}x^{9}\\
+	&\hspace{6.8cm}+p_{120}x^7+p_{121}x^8+p_{122}x^{9}+\cdots+p_{127}x^{14} \\
+	&=(p_{120})\parallel(p_{120}+p_{121})\parallel(p_{120}+p_{121}+p_{122})\parallel(p_{121}+p_{122}+p_{123})\\
+	&\hspace{.25cm}\parallel(p_{122}+p_{123}+p_{124})\parallel(p_{123}+p_{124}+p_{125})\parallel(p_{124}+p_{125}+p_{126})\\
+	&\hspace{.25cm}\parallel(p_{120}+p_{125}+p_{126}+p_{127})
+	\boldsymbol{\parallel}(p_{121}+p_{126}+p_{127})\parallel(p_{122}+p_{127})\\
+	&\hspace{.25cm}\parallel(p_{123})\parallel(p_{124})\parallel(p_{125})\parallel(p_{126})\parallel(p_{127})\parallel(\texttt{0})\\
+	&=R_0(x)\boldsymbol{\parallel} R_1(x)\quad\text{with}\quad R_i(x)\in\GF(2^8).
+\end{align*}
+\vfill
+Thus, $\texttt{x$^8$time()}:\GF(2^{128})\to \GF(2^{128})$ is defined by \[
+\texttt{x$^8$time}(P(x))=x^8(P_0(x), \cdots, P_{15}(x))=(0,P_0(x), \cdots, P_{14}(x))\oplus R_0(P_{15}(x))\parallel R_1(P_{15}(x))
+\]\vfill
+\begin{lstlisting}[style=C]
+void Make_GHASH_const_R0R1(u8 R0[256], u8 R1[256]) {
+	u8 a[8];    // a0 a1 ... a7
+	for (int i = 0; i < 256; i++) {
+		R0[i] = 0; R1[i] = 0;
+	}
+	
+	for (int i = 0; i < 256; i++) { 		// 0x00 - 0xFF
+		for (int j = 0; j < 8; j++)
+			a[j] = (i >> (7-j)) & 0x01; 	// a0, a1, ..., a7
+		R0[i] = a[0] << 7;
+		R0[i] ^= (a[0] ^ a[1]) << 6;
+		R0[i] ^= (a[0] ^ a[1] ^ a[2]) << 5;
+		R0[i] ^= (a[1] ^ a[2] ^ a[3]) << 4;
+		R0[i] ^= (a[2] ^ a[3] ^ a[4]) << 3;
+		R0[i] ^= (a[3] ^ a[4] ^ a[5]) << 2;
+		R0[i] ^= (a[4] ^ a[5] ^ a[6]) << 1;
+		R0[i] ^= a[5] ^ a[6] ^ a[7] ^ a[0];
+		
+		R1[i] = (a[7] ^ a[6] ^ a[1]) << 7;
+		R1[i] ^= (a[7] ^ a[2]) << 6;
+		R1[i] ^= a[3] << 5;
+		R1[i] ^= a[4] << 4;
+		R1[i] ^= a[5] << 3;
+		R1[i] ^= a[6] << 2;
+		R1[i] ^= a[7] << 1;
+	}
+}
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
